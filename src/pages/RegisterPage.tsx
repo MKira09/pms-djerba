@@ -1,0 +1,80 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Mail, Lock, User, Building, Home } from 'lucide-react'
+import toast from 'react-hot-toast'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import { supabase } from '@/lib/supabase'
+
+export default function RegisterPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ full_name: '', company_name: '', email: '', password: '', confirm: '' })
+  const [loading, setLoading] = useState(false)
+
+  function set(key: string, val: string) { setForm(f => ({ ...f, [key]: val })) }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault()
+    if (form.password !== form.confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: { full_name: form.full_name, company_name: form.company_name },
+        },
+      })
+      if (error) throw error
+      toast.success('Compte créé ! Vérifiez vos emails.')
+      navigate('/login')
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? 'Erreur lors de la création du compte')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-800 rounded-2xl mb-3 shadow-lg">
+            <Home className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">PMS Djerba</h1>
+          <div className="inline-flex items-center gap-1.5 mt-2 bg-success-100 text-success-800 px-3 py-1 rounded-full text-xs font-medium">
+            ✨ {t('auth.trial_badge')}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('auth.create_account')}</h2>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <Input label={t('auth.full_name')} value={form.full_name} onChange={e => set('full_name', e.target.value)} left={<User className="h-4 w-4" />} required placeholder="Votre nom" />
+            <Input label={t('auth.company_name')} value={form.company_name} onChange={e => set('company_name', e.target.value)} left={<Building className="h-4 w-4" />} placeholder="Agence Djerba Villas" />
+            <Input label={t('common.email')} type="email" value={form.email} onChange={e => set('email', e.target.value)} left={<Mail className="h-4 w-4" />} placeholder={t('auth.email_placeholder')} required />
+            <Input label={t('auth.password')} type="password" value={form.password} onChange={e => set('password', e.target.value)} left={<Lock className="h-4 w-4" />} placeholder="Min. 8 caractères" required />
+            <Input label={t('auth.confirm_password')} type="password" value={form.confirm} onChange={e => set('confirm', e.target.value)} left={<Lock className="h-4 w-4" />} placeholder="••••••••" required />
+
+            <Button type="submit" loading={loading} className="w-full" size="lg">
+              {t('auth.register')} — Essai gratuit 14j
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            {t('auth.already_account')}{' '}
+            <Link to="/login" className="text-brand-700 font-medium hover:underline">{t('auth.login')}</Link>
+          </p>
+
+          <p className="text-center text-xs text-gray-400 mt-4">
+            Sans carte bancaire • Annulation à tout moment
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

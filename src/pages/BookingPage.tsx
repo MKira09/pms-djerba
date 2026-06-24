@@ -81,6 +81,8 @@ export default function BookingPage() {
         villa_id: selectedVilla.id,
         check_in: checkIn,
         check_out: checkOut,
+        check_in_time: '14:00',
+        check_out_time: '11:00',
         guests: form.guests,
         total_amount: total,
         currency: 'TND',

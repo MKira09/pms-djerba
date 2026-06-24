@@ -9,6 +9,7 @@ import Textarea from '@/components/ui/Textarea'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
 import { usePricingStore } from '@/stores/pricing.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { nightCount } from '@/lib/utils'
 import type { ReservationSource, ReservationStatus, Reservation } from '@/types'
 import { parseISO, addDays, format } from 'date-fns'
@@ -27,6 +28,8 @@ interface FormData {
   villa_id: string
   check_in: string
   check_out: string
+  check_in_time: string
+  check_out_time: string
   guests: number
   total_amount: number
   source: ReservationSource
@@ -42,9 +45,26 @@ const today = format(new Date(), 'yyyy-MM-dd')
 const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd')
 
 const EMPTY: FormData = {
-  villa_id: '', check_in: today, check_out: tomorrow, guests: 2,
-  total_amount: 0, source: 'direct', status: 'confirmed',
+  villa_id: '', check_in: today, check_out: tomorrow,
+  check_in_time: '14:00', check_out_time: '11:00',
+  guests: 2, total_amount: 0, source: 'direct', status: 'confirmed',
   internal_note: '', client_name: '', client_email: '', client_phone: '', client_nationality: '',
+}
+
+async function sendConfirmationEmail(params: {
+  clientEmail: string; clientName: string; villaName: string
+  checkIn: string; checkOut: string; checkInTime: string; checkOutTime: string
+  totalAmount: number; agencyName: string
+}) {
+  try {
+    await fetch('/.netlify/functions/send-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    })
+  } catch {
+    // email failure is non-critical
+  }
 }
 
 export default function ReservationForm({ open, reservation, defaultDate, onClose }: Props) {
@@ -52,6 +72,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { add, update, checkConflict } = useReservationsStore()
   const { villas } = useVillasStore()
   const { computePrice } = usePricingStore()
+  const { tenant } = useAuthStore()
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
@@ -62,6 +83,8 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         villa_id: reservation.villa_id,
         check_in: reservation.check_in,
         check_out: reservation.check_out,
+        check_in_time: reservation.check_in_time ?? '14:00',
+        check_out_time: reservation.check_out_time ?? '11:00',
         guests: reservation.guests,
         total_amount: reservation.total_amount,
         source: reservation.source,
@@ -85,7 +108,6 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   function set<K extends keyof FormData>(k: K, v: FormData[K]) {
     setForm(f => {
       const next = { ...f, [k]: v }
-      // Auto-compute price when villa/dates change
       if ((k === 'villa_id' || k === 'check_in' || k === 'check_out') && next.villa_id && next.check_in && next.check_out) {
         const villa = villas.find(v => v.id === next.villa_id)
         if (villa) {
@@ -101,8 +123,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
 
   function validateDates() {
     if (!form.villa_id || !form.check_in || !form.check_out) return
-    const hasConflict = checkConflict(form.villa_id, form.check_in, form.check_out, reservation?.id)
-    setConflict(hasConflict)
+    setConflict(checkConflict(form.villa_id, form.check_in, form.check_out, reservation?.id))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -111,22 +132,49 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     if (form.check_in >= form.check_out) { toast.error('La date de départ doit être après l\'arrivée.'); return }
     setLoading(true)
     try {
+      const villaName = villas.find(v => v.id === form.villa_id)?.name ?? ''
+      const checkInFmt = format(parseISO(form.check_in), 'dd/MM/yyyy')
+      const checkOutFmt = format(parseISO(form.check_out), 'dd/MM/yyyy')
+
       if (reservation) {
+        const wasNotConfirmed = reservation.status !== 'confirmed'
         await update(reservation.id, {
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
+          check_in_time: form.check_in_time, check_out_time: form.check_out_time,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
         })
         toast.success('Réservation modifiée.')
+        // Send email if status changed to confirmed
+        if (form.status === 'confirmed' && wasNotConfirmed && reservation.client?.email) {
+          sendConfirmationEmail({
+            clientEmail: reservation.client.email,
+            clientName: reservation.client.full_name,
+            villaName, checkIn: checkInFmt, checkOut: checkOutFmt,
+            checkInTime: form.check_in_time, checkOutTime: form.check_out_time,
+            totalAmount: form.total_amount, agencyName: tenant?.name ?? 'VillaHub',
+          })
+        }
       } else {
-        await add({
+        const result = await add({
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
+          check_in_time: form.check_in_time, check_out_time: form.check_out_time,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
           client_id: null, currency: 'TND', ical_uid: null,
           client: { full_name: form.client_name, email: form.client_email || null, phone: form.client_phone || null, nationality: form.client_nationality || null },
         })
         toast.success('Réservation créée !')
+        // Send email if confirmed and client has email
+        if (form.status === 'confirmed' && form.client_email) {
+          sendConfirmationEmail({
+            clientEmail: form.client_email, clientName: form.client_name,
+            villaName: result.villa?.name ?? villaName,
+            checkIn: checkInFmt, checkOut: checkOutFmt,
+            checkInTime: form.check_in_time, checkOutTime: form.check_out_time,
+            totalAmount: form.total_amount, agencyName: tenant?.name ?? 'VillaHub',
+          })
+        }
       }
       onClose()
     } catch {
@@ -170,6 +218,10 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
             <div className="grid grid-cols-2 gap-3">
               <Input label={t('reservations.check_in')} type="date" value={form.check_in} onChange={e => { set('check_in', e.target.value); validateDates() }} required />
               <Input label={t('reservations.check_out')} type="date" value={form.check_out} onChange={e => { set('check_out', e.target.value); validateDates() }} required />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Heure d'arrivée" type="time" value={form.check_in_time} onChange={e => set('check_in_time', e.target.value)} />
+              <Input label="Heure de départ" type="time" value={form.check_out_time} onChange={e => set('check_out_time', e.target.value)} />
             </div>
             {conflict && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">⚠️ {t('reservations.conflict')}</p>}
             <div className="grid grid-cols-2 gap-3">

@@ -89,6 +89,8 @@ export interface Reservation {
   client_id: string | null
   check_in: string
   check_out: string
+  check_in_time?: string | null
+  check_out_time?: string | null
   guests: number
   total_amount: number
   currency: string

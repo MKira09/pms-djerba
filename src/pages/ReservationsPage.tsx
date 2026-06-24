@@ -101,8 +101,14 @@ export default function ReservationsPage() {
                       <p className="text-xs text-gray-400">{r.guests} pers.</p>
                     </td>
                     <td className="px-4 py-3 text-gray-700">{r.villa?.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{format(parseISO(r.check_in), 'dd/MM/yyyy')}</td>
-                    <td className="px-4 py-3 text-gray-600">{format(parseISO(r.check_out), 'dd/MM/yyyy')}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      <span>{format(parseISO(r.check_in), 'dd/MM/yyyy')}</span>
+                      {r.check_in_time && <span className="text-xs text-gray-400 block">{r.check_in_time}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      <span>{format(parseISO(r.check_out), 'dd/MM/yyyy')}</span>
+                      {r.check_out_time && <span className="text-xs text-gray-400 block">{r.check_out_time}</span>}
+                    </td>
                     <td className="px-4 py-3 text-right text-gray-600">{nights}</td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmtCurrency(r.total_amount)}</td>
                     <td className="px-4 py-3 text-center">

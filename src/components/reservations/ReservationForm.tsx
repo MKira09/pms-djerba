@@ -57,13 +57,21 @@ async function sendConfirmationEmail(params: {
   totalAmount: number; agencyName: string
 }) {
   try {
-    await fetch('/api/send-confirmation', {
+    const res = await fetch('/api/send-confirmation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),
     })
-  } catch {
-    // email failure is non-critical
+    const data = await res.json()
+    if (!res.ok) {
+      const errMsg = data?.error?.message || (typeof data?.error === 'string' ? data.error : JSON.stringify(data?.error))
+      toast.error('Email non envoyé : ' + (errMsg || 'erreur inconnue'), { duration: 6000 })
+      console.error('send-confirmation error:', data)
+    } else {
+      toast.success('Email de confirmation envoyé !')
+    }
+  } catch (e) {
+    console.error('send-confirmation fetch error:', e)
   }
 }
 

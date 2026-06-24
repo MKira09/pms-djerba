@@ -1,22 +1,33 @@
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' })
-  }
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' })
 
   try {
+    // Vercel may deliver body as string or object depending on runtime
+    let body = req.body
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body) } catch { body = {} }
+    }
+    body = body || {}
+
     const {
       clientEmail, clientName, villaName,
       checkIn, checkOut, checkInTime, checkOutTime,
       totalAmount, agencyName,
-    } = req.body
+    } = body
 
     if (!clientEmail || !villaName) {
-      return res.status(400).json({ error: 'Missing required fields' })
+      return res.status(400).json({ error: 'Missing clientEmail or villaName' })
     }
 
     const apiKey = process.env.RESEND_API_KEY
     if (!apiKey) {
-      return res.status(500).json({ error: 'RESEND_API_KEY not configured' })
+      return res.status(500).json({ error: 'RESEND_API_KEY not set in Vercel environment variables' })
     }
 
     const html = `
@@ -60,13 +71,16 @@ module.exports = async function handler(req, res) {
       }),
     })
 
+    const result = await response.json()
+
     if (!response.ok) {
-      const text = await response.text()
-      return res.status(500).json({ error: text })
+      console.error('Resend error:', result)
+      return res.status(500).json({ error: result })
     }
 
-    return res.status(200).json({ ok: true })
+    return res.status(200).json({ ok: true, id: result.id })
   } catch (err) {
+    console.error('send-confirmation error:', err)
     return res.status(500).json({ error: err.message })
   }
 }

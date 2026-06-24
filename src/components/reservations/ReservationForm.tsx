@@ -57,7 +57,7 @@ async function sendConfirmationEmail(params: {
   totalAmount: number; agencyName: string
 }) {
   try {
-    await fetch('/.netlify/functions/send-confirmation', {
+    await fetch('/api/send-confirmation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),

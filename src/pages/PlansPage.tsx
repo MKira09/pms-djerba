@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Home, Check } from 'lucide-react'
+import { Home, Check, Loader2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
+import toast from 'react-hot-toast'
 
 const PLANS = [
   {
@@ -52,6 +54,28 @@ const PLANS = [
 
 export default function PlansPage() {
   const navigate = useNavigate()
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+
+  async function handleChoosePlan(planId: string) {
+    setLoadingPlan(planId)
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        toast.error(data.error || 'Erreur lors de la création de la session Stripe.')
+        return
+      }
+      window.location.href = data.url
+    } catch (err) {
+      toast.error('Erreur réseau. Réessayez.')
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white">
@@ -123,14 +147,18 @@ export default function PlansPage() {
             </ul>
 
             <button
-              onClick={() => navigate(`/register?plan=${plan.id}`)}
-              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
+              onClick={() => handleChoosePlan(plan.id)}
+              disabled={!!loadingPlan}
+              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
                 plan.highlight
                   ? 'bg-white text-brand-800 hover:bg-brand-50'
                   : 'bg-brand-800 text-white hover:bg-brand-900'
               }`}
             >
-              Choisir ce plan
+              {loadingPlan === plan.id
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirection…</>
+                : 'Choisir ce plan'
+              }
             </button>
           </div>
         ))}

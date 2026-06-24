@@ -20,18 +20,23 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: { full_name: form.full_name, company_name: form.company_name },
         },
       })
-      if (error) throw error
-      toast.success('Compte créé ! Vérifiez vos emails.')
-      navigate('/login')
+      if (error) {
+        const msg = error.message || JSON.stringify(error)
+        toast.error('Erreur : ' + msg)
+        return
+      }
+      toast.success('Compte créé ! Connexion en cours…')
+      navigate('/dashboard')
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? 'Erreur lors de la création du compte')
+      const msg = err instanceof Error ? err.message : JSON.stringify(err)
+      toast.error('Erreur réseau : ' + (msg || 'connexion impossible'))
     } finally {
       setLoading(false)
     }

@@ -25,7 +25,7 @@ export const useExtrasStore = create<ExtrasState>()((set) => ({
     if (isDemoMode || !tenant) return
     set({ loading: true })
     const { data } = await supabase.from('tenants').select('extras_config').eq('id', tenant.id).single()
-    if (data?.extras_config && Array.isArray(data.extras_config)) {
+    if (data?.extras_config && Array.isArray(data.extras_config) && data.extras_config.length > 0) {
       set({ extras: data.extras_config as Extra[] })
     }
     set({ loading: false })

@@ -15,30 +15,38 @@ export default function RegisterPage() {
 
   function set(key: string, val: string) { setForm(f => ({ ...f, [key]: val })) }
 
+  function showError(error: unknown, prefix = 'Erreur') {
+    const e = error as any
+    const status = e?.status ? ` [${e.status}]` : ''
+    const msg = e?.message || e?.error_description || (typeof e?.toString === 'function' ? e.toString() : '') || 'inconnue'
+    toast.error(prefix + status + ': ' + msg, { duration: 8000 })
+    console.error(prefix, error)
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (form.password !== form.confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      // Étape 1 : créer le compte auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        options: {
-          data: { full_name: form.full_name, company_name: form.company_name },
-        },
       })
-      if (error) {
-        const e = error as any
-        const msg = e.message || e.error_description || e.toString() || 'inconnue'
-        const status = e.status ? ` [${e.status}]` : ''
-        toast.error('Erreur' + status + ': ' + msg, { duration: 8000 })
-        console.error('Supabase signUp error:', error, { message: e.message, status: e.status, code: e.code, name: e.name })
-        return
-      }
-      toast.success('Compte créé ! Connexion en cours…')
+      if (authError) { showError(authError, 'Erreur inscription'); return }
+      if (!authData.user) { toast.error('Erreur : utilisateur non créé', { duration: 8000 }); return }
+
+      // Étape 2 : créer le tenant + profil via la fonction SQL
+      const { error: rpcError } = await supabase.rpc('create_tenant_and_profile', {
+        p_full_name: form.full_name,
+        p_company_name: form.company_name || 'Mon agence',
+      })
+      if (rpcError) { showError(rpcError, 'Erreur profil'); return }
+
+      toast.success('Compte créé ! Bienvenue 🎉', { duration: 4000 })
       navigate('/dashboard')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : JSON.stringify(err)
+      const msg = err instanceof Error ? err.message : String(err)
       toast.error('Erreur réseau : ' + (msg || 'connexion impossible'))
     } finally {
       setLoading(false)

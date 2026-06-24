@@ -38,7 +38,7 @@ export default function SettingsPage() {
         <div className="space-y-3">
           <Input label="Nom complet" value={name} onChange={e => setName(e.target.value)} />
           <Input label="Nom de l'agence" value={company} onChange={e => setCompany(e.target.value)} />
-          <Input label="Email" value={profile?.id ? 'demo@pms-djerba.tn' : ''} disabled />
+          <Input label="Email" value={profile?.id ? 'demo@villahub.tn' : ''} disabled />
           <Button onClick={() => toast.success('Profil enregistré.')}>{t('common.save')}</Button>
         </div>
       </Card>

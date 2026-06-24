@@ -72,10 +72,10 @@ export const DEMO_RESERVATIONS: Reservation[] = [
 
 // ─── TEAM MEMBERS ──────────────────────────────────────────────────────────
 export const DEMO_TEAM: TeamMember[] = [
-  { id: 't1', tenant_id: TENANT_ID, full_name: 'Fatma Ben Amor',   role: 'manager',     phone: '+216 71 100 001', email: 'fatma.ba@pms-djerba.tn',   assigned_villa_ids: ['v1','v2','v3','v4'],  created_at: past(60) },
-  { id: 't2', tenant_id: TENANT_ID, full_name: 'Mariam Khelil',    role: 'cleaner',     phone: '+216 71 100 002', email: 'mariam.k@pms-djerba.tn',   assigned_villa_ids: ['v5','v6','v7','v8'],  created_at: past(55) },
-  { id: 't3', tenant_id: TENANT_ID, full_name: 'Nour Triki',       role: 'cleaner',     phone: '+216 71 100 003', email: 'nour.t@pms-djerba.tn',     assigned_villa_ids: ['v9','v10','v11','v12'], created_at: past(50) },
-  { id: 't4', tenant_id: TENANT_ID, full_name: 'Sami Romdhane',    role: 'maintenance', phone: '+216 71 100 004', email: 'sami.r@pms-djerba.tn',     assigned_villa_ids: ['v13','v14','v15'], created_at: past(45) },
+  { id: 't1', tenant_id: TENANT_ID, full_name: 'Fatma Ben Amor',   role: 'manager',     phone: '+216 71 100 001', email: 'fatma.ba@villahub.tn',   assigned_villa_ids: ['v1','v2','v3','v4'],  created_at: past(60) },
+  { id: 't2', tenant_id: TENANT_ID, full_name: 'Mariam Khelil',    role: 'cleaner',     phone: '+216 71 100 002', email: 'mariam.k@villahub.tn',   assigned_villa_ids: ['v5','v6','v7','v8'],  created_at: past(55) },
+  { id: 't3', tenant_id: TENANT_ID, full_name: 'Nour Triki',       role: 'cleaner',     phone: '+216 71 100 003', email: 'nour.t@villahub.tn',     assigned_villa_ids: ['v9','v10','v11','v12'], created_at: past(50) },
+  { id: 't4', tenant_id: TENANT_ID, full_name: 'Sami Romdhane',    role: 'maintenance', phone: '+216 71 100 004', email: 'sami.r@villahub.tn',     assigned_villa_ids: ['v13','v14','v15'], created_at: past(45) },
 ]
 
 // ─── CLEANING TASKS ────────────────────────────────────────────────────────

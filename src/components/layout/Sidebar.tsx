@@ -46,7 +46,7 @@ export default function Sidebar() {
             <Home className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-bold text-base leading-tight">PMS Djerba</p>
+            <p className="font-bold text-base leading-tight">VillaHub</p>
             <p className="text-brand-300 text-xs truncate max-w-[140px]">{tenant?.name ?? '—'}</p>
           </div>
         </div>

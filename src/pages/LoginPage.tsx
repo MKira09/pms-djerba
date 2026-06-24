@@ -64,8 +64,8 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-800 rounded-2xl mb-3 shadow-lg">
             <Home className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">PMS Djerba</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestion de villas saisonnières</p>
+          <h1 className="text-2xl font-bold text-gray-900">VillaHub</h1>
+          <p className="text-gray-500 text-sm mt-1">Gérez vos locations saisonnières en toute simplicité</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">

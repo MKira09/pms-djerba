@@ -334,7 +334,7 @@ export default function BookingPage() {
       <footer className="bg-brand-900 text-brand-200 text-center py-8 px-4 mt-12">
         <p className="font-bold text-white text-lg mb-1">Agence Djerba Villas</p>
         <p className="text-sm">📞 +216 71 000 000 · ✉️ contact@djerba-villas.tn</p>
-        <p className="text-xs mt-3 text-brand-400">Propulsé par PMS Djerba</p>
+        <p className="text-xs mt-3 text-brand-400">Propulsé par VillaHub</p>
       </footer>
     </div>
   )

@@ -70,7 +70,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-800 rounded-2xl mb-3 shadow-lg">
             <Home className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">PMS Djerba</h1>
+          <h1 className="text-2xl font-bold text-gray-900">VillaHub</h1>
           <div className="inline-flex items-center gap-1.5 mt-2 bg-success-100 text-success-800 px-3 py-1 rounded-full text-xs font-medium">
             ✨ {t('auth.trial_badge')}
           </div>

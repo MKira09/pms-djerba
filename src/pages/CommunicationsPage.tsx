@@ -19,19 +19,19 @@ const TRIGGERS: { key: EmailTrigger; icon: React.ElementType; label: string; tim
 const DEFAULT_TEMPLATES: Record<EmailTrigger, { subject: string; body: string }> = {
   booking_confirmed: {
     subject: 'Votre réservation est confirmée — {villa}',
-    body: `Bonjour {nom_client},\n\nVotre réservation à la {villa} est confirmée.\n\nDates : du {date_arrivee} au {date_depart}\nNombre de personnes : {voyageurs}\n\nNous vous ferons parvenir les instructions d'arrivée 2 jours avant votre séjour.\n\nÀ bientôt !\nL'équipe PMS Djerba`,
+    body: `Bonjour {nom_client},\n\nVotre réservation à la {villa} est confirmée.\n\nDates : du {date_arrivee} au {date_depart}\nNombre de personnes : {voyageurs}\n\nNous vous ferons parvenir les instructions d'arrivée 2 jours avant votre séjour.\n\nÀ bientôt !\nL'équipe VillaHub`,
   },
   reminder_checkin: {
     subject: 'Dans 2 jours — Vos instructions d\'arrivée pour {villa}',
-    body: `Bonjour {nom_client},\n\nVotre séjour à la {villa} commence dans 2 jours !\n\nCode d'accès : {code_acces}\nWiFi : {wifi}\n\nInstructions d'arrivée :\n{instructions}\n\nBonne route !\nL'équipe PMS Djerba`,
+    body: `Bonjour {nom_client},\n\nVotre séjour à la {villa} commence dans 2 jours !\n\nCode d'accès : {code_acces}\nWiFi : {wifi}\n\nInstructions d'arrivée :\n{instructions}\n\nBonne route !\nL'équipe VillaHub`,
   },
   welcome: {
     subject: 'Bienvenue à la {villa} !',
-    body: `Bonjour {nom_client},\n\nNous vous souhaitons la bienvenue à la {villa} !\n\nVoici votre livret d'accueil numérique : {lien_livret}\n\nWiFi : {wifi}\n\nN'hésitez pas à nous contacter pour tout besoin.\n\nBon séjour !\nL'équipe PMS Djerba`,
+    body: `Bonjour {nom_client},\n\nNous vous souhaitons la bienvenue à la {villa} !\n\nVoici votre livret d'accueil numérique : {lien_livret}\n\nWiFi : {wifi}\n\nN'hésitez pas à nous contacter pour tout besoin.\n\nBon séjour !\nL'équipe VillaHub`,
   },
   review_request: {
     subject: 'Comment s\'est passé votre séjour à la {villa} ?',
-    body: `Bonjour {nom_client},\n\nNous espérons que votre séjour à la {villa} s'est bien passé !\n\nVotre avis nous est précieux — pouvez-vous prendre 2 minutes pour partager votre expérience ?\n\nMerci de votre confiance,\nL'équipe PMS Djerba`,
+    body: `Bonjour {nom_client},\n\nNous espérons que votre séjour à la {villa} s'est bien passé !\n\nVotre avis nous est précieux — pouvez-vous prendre 2 minutes pour partager votre expérience ?\n\nMerci de votre confiance,\nL'équipe VillaHub`,
   },
 }
 

@@ -121,9 +121,12 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     if (k === 'villa_id' || k === 'check_in' || k === 'check_out') setConflict(false)
   }
 
-  function validateDates() {
-    if (!form.villa_id || !form.check_in || !form.check_out) return
-    setConflict(checkConflict(form.villa_id, form.check_in, form.check_out, reservation?.id))
+  function validateDates(overrides?: { villa_id?: string; check_in?: string; check_out?: string }) {
+    const vid = overrides?.villa_id ?? form.villa_id
+    const ci  = overrides?.check_in  ?? form.check_in
+    const co  = overrides?.check_out ?? form.check_out
+    if (!vid || !ci || !co) return
+    setConflict(checkConflict(vid, ci, co, reservation?.id))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -178,8 +181,13 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
       }
       onClose()
     } catch (err: unknown) {
-      const msg = (err as any)?.message || String(err) || 'inconnue'
-      toast.error('Erreur : ' + msg, { duration: 8000 })
+      const msg = (err as any)?.message || String(err) || ''
+      if (msg.includes('no_overlap') || msg.includes('exclusion')) {
+        toast.error('Ces dates sont déjà réservées pour cette villa. Choisissez d\'autres dates.', { duration: 6000 })
+        setConflict(true)
+      } else {
+        toast.error('Erreur : ' + (msg || 'inconnue'), { duration: 8000 })
+      }
     } finally {
       setLoading(false)
     }
@@ -212,13 +220,13 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               label={t('reservations.villa')}
               options={villaOpts}
               value={form.villa_id}
-              onChange={e => set('villa_id', e.target.value)}
+              onChange={e => { set('villa_id', e.target.value); validateDates({ villa_id: e.target.value }) }}
               placeholder="— Choisir une villa —"
               required
             />
             <div className="grid grid-cols-2 gap-3">
-              <Input label={t('reservations.check_in')} type="date" value={form.check_in} onChange={e => { set('check_in', e.target.value); validateDates() }} required />
-              <Input label={t('reservations.check_out')} type="date" value={form.check_out} onChange={e => { set('check_out', e.target.value); validateDates() }} required />
+              <Input label={t('reservations.check_in')} type="date" value={form.check_in} onChange={e => { set('check_in', e.target.value); validateDates({ check_in: e.target.value }) }} required />
+              <Input label={t('reservations.check_out')} type="date" value={form.check_out} onChange={e => { set('check_out', e.target.value); validateDates({ check_out: e.target.value }) }} required />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input label="Heure d'arrivée" type="time" value={form.check_in_time} onChange={e => set('check_in_time', e.target.value)} />

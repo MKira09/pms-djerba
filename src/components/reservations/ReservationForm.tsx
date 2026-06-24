@@ -177,8 +177,9 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         }
       }
       onClose()
-    } catch {
-      toast.error('Erreur lors de la sauvegarde.')
+    } catch (err: unknown) {
+      const msg = (err as any)?.message || String(err) || 'inconnue'
+      toast.error('Erreur : ' + msg, { duration: 8000 })
     } finally {
       setLoading(false)
     }

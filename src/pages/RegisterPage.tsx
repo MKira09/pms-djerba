@@ -20,7 +20,7 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
     setLoading(true)
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {

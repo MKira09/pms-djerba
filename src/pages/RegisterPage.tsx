@@ -28,8 +28,11 @@ export default function RegisterPage() {
         },
       })
       if (error) {
-        const msg = error.message || JSON.stringify(error)
-        toast.error('Erreur : ' + msg)
+        const e = error as any
+        const msg = e.message || e.error_description || e.toString() || 'inconnue'
+        const status = e.status ? ` [${e.status}]` : ''
+        toast.error('Erreur' + status + ': ' + msg, { duration: 8000 })
+        console.error('Supabase signUp error:', error, { message: e.message, status: e.status, code: e.code, name: e.name })
         return
       }
       toast.success('Compte créé ! Connexion en cours…')

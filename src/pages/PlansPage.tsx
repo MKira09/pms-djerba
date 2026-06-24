@@ -71,7 +71,7 @@ export default function PlansPage() {
       {/* Hero */}
       <div className="text-center py-14 px-4">
         <span className="inline-block bg-brand-100 text-brand-800 text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          Essai gratuit 14 jours · Sans carte bancaire
+          Gestion de villas · Simple et efficace
         </span>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Choisissez votre plan
@@ -130,14 +130,14 @@ export default function PlansPage() {
                   : 'bg-brand-800 text-white hover:bg-brand-900'
               }`}
             >
-              Commencer l'essai gratuit
+              Choisir ce plan
             </button>
           </div>
         ))}
       </div>
 
       <p className="text-center text-xs text-gray-400 pb-10">
-        Tous les plans incluent 14 jours d'essai gratuit · Annulation à tout moment · Aucune carte requise
+        Annulation à tout moment · Paiement mensuel sans engagement
       </p>
     </div>
   )

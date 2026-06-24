@@ -81,9 +81,6 @@ export default function RegisterPage() {
             <Home className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">VillaHub</h1>
-          <div className="inline-flex items-center gap-1.5 mt-2 bg-success-100 text-success-800 px-3 py-1 rounded-full text-xs font-medium">
-            ✨ {t('auth.trial_badge')}
-          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -107,7 +104,7 @@ export default function RegisterPage() {
             <Input label={t('auth.confirm_password')} type="password" value={form.confirm} onChange={e => set('confirm', e.target.value)} left={<Lock className="h-4 w-4" />} placeholder="••••••••" required />
 
             <Button type="submit" loading={loading} className="w-full" size="lg">
-              {t('auth.register')} — Essai gratuit 14j
+              Créer mon compte
             </Button>
           </form>
 
@@ -116,9 +113,6 @@ export default function RegisterPage() {
             <Link to="/login" className="text-brand-700 font-medium hover:underline">{t('auth.login')}</Link>
           </p>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
-            Sans carte bancaire • Annulation à tout moment
-          </p>
         </div>
       </div>
     </div>

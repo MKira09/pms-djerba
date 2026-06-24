@@ -11,6 +11,13 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'issue'
 export type EmailTrigger = 'booking_confirmed' | 'reminder_checkin' | 'welcome' | 'review_request'
 export type Lang = 'fr' | 'ar' | 'en'
 
+// ─── Extra ─────────────────────────────────────────────────────────────────
+export interface Extra {
+  id: string
+  name: string
+  price: number
+}
+
 // ─── Tenant ────────────────────────────────────────────────────────────────
 export interface Tenant {
   id: string
@@ -18,6 +25,7 @@ export interface Tenant {
   plan: Plan
   trial_ends: string | null
   created_at: string
+  extras_config?: Extra[] | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────
@@ -91,6 +99,7 @@ export interface Reservation {
   check_out: string
   check_in_time?: string | null
   check_out_time?: string | null
+  extras?: Extra[] | null
   guests: number
   total_amount: number
   currency: string

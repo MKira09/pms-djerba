@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const {
       clientEmail, clientName, villaName,
       checkIn, checkOut, checkInTime, checkOutTime,
-      totalAmount, agencyName,
+      totalAmount, agencyName, extras,
     } = body
 
     if (!clientEmail || !villaName) {
@@ -49,6 +49,10 @@ export default async function handler(req, res) {
         <tr style="background:#f9fafb;"><td style="padding:12px 16px;color:#6b7280;font-size:14px;border-bottom:1px solid #e5e7eb;">🏠 Villa</td><td style="padding:12px 16px;font-weight:600;text-align:right;border-bottom:1px solid #e5e7eb;">${villaName}</td></tr>
         <tr><td style="padding:12px 16px;color:#6b7280;font-size:14px;border-bottom:1px solid #e5e7eb;">📅 Arrivée</td><td style="padding:12px 16px;font-weight:600;text-align:right;border-bottom:1px solid #e5e7eb;">${checkIn}${checkInTime ? ' à ' + checkInTime : ''}</td></tr>
         <tr style="background:#f9fafb;"><td style="padding:12px 16px;color:#6b7280;font-size:14px;border-bottom:1px solid #e5e7eb;">📅 Départ</td><td style="padding:12px 16px;font-weight:600;text-align:right;border-bottom:1px solid #e5e7eb;">${checkOut}${checkOutTime ? ' à ' + checkOutTime : ''}</td></tr>
+        ${extras && extras.length > 0 ? `
+        <tr style="background:#f9fafb;"><td colspan="2" style="padding:10px 16px;font-size:13px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Extras & Services</td></tr>
+        ${extras.map(e => `<tr><td style="padding:8px 16px;color:#6b7280;font-size:13px;border-bottom:1px solid #e5e7eb;">✓ ${e.name}</td><td style="padding:8px 16px;font-weight:600;text-align:right;border-bottom:1px solid #e5e7eb;">${e.price} TND</td></tr>`).join('')}
+        ` : ''}
         <tr><td style="padding:14px 16px;color:#1e3a5f;font-weight:700;font-size:15px;">💰 Montant total</td><td style="padding:14px 16px;font-weight:700;text-align:right;color:#1e3a5f;font-size:18px;">${totalAmount} TND</td></tr>
       </table>
       <p style="color:#374151;font-size:14px;">Pour toute question, contactez <strong>${agencyName || 'VillaHub'}</strong>.</p>

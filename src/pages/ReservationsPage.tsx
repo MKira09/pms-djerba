@@ -110,7 +110,16 @@ export default function ReservationsPage() {
                       {r.check_out_time && <span className="text-xs text-gray-400 block">{r.check_out_time}</span>}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">{nights}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmtCurrency(r.total_amount)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                      {fmtCurrency(r.total_amount)}
+                      {r.extras && r.extras.length > 0 && (
+                        <div className="flex flex-wrap gap-1 justify-end mt-1">
+                          {r.extras.map(e => (
+                            <span key={e.id} className="text-xs text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded">{e.name}</span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>
                     </td>

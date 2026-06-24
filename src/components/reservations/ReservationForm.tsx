@@ -10,8 +10,9 @@ import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
 import { usePricingStore } from '@/stores/pricing.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { useExtrasStore } from '@/stores/extras.store'
 import { nightCount } from '@/lib/utils'
-import type { ReservationSource, ReservationStatus, Reservation } from '@/types'
+import type { ReservationSource, ReservationStatus, Reservation, Extra } from '@/types'
 import { parseISO, addDays, format } from 'date-fns'
 
 const SOURCES: ReservationSource[] = ['airbnb', 'booking', 'direct', 'whatsapp', 'vrbo', 'autre']
@@ -30,6 +31,7 @@ interface FormData {
   check_out: string
   check_in_time: string
   check_out_time: string
+  extras: Extra[]
   guests: number
   total_amount: number
   source: ReservationSource
@@ -47,6 +49,7 @@ const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd')
 const EMPTY: FormData = {
   villa_id: '', check_in: today, check_out: tomorrow,
   check_in_time: '14:00', check_out_time: '11:00',
+  extras: [],
   guests: 2, total_amount: 0, source: 'direct', status: 'confirmed',
   internal_note: '', client_name: '', client_email: '', client_phone: '', client_nationality: '',
 }
@@ -54,7 +57,7 @@ const EMPTY: FormData = {
 async function sendConfirmationEmail(params: {
   clientEmail: string; clientName: string; villaName: string
   checkIn: string; checkOut: string; checkInTime: string; checkOutTime: string
-  totalAmount: number; agencyName: string
+  totalAmount: number; agencyName: string; extras: Extra[]
 }) {
   try {
     const res = await fetch('/api/send-confirmation', {
@@ -82,9 +85,12 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { villas } = useVillasStore()
   const { computePrice } = usePricingStore()
   const { tenant } = useAuthStore()
+  const { extras: availableExtras, fetch: fetchExtras } = useExtrasStore()
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
+
+  useEffect(() => { fetchExtras() }, [])
 
   useEffect(() => {
     if (reservation) {
@@ -94,6 +100,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         check_out: reservation.check_out,
         check_in_time: reservation.check_in_time ?? '14:00',
         check_out_time: reservation.check_out_time ?? '11:00',
+        extras: reservation.extras ?? [],
         guests: reservation.guests,
         total_amount: reservation.total_amount,
         source: reservation.source,
@@ -122,12 +129,24 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         if (villa) {
           const nights = nightCount(next.check_in, next.check_out)
           const pricePerNight = computePrice(villa.base_price, parseISO(next.check_in))
-          next.total_amount = Math.max(0, nights * pricePerNight)
+          const extrasTotal = next.extras.reduce((s, e) => s + e.price, 0)
+          next.total_amount = Math.max(0, nights * pricePerNight) + extrasTotal
         }
       }
       return next
     })
     if (k === 'villa_id' || k === 'check_in' || k === 'check_out') setConflict(false)
+  }
+
+  function toggleExtra(extra: Extra) {
+    setForm(f => {
+      const isSelected = f.extras.some(e => e.id === extra.id)
+      const newExtras = isSelected ? f.extras.filter(e => e.id !== extra.id) : [...f.extras, extra]
+      const prevExtrasTotal = f.extras.reduce((s, e) => s + e.price, 0)
+      const newExtrasTotal = newExtras.reduce((s, e) => s + e.price, 0)
+      const base = f.total_amount - prevExtrasTotal
+      return { ...f, extras: newExtras, total_amount: Math.max(0, base) + newExtrasTotal }
+    })
   }
 
   function validateDates(overrides?: { villa_id?: string; check_in?: string; check_out?: string }) {
@@ -153,6 +172,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         await update(reservation.id, {
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
           check_in_time: form.check_in_time, check_out_time: form.check_out_time,
+          extras: form.extras,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
         })
@@ -165,12 +185,14 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
             villaName, checkIn: checkInFmt, checkOut: checkOutFmt,
             checkInTime: form.check_in_time, checkOutTime: form.check_out_time,
             totalAmount: form.total_amount, agencyName: tenant?.name ?? 'VillaHub',
+            extras: form.extras,
           })
         }
       } else {
         const result = await add({
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
           check_in_time: form.check_in_time, check_out_time: form.check_out_time,
+          extras: form.extras,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
           client_id: null, currency: 'TND', ical_uid: null,
@@ -185,6 +207,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
             checkIn: checkInFmt, checkOut: checkOutFmt,
             checkInTime: form.check_in_time, checkOutTime: form.check_out_time,
             totalAmount: form.total_amount, agencyName: tenant?.name ?? 'VillaHub',
+            extras: form.extras,
           })
         }
       }
@@ -206,6 +229,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const sourceOpts = SOURCES.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))
   const statusOpts = STATUSES.map(s => ({ value: s, label: t(`reservations.${s}`) }))
   const nights = form.check_in && form.check_out ? Math.max(0, nightCount(form.check_in, form.check_out)) : 0
+  const extrasTotal = form.extras.reduce((s, e) => s + e.price, 0)
 
   return (
     <Modal
@@ -263,6 +287,37 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               <Input label={t('reservations.client_email')} type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} />
               <Input label={t('reservations.client_nationality')} value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)} />
             </div>
+          </div>
+        )}
+
+        {/* Extras */}
+        {availableExtras.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Extras & Services</h3>
+            <div className="space-y-2">
+              {availableExtras.map(extra => {
+                const checked = form.extras.some(e => e.id === extra.id)
+                return (
+                  <label key={extra.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleExtra(extra)}
+                        className="accent-brand-800 w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700">{extra.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{extra.price} TND</span>
+                  </label>
+                )
+              })}
+            </div>
+            {extrasTotal > 0 && (
+              <p className="text-xs text-gray-500 mt-2 text-right">
+                Extras : +{extrasTotal} TND · Total : <strong>{form.total_amount} TND</strong>
+              </p>
+            )}
           </div>
         )}
 

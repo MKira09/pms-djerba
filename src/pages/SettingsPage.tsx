@@ -1,18 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import { useAuthStore } from '@/stores/auth.store'
+import { useExtrasStore } from '@/stores/extras.store'
+import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { profile, tenant } = useAuthStore()
+  const { extras, fetch: fetchExtras, save: saveExtras } = useExtrasStore()
   const [name, setName] = useState(profile?.full_name ?? '')
   const [company, setCompany] = useState(tenant?.name ?? '')
+  const [localExtras, setLocalExtras] = useState<Extra[]>([])
+
+  useEffect(() => { fetchExtras() }, [])
+  useEffect(() => { setLocalExtras(extras) }, [extras])
+
+  function updateExtraPrice(id: string, price: number) {
+    setLocalExtras(prev => prev.map(e => e.id === id ? { ...e, price } : e))
+  }
+
+  async function handleSaveExtras() {
+    await saveExtras(localExtras)
+    toast.success('Tarifs extras enregistrés.')
+  }
 
   const langOpts = [
     { value: 'fr', label: 'Français' },
@@ -72,6 +88,33 @@ export default function SettingsPage() {
               <input type="checkbox" defaultChecked className="accent-brand-800 w-4 h-4" />
             </label>
           ))}
+        </div>
+      </Card>
+
+      {/* Extras */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <ShoppingBag className="h-4 w-4 text-brand-700" /> Extras & Services
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">Configurez les prix des extras proposés lors des réservations.</p>
+        <div className="space-y-3">
+          {localExtras.map(extra => (
+            <div key={extra.id} className="flex items-center gap-3">
+              <span className="flex-1 text-sm text-gray-700">{extra.name}</span>
+              <div className="flex items-center gap-2 w-40">
+                <Input
+                  type="number"
+                  min={0}
+                  value={extra.price}
+                  onChange={e => updateExtraPrice(extra.id, +e.target.value)}
+                />
+                <span className="text-sm text-gray-500 whitespace-nowrap">TND</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <Button onClick={handleSaveExtras}>Enregistrer les prix</Button>
         </div>
       </Card>
 

@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export default function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const enterDemoMode = useAuthStore(s => s.enterDemoMode)
+  const { enterDemoMode, setProfile, setTenant } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,11 +20,32 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
+
+      const userId = data.user?.id
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (profile) {
+          setProfile(profile)
+          const { data: tenant } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('id', profile.tenant_id)
+            .single()
+          setTenant(tenant ?? null)
+        }
+      }
+
       navigate('/dashboard')
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? 'Erreur de connexion')
+      const msg = err instanceof Error ? err.message : 'Erreur de connexion'
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -39,7 +60,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-800 rounded-2xl mb-3 shadow-lg">
             <Home className="h-7 w-7 text-white" />
@@ -85,7 +105,6 @@ export default function LoginPage() {
             <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">ou</span></div>
           </div>
 
-          {/* Demo mode */}
           <Button variant="secondary" size="lg" className="w-full" onClick={handleDemo}>
             🎯 Voir la démonstration
           </Button>

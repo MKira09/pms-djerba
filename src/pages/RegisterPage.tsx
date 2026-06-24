@@ -6,10 +6,12 @@ import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { setProfile, setTenant } = useAuthStore()
   const [form, setForm] = useState({ full_name: '', company_name: '', email: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)
 
@@ -42,6 +44,14 @@ export default function RegisterPage() {
         p_company_name: form.company_name || 'Mon agence',
       })
       if (rpcError) { showError(rpcError, 'Erreur profil'); return }
+
+      // Charger le profil et le tenant dans le store
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single()
+      if (profile) {
+        setProfile(profile)
+        const { data: tenant } = await supabase.from('tenants').select('*').eq('id', profile.tenant_id).single()
+        setTenant(tenant ?? null)
+      }
 
       toast.success('Compte créé ! Bienvenue 🎉', { duration: 4000 })
       navigate('/dashboard')

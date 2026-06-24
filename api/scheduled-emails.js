@@ -92,7 +92,7 @@ function reviewHtml(r) {
     <p style="color:#374151;">Merci de votre confiance !</p>`)
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Missing Supabase config' })
   }

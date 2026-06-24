@@ -38,7 +38,6 @@ export default async function handler(req, res) {
     params.append('success_url', `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`)
     params.append('cancel_url', `${baseUrl}/plans`)
     params.append('metadata[plan]', plan)
-    params.append('customer_creation', 'always')
     params.append('billing_address_collection', 'auto')
 
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {

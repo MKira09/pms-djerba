@@ -118,9 +118,15 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
   const { t } = useTranslation()
   return (
     <Card padding={false} className="overflow-hidden">
-      {/* Photo placeholder */}
-      <div className="h-36 bg-gradient-to-br from-brand-100 to-brand-200 relative flex items-center justify-center">
-        <span className="text-4xl">🏖️</span>
+      {/* Photo */}
+      <div className="h-36 relative overflow-hidden">
+        {villa.photos?.[0] ? (
+          <img src={villa.photos[0]} alt={villa.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center">
+            <span className="text-4xl">🏖️</span>
+          </div>
+        )}
         <div className="absolute top-3 right-3">
           <Badge className={VILLA_STATUS_COLORS[villa.status]} dot>
             {t(`villas.${villa.status}`)}

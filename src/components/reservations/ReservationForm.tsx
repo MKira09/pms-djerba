@@ -72,6 +72,7 @@ async function sendConfirmationEmail(params: {
     }
   } catch (e) {
     console.error('send-confirmation fetch error:', e)
+    toast.error('Email non envoyé : erreur réseau', { duration: 6000 })
   }
 }
 

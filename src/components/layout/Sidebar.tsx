@@ -6,20 +6,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-
-const NAV = [
-  { to: '/dashboard',    icon: LayoutDashboard, key: 'nav.dashboard' },
-  { to: '/villas',       icon: Home,            key: 'nav.villas' },
-  { to: '/calendar',     icon: Calendar,        key: 'nav.calendar' },
-  { to: '/reservations', icon: ClipboardList,   key: 'nav.reservations' },
-  { to: '/team',         icon: Users,           key: 'nav.team' },
-  { to: '/pricing',      icon: TrendingUp,      key: 'nav.pricing' },
-  { to: '/communications', icon: Mail,          key: 'nav.communications' },
-  { to: '/blacklist',      icon: ShieldAlert,   key: 'nav.blacklist' },
-]
 
 const BOTTOM_NAV = [
   { to: '/settings',     icon: Settings,        key: 'nav.settings' },
@@ -29,7 +19,19 @@ const BOTTOM_NAV = [
 export default function Sidebar() {
   const { t } = useTranslation()
   const { logout, profile, tenant, isDemoMode } = useAuthStore()
+  const { plural } = usePropertyTerm()
   const navigate = useNavigate()
+
+  const NAV = [
+    { to: '/dashboard',      icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/villas',         icon: Home,            label: plural },
+    { to: '/calendar',       icon: Calendar,        label: t('nav.calendar') },
+    { to: '/reservations',   icon: ClipboardList,   label: t('nav.reservations') },
+    { to: '/team',           icon: Users,           label: t('nav.team') },
+    { to: '/pricing',        icon: TrendingUp,      label: t('nav.pricing') },
+    { to: '/communications', icon: Mail,            label: t('nav.communications') },
+    { to: '/blacklist',      icon: ShieldAlert,     label: t('nav.blacklist') },
+  ]
 
   async function handleLogout() {
     if (!isDemoMode) await supabase.auth.signOut()
@@ -60,7 +62,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ to, icon: Icon, key }) => (
+        {NAV.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -74,7 +76,7 @@ export default function Sidebar() {
             }
           >
             <Icon className="h-5 w-5 flex-shrink-0" />
-            {t(key)}
+            {label}
           </NavLink>
         ))}
       </nav>

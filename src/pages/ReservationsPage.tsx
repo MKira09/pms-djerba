@@ -12,11 +12,13 @@ import Modal from '@/components/ui/Modal'
 import ReservationForm from '@/components/reservations/ReservationForm'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { fmtCurrency, SOURCE_COLORS, STATUS_COLORS } from '@/lib/utils'
 import type { Reservation, ReservationStatus, ReservationSource } from '@/types'
 
 export default function ReservationsPage() {
   const { t } = useTranslation()
+  const { singular } = usePropertyTerm()
   const { reservations, fetch, remove } = useReservationsStore()
   const { villas, fetch: fetchVillas } = useVillasStore()
   const [search, setSearch] = useState('')
@@ -49,7 +51,7 @@ export default function ReservationsPage() {
     { value: 'all', label: 'Tous les statuts' },
     ...(['confirmed', 'pending', 'cancelled', 'checkout'] as ReservationStatus[]).map(s => ({ value: s, label: t(`reservations.${s}`) })),
   ]
-  const villaOpts = [{ value: 'all', label: 'Toutes les villas' }, ...villas.map(v => ({ value: v.id, label: v.name }))]
+  const villaOpts = [{ value: 'all', label: `Toutes les ${singular.toLowerCase()}s` }, ...villas.map(v => ({ value: v.id, label: v.name }))]
   const sourceOpts = [{ value: 'all', label: 'Toutes les sources' }, ...(['airbnb','booking','direct','whatsapp','vrbo','autre'] as ReservationSource[]).map(s => ({ value: s, label: s }))]
 
   return (
@@ -81,7 +83,7 @@ export default function ReservationsPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Client</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">Villa</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">{singular}</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Arrivée</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Départ</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">Nuits</th>

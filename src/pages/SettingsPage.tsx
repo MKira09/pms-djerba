@@ -1,21 +1,37 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
+import { supabase } from '@/lib/supabase'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
+const PROPERTY_TYPE_OPTIONS = [
+  { value: 'Villa', label: 'Villa' },
+  { value: 'Appartement', label: 'Appartement' },
+  { value: 'Maison', label: 'Maison' },
+  { value: 'Riad', label: 'Riad' },
+  { value: 'Chalet', label: 'Chalet' },
+  { value: 'Bungalow', label: 'Bungalow' },
+  { value: 'Studio', label: 'Studio' },
+  { value: 'Autre', label: 'Autre (personnalisé)' },
+]
+
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
-  const { profile, tenant } = useAuthStore()
+  const { profile, tenant, isDemoMode, updateTenant } = useAuthStore()
   const { extras, fetch: fetchExtras, save: saveExtras } = useExtrasStore()
   const [name, setName] = useState(profile?.full_name ?? '')
   const [company, setCompany] = useState(tenant?.name ?? '')
+  const [slogan, setSlogan] = useState(tenant?.slogan ?? '')
+  const [propertyType, setPropertyType] = useState(tenant?.property_type ?? 'Villa')
+  const [propertyTypeCustom, setPropertyTypeCustom] = useState(tenant?.property_type_custom ?? '')
+  const [savingAgency, setSavingAgency] = useState(false)
   const [localExtras, setLocalExtras] = useState<Extra[]>([])
 
   useEffect(() => { fetchExtras() }, [])
@@ -28,6 +44,29 @@ export default function SettingsPage() {
   async function handleSaveExtras() {
     await saveExtras(localExtras)
     toast.success('Tarifs extras enregistrés.')
+  }
+
+  async function handleSaveAgency() {
+    if (!tenant) return
+    setSavingAgency(true)
+    try {
+      const updates = {
+        name: company.trim() || tenant.name,
+        slogan: slogan.trim() || null,
+        property_type: propertyType,
+        property_type_custom: propertyType === 'Autre' ? propertyTypeCustom.trim() : null,
+      }
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant(updates)
+      toast.success('Paramètres agence enregistrés.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingAgency(false)
+    }
   }
 
   const langOpts = [
@@ -53,9 +92,62 @@ export default function SettingsPage() {
         </h2>
         <div className="space-y-3">
           <Input label="Nom complet" value={name} onChange={e => setName(e.target.value)} />
-          <Input label="Nom de l'agence" value={company} onChange={e => setCompany(e.target.value)} />
           <Input label="Email" value={profile?.id ? 'demo@villahub.tn' : ''} disabled />
           <Button onClick={() => toast.success('Profil enregistré.')}>{t('common.save')}</Button>
+        </div>
+      </Card>
+
+      {/* Agency */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-brand-700" /> Agence
+        </h2>
+        <div className="space-y-3">
+          <Input label="Nom de l'agence" value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex : Djerba Prestige Villas" />
+          <Input label="Slogan" value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="Ex : Votre séjour de rêve à Djerba" />
+          <p className="text-xs text-gray-400">Le slogan s'affiche dans l'en-tête de l'application.</p>
+        </div>
+      </Card>
+
+      {/* Property type */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Home className="h-4 w-4 text-brand-700" /> Type de biens
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Choisissez le terme utilisé pour désigner vos propriétés dans toute l'application.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {PROPERTY_TYPE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setPropertyType(opt.value)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors text-center ${
+                propertyType === opt.value
+                  ? 'bg-brand-800 text-white border-brand-800'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {propertyType === 'Autre' && (
+          <Input
+            label="Terme personnalisé (singulier)"
+            value={propertyTypeCustom}
+            onChange={e => setPropertyTypeCustom(e.target.value)}
+            placeholder="Ex : Maison de vacances"
+            className="max-w-xs"
+          />
+        )}
+        {propertyType !== 'Autre' && (
+          <p className="text-xs text-gray-400">
+            Le terme "<strong>{propertyType}</strong>" remplacera "Villa" dans les menus, formulaires et tableaux de bord.
+          </p>
+        )}
+        <div className="mt-4">
+          <Button onClick={handleSaveAgency} loading={savingAgency}>Enregistrer</Button>
         </div>
       </Card>
 

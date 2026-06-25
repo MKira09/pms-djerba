@@ -9,6 +9,7 @@ import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { supabase } from '@/lib/supabase'
 import { AMENITY_OPTIONS, cn } from '@/lib/utils'
 import type { Villa, VillaStatus } from '@/types'
@@ -25,6 +26,7 @@ const EMPTY: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
 
 export default function VillaForm({ open, villa, onClose }: Props) {
   const { t } = useTranslation()
+  const { singular } = usePropertyTerm()
   const { add, update } = useVillasStore()
   const { tenant } = useAuthStore()
   const [form, setForm] = useState(EMPTY)
@@ -111,7 +113,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title={villa ? t('villas.edit_villa') : t('villas.add_villa')}
+      title={villa ? `Modifier la ${singular.toLowerCase()}` : `Ajouter une ${singular.toLowerCase()}`}
       size="lg"
       footer={
         <>
@@ -122,7 +124,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
     >
       <form id="villa-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label={t('villas.villa_name')} value={form.name} onChange={e => set('name', e.target.value)} required />
+          <Input label={`Nom de la ${singular.toLowerCase()}`} value={form.name} onChange={e => set('name', e.target.value)} required />
           <Select label={t('villas.status')} value={form.status} onChange={e => set('status', e.target.value as VillaStatus)} options={statusOpts} />
         </div>
 

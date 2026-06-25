@@ -2,20 +2,23 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard, Home, Calendar, ClipboardList, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const NAV = [
-  { to: '/dashboard',    icon: LayoutDashboard, key: 'nav.dashboard' },
-  { to: '/villas',       icon: Home,            key: 'nav.villas' },
-  { to: '/calendar',     icon: Calendar,        key: 'nav.calendar' },
-  { to: '/reservations', icon: ClipboardList,   key: 'nav.reservations' },
-  { to: '/team',         icon: Users,           key: 'nav.team' },
-]
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 
 export default function BottomNav() {
   const { t } = useTranslation()
+  const { plural } = usePropertyTerm()
+
+  const NAV = [
+    { to: '/dashboard',    icon: LayoutDashboard, label: t('nav.dashboard').split(' ')[0] },
+    { to: '/villas',       icon: Home,            label: plural },
+    { to: '/calendar',     icon: Calendar,        label: t('nav.calendar') },
+    { to: '/reservations', icon: ClipboardList,   label: t('nav.reservations').split(' ')[0] },
+    { to: '/team',         icon: Users,           label: t('nav.team') },
+  ]
+
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex z-40 safe-bottom">
-      {NAV.map(({ to, icon: Icon, key }) => (
+      {NAV.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
           to={to}
@@ -29,7 +32,7 @@ export default function BottomNav() {
           {({ isActive }) => (
             <>
               <Icon className={cn('h-5 w-5', isActive && 'stroke-brand-800')} />
-              <span>{t(key).split(' ')[0]}</span>
+              <span>{label}</span>
             </>
           )}
         </NavLink>

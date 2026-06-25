@@ -11,6 +11,7 @@ import Select from '@/components/ui/Select'
 import ReservationForm from '@/components/reservations/ReservationForm'
 import { useVillasStore } from '@/stores/villas.store'
 import { useReservationsStore } from '@/stores/reservations.store'
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { SOURCE_HEX } from '@/lib/utils'
 import type { Reservation } from '@/types'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,7 @@ function getMonthDays(month: Date) {
 
 export default function CalendarPage() {
   const { t } = useTranslation()
+  const { plural } = usePropertyTerm()
   const { villas, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
   const [month, setMonth] = useState(new Date())
@@ -58,7 +60,7 @@ export default function CalendarPage() {
   }
 
   const villaOptions = [
-    { value: 'all', label: t('calendar.all_villas') },
+    { value: 'all', label: `Toutes les ${plural.toLowerCase()}` },
     ...villas.map(v => ({ value: v.id, label: v.name })),
   ]
 

@@ -8,6 +8,7 @@ interface AuthState {
   isDemoMode: boolean
   setProfile: (profile: Profile | null) => void
   setTenant: (tenant: Tenant | null) => void
+  updateTenant: (updates: Partial<Tenant>) => void
   enterDemoMode: () => void
   logout: () => void
 }
@@ -37,6 +38,7 @@ export const useAuthStore = create<AuthState>()(
       isDemoMode: false,
       setProfile: (profile) => set({ profile }),
       setTenant: (tenant) => set({ tenant }),
+      updateTenant: (updates) => set(s => ({ tenant: s.tenant ? { ...s.tenant, ...updates } : s.tenant })),
       enterDemoMode: () => set({ profile: DEMO_PROFILE, tenant: DEMO_TENANT, isDemoMode: true }),
       logout: () => set({ profile: null, tenant: null, isDemoMode: false }),
     }),

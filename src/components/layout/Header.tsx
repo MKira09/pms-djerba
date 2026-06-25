@@ -11,7 +11,7 @@ const LANGS: { code: Lang; label: string }[] = [
 
 export default function Header() {
   const { i18n } = useTranslation()
-  useAuthStore()
+  const { tenant } = useAuthStore()
 
   function switchLang(lang: Lang) {
     i18n.changeLanguage(lang)
@@ -23,7 +23,16 @@ export default function Header() {
     <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
       {/* Mobile brand */}
       <div className="md:hidden font-bold text-brand-800">VillaHub</div>
-      <div className="hidden md:block" />
+
+      {/* Desktop: agency name + slogan */}
+      <div className="hidden md:flex items-baseline gap-3">
+        {tenant?.name && (
+          <span className="font-semibold text-gray-800 text-sm">{tenant.name}</span>
+        )}
+        {tenant?.slogan && (
+          <span className="text-xs text-gray-400 italic">{tenant.slogan}</span>
+        )}
+      </div>
 
       <div className="flex items-center gap-3">
         {/* Lang switcher */}

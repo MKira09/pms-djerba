@@ -26,6 +26,9 @@ export interface Tenant {
   trial_ends: string | null
   created_at: string
   extras_config?: Extra[] | null
+  property_type?: string | null
+  property_type_custom?: string | null
+  slogan?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

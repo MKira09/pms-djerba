@@ -10,6 +10,7 @@ import Modal from '@/components/ui/Modal'
 import VillaForm from '@/components/villas/VillaForm'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { fmtCurrency, VILLA_STATUS_COLORS, PLAN_LIMITS, AMENITY_OPTIONS } from '@/lib/utils'
 import type { Villa } from '@/types'
 
@@ -17,6 +18,7 @@ export default function VillasPage() {
   const { t } = useTranslation()
   const { villas, fetch, remove, loading } = useVillasStore()
   const { tenant } = useAuthStore()
+  const { singular, plural } = usePropertyTerm()
   const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editVilla, setEditVilla] = useState<Villa | null>(null)
@@ -31,7 +33,7 @@ export default function VillasPage() {
     if (!deleteId) return
     try {
       await remove(deleteId)
-      toast.success('Villa supprimée.')
+      toast.success(`${singular} supprimée.`)
     } catch {
       toast.error('Erreur lors de la suppression.')
     } finally {
@@ -50,17 +52,17 @@ export default function VillasPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('villas.title')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Mes {plural}</h1>
           <p className="text-sm text-gray-500">{villas.filter(v => v.status === 'active').length} actives · limite plan : {limit}</p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-          {t('villas.add_villa')}
+          Ajouter une {singular}
         </Button>
       </div>
 
       {/* Search */}
       <Input
-        placeholder={`${t('common.search')} une villa…`}
+        placeholder={`${t('common.search')} une ${singular.toLowerCase()}…`}
         value={search}
         onChange={e => setSearch(e.target.value)}
         left={<Search className="h-4 w-4" />}
@@ -73,7 +75,7 @@ export default function VillasPage() {
       ) : filtered.length === 0 ? (
         <Card className="text-center py-16 text-gray-400">
           <p className="text-lg font-medium mb-2">🏠</p>
-          <p>{t('villas.no_villas')}</p>
+          <p>Aucune {singular.toLowerCase()} pour l'instant. Ajoutez votre première {singular.toLowerCase()} !</p>
         </Card>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -99,7 +101,7 @@ export default function VillasPage() {
       <Modal
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="Supprimer la villa"
+        title={`Supprimer la ${singular.toLowerCase()}`}
         size="sm"
         footer={
           <>

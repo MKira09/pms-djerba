@@ -1,37 +1,54 @@
-import { NavLink } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Home, Calendar, ClipboardList,
-  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert,
+  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert, ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
+import { useVillasStore } from '@/stores/villas.store'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
 
 const BOTTOM_NAV = [
-  { to: '/settings',     icon: Settings,        key: 'nav.settings' },
-  { to: '/subscription', icon: CreditCard,      key: 'nav.subscription' },
+  { to: '/settings',     icon: Settings,    key: 'nav.settings' },
+  { to: '/subscription', icon: CreditCard,  key: 'nav.subscription' },
 ]
+
+const NAV_LINKS = [
+  { to: '/dashboard',      icon: LayoutDashboard, key: 'nav.dashboard' },
+  { to: '/calendar',       icon: Calendar,        key: 'nav.calendar' },
+  { to: '/reservations',   icon: ClipboardList,   key: 'nav.reservations' },
+  { to: '/team',           icon: Users,           key: 'nav.team' },
+  { to: '/pricing',        icon: TrendingUp,      key: 'nav.pricing' },
+  { to: '/communications', icon: Mail,            key: 'nav.communications' },
+  { to: '/blacklist',      icon: ShieldAlert,     key: 'nav.blacklist' },
+]
+
+const LINK_CLASS = (isActive: boolean) => cn(
+  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+  isActive ? 'bg-white/15 text-white' : 'text-brand-200 hover:bg-white/10 hover:text-white'
+)
 
 export default function Sidebar() {
   const { t } = useTranslation()
   const { logout, profile, tenant, isDemoMode } = useAuthStore()
-  const { plural, isMultiType } = usePropertyTerm()
+  const { plural, isMultiType, types } = usePropertyTerm()
+  const { villas } = useVillasStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  const onVillas = location.pathname === '/villas'
+  const [bienOpen, setBienOpen] = useState(onVillas)
 
-  const NAV = [
-    { to: '/dashboard',      icon: LayoutDashboard, label: t('nav.dashboard') },
-    { to: '/villas',         icon: Home,            label: isMultiType ? 'Mes biens' : plural },
-    { to: '/calendar',       icon: Calendar,        label: t('nav.calendar') },
-    { to: '/reservations',   icon: ClipboardList,   label: t('nav.reservations') },
-    { to: '/team',           icon: Users,           label: t('nav.team') },
-    { to: '/pricing',        icon: TrendingUp,      label: t('nav.pricing') },
-    { to: '/communications', icon: Mail,            label: t('nav.communications') },
-    { to: '/blacklist',      icon: ShieldAlert,     label: t('nav.blacklist') },
-  ]
+  useEffect(() => {
+    if (onVillas) setBienOpen(true)
+  }, [onVillas])
+
+  function countByType(type: string) {
+    return villas.filter(v => (v.property_type || types[0]) === type).length
+  }
 
   async function handleLogout() {
     if (!isDemoMode) await supabase.auth.signOut()
@@ -39,6 +56,8 @@ export default function Sidebar() {
     navigate('/login')
     toast.success(t('auth.logout'))
   }
+
+  const activeType = new URLSearchParams(location.search).get('type')
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-brand-800 text-white shadow-xl flex-shrink-0">
@@ -62,21 +81,77 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-white/15 text-white'
-                  : 'text-brand-200 hover:bg-white/10 hover:text-white'
-              )
-            }
-          >
+        {/* Dashboard */}
+        <NavLink to="/dashboard" className={({ isActive }) => LINK_CLASS(isActive)}>
+          <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+          {t('nav.dashboard')}
+        </NavLink>
+
+        {/* Biens — single type: simple NavLink / multi: collapsible */}
+        {!isMultiType ? (
+          <NavLink to="/villas" className={({ isActive }) => LINK_CLASS(isActive)}>
+            <Home className="h-5 w-5 flex-shrink-0" />
+            <span className="flex-1">Mes {plural}</span>
+            {villas.length > 0 && (
+              <span className="text-[11px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">
+                {villas.length}
+              </span>
+            )}
+          </NavLink>
+        ) : (
+          <div>
+            <button
+              onClick={() => setBienOpen(o => !o)}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                onVillas ? 'bg-white/15 text-white' : 'text-brand-200 hover:bg-white/10 hover:text-white'
+              )}
+            >
+              <Home className="h-5 w-5 flex-shrink-0" />
+              <span className="flex-1 text-left">Mes biens</span>
+              <ChevronDown className={cn('h-4 w-4 transition-transform', bienOpen && 'rotate-180')} />
+            </button>
+
+            {bienOpen && (
+              <div className="mt-0.5 ml-8 space-y-0.5">
+                <NavLink
+                  to="/villas"
+                  end
+                  className={cn(
+                    'flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    onVillas && !activeType ? 'bg-white/15 text-white' : 'text-brand-300 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <span>Tous les biens</span>
+                  <span className="text-[11px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">
+                    {villas.length}
+                  </span>
+                </NavLink>
+                {types.sort((a, b) => a.localeCompare(b, 'fr')).map(type => (
+                  <NavLink
+                    key={type}
+                    to={`/villas?type=${encodeURIComponent(type)}`}
+                    className={cn(
+                      'flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                      activeType === type ? 'bg-white/15 text-white' : 'text-brand-300 hover:bg-white/10 hover:text-white'
+                    )}
+                  >
+                    <span>{type}s</span>
+                    <span className="text-[11px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">
+                      {countByType(type)}
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rest of nav */}
+        {NAV_LINKS.map(({ to, icon: Icon, key }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => LINK_CLASS(isActive)}>
             <Icon className="h-5 w-5 flex-shrink-0" />
-            {label}
+            {t(key)}
           </NavLink>
         ))}
       </nav>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Search, Pencil, Trash2, Bed, Bath, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
@@ -18,7 +19,9 @@ export default function VillasPage() {
   const { t } = useTranslation()
   const { villas, fetch, remove, loading } = useVillasStore()
   const { tenant } = useAuthStore()
-  const { singular, plural } = usePropertyTerm()
+  const { singular, plural, isMultiType } = usePropertyTerm()
+  const [searchParams] = useSearchParams()
+  const typeFilter = searchParams.get('type')
   const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editVilla, setEditVilla] = useState<Villa | null>(null)
@@ -27,7 +30,11 @@ export default function VillasPage() {
   useEffect(() => { fetch() }, [])
 
   const limit = PLAN_LIMITS[tenant?.plan ?? 'starter']
-  const filtered = villas.filter(v => v.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = villas.filter(v => {
+    const matchSearch = v.name.toLowerCase().includes(search.toLowerCase())
+    const matchType = !typeFilter || (v.property_type || singular) === typeFilter
+    return matchSearch && matchType
+  })
 
   const groups: { type: string; items: Villa[] }[] = Object.entries(
     filtered.reduce<Record<string, Villa[]>>((acc, v) => {
@@ -65,8 +72,10 @@ export default function VillasPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mes {plural}</h1>
-          <p className="text-sm text-gray-500">{villas.filter(v => v.status === 'active').length} actives · limite plan : {limit}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {typeFilter && isMultiType ? `Mes ${typeFilter}s` : `Mes ${plural}`}
+          </h1>
+          <p className="text-sm text-gray-500">{villas.filter(v => v.status === 'active').length} actifs · limite plan : {limit}</p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
           Ajouter une {singular}

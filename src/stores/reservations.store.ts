@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Reservation, Client } from '@/types'
 
-type NewClientPayload = { full_name: string; email: string | null; phone: string | null; nationality: string | null }
+type NewClientPayload = { full_name: string; email: string | null; phone: string | null; nationality: string | null; passport_number?: string | null }
 type AddReservationPayload = Omit<Reservation, 'id' | 'tenant_id' | 'created_at' | 'updated_at' | 'client' | 'villa'> & { client?: NewClientPayload }
 import { DEMO_RESERVATIONS, DEMO_CLIENTS, DEMO_VILLAS, enrichReservations } from '@/lib/demo-data'
 import { useAuthStore } from './auth.store'

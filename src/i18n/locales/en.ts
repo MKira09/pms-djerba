@@ -38,6 +38,7 @@ export default {
     team: 'Team',
     pricing: 'Pricing',
     communications: 'Communications',
+    blacklist: 'Blacklist',
     settings: 'Settings',
     subscription: 'Subscription',
   },

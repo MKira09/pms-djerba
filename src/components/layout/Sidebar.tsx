@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Home, Calendar, ClipboardList,
-  Users, TrendingUp, Mail, Settings, CreditCard, LogOut,
+  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
@@ -18,6 +18,7 @@ const NAV = [
   { to: '/team',         icon: Users,           key: 'nav.team' },
   { to: '/pricing',      icon: TrendingUp,      key: 'nav.pricing' },
   { to: '/communications', icon: Mail,          key: 'nav.communications' },
+  { to: '/blacklist',      icon: ShieldAlert,   key: 'nav.blacklist' },
 ]
 
 const BOTTOM_NAV = [

@@ -38,6 +38,7 @@ export default {
     team: 'الفريق',
     pricing: 'التسعير',
     communications: 'التواصل',
+    blacklist: 'القائمة السوداء',
     settings: 'الإعدادات',
     subscription: 'الاشتراك',
   },

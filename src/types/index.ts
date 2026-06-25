@@ -85,7 +85,19 @@ export interface Client {
   email: string | null
   phone: string | null
   nationality: string | null
+  passport_number?: string | null
   preferred_lang: Lang
+  created_at: string
+}
+
+// ─── Blacklist ─────────────────────────────────────────────────────────────
+export interface BlacklistEntry {
+  id: string
+  tenant_id: string
+  full_name: string | null
+  phone: string | null
+  email: string | null
+  reason: string | null
   created_at: string
 }
 
@@ -100,6 +112,10 @@ export interface Reservation {
   check_in_time?: string | null
   check_out_time?: string | null
   extras?: Extra[] | null
+  adults?: number | null
+  children?: number | null
+  occasion?: string | null
+  has_pets?: boolean | null
   guests: number
   total_amount: number
   currency: string

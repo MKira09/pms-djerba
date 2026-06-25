@@ -8,6 +8,7 @@ import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
 import PlansPage from '@/pages/PlansPage'
 import PaymentSuccessPage from '@/pages/PaymentSuccessPage'
+import BlacklistPage from '@/pages/BlacklistPage'
 import AdminPage from '@/pages/AdminPage'
 import DashboardPage from '@/pages/DashboardPage'
 import VillasPage from '@/pages/VillasPage'
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="/team"            element={<TeamPage />} />
           <Route path="/pricing"         element={<PricingPage />} />
           <Route path="/communications"  element={<CommunicationsPage />} />
+          <Route path="/blacklist"       element={<BlacklistPage />} />
           <Route path="/settings"        element={<SettingsPage />} />
           <Route path="/subscription"    element={<SubscriptionPage />} />
         </Route>

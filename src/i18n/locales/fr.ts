@@ -38,6 +38,7 @@ export default {
     team: 'Équipe',
     pricing: 'Tarification',
     communications: 'Communications',
+    blacklist: 'Liste noire',
     settings: 'Paramètres',
     subscription: 'Abonnement',
   },

@@ -11,12 +11,15 @@ import { useVillasStore } from '@/stores/villas.store'
 import { usePricingStore } from '@/stores/pricing.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
+import { useBlacklistStore } from '@/stores/blacklist.store'
 import { nightCount } from '@/lib/utils'
 import type { ReservationSource, ReservationStatus, Reservation, Extra } from '@/types'
 import { parseISO, addDays, format } from 'date-fns'
+import { AlertTriangle } from 'lucide-react'
 
 const SOURCES: ReservationSource[] = ['airbnb', 'booking', 'direct', 'whatsapp', 'vrbo', 'autre']
 const STATUSES: ReservationStatus[] = ['confirmed', 'pending', 'cancelled', 'checkout']
+const OCCASIONS = ['Vacances en famille', 'Lune de miel', 'Entre amis', 'Voyage d\'affaires', 'Autre']
 
 interface Props {
   open: boolean
@@ -32,7 +35,11 @@ interface FormData {
   check_in_time: string
   check_out_time: string
   extras: Extra[]
+  adults: number
+  children: number
   guests: number
+  occasion: string
+  has_pets: boolean
   total_amount: number
   source: ReservationSource
   status: ReservationStatus
@@ -41,6 +48,7 @@ interface FormData {
   client_email: string
   client_phone: string
   client_nationality: string
+  passport_number: string
 }
 
 const today = format(new Date(), 'yyyy-MM-dd')
@@ -49,9 +57,11 @@ const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd')
 const EMPTY: FormData = {
   villa_id: '', check_in: today, check_out: tomorrow,
   check_in_time: '14:00', check_out_time: '11:00',
-  extras: [],
-  guests: 2, total_amount: 0, source: 'direct', status: 'confirmed',
-  internal_note: '', client_name: '', client_email: '', client_phone: '', client_nationality: '',
+  extras: [], adults: 1, children: 0, guests: 1,
+  occasion: '', has_pets: false,
+  total_amount: 0, source: 'direct', status: 'confirmed',
+  internal_note: '', client_name: '', client_email: '', client_phone: '',
+  client_nationality: '', passport_number: '',
 }
 
 async function sendConfirmationEmail(params: {
@@ -86,11 +96,12 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { computePrice } = usePricingStore()
   const { tenant } = useAuthStore()
   const { extras: availableExtras, fetch: fetchExtras } = useExtrasStore()
+  const { fetch: fetchBlacklist, check: checkBlacklist } = useBlacklistStore()
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
 
-  useEffect(() => { fetchExtras() }, [])
+  useEffect(() => { fetchExtras(); fetchBlacklist() }, [])
 
   useEffect(() => {
     if (reservation) {
@@ -101,7 +112,11 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         check_in_time: reservation.check_in_time ?? '14:00',
         check_out_time: reservation.check_out_time ?? '11:00',
         extras: reservation.extras ?? [],
+        adults: reservation.adults ?? reservation.guests,
+        children: reservation.children ?? 0,
         guests: reservation.guests,
+        occasion: reservation.occasion ?? '',
+        has_pets: reservation.has_pets ?? false,
         total_amount: reservation.total_amount,
         source: reservation.source,
         status: reservation.status,
@@ -110,6 +125,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         client_email: reservation.client?.email ?? '',
         client_phone: reservation.client?.phone ?? '',
         client_nationality: reservation.client?.nationality ?? '',
+        passport_number: reservation.client?.passport_number ?? '',
       })
     } else {
       setForm({
@@ -172,7 +188,8 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         await update(reservation.id, {
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
           check_in_time: form.check_in_time, check_out_time: form.check_out_time,
-          extras: form.extras,
+          extras: form.extras, adults: form.adults, children: form.children,
+          occasion: form.occasion || null, has_pets: form.has_pets,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
         })
@@ -192,11 +209,16 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         const result = await add({
           villa_id: form.villa_id, check_in: form.check_in, check_out: form.check_out,
           check_in_time: form.check_in_time, check_out_time: form.check_out_time,
-          extras: form.extras,
+          extras: form.extras, adults: form.adults, children: form.children,
+          occasion: form.occasion || null, has_pets: form.has_pets,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
           client_id: null, currency: 'TND', ical_uid: null,
-          client: { full_name: form.client_name, email: form.client_email || null, phone: form.client_phone || null, nationality: form.client_nationality || null },
+          client: {
+            full_name: form.client_name, email: form.client_email || null,
+            phone: form.client_phone || null, nationality: form.client_nationality || null,
+            passport_number: form.passport_number || null,
+          },
         })
         toast.success('Réservation créée !')
         // Send email if confirmed and client has email
@@ -228,8 +250,10 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const villaOpts = villas.map(v => ({ value: v.id, label: v.name }))
   const sourceOpts = SOURCES.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))
   const statusOpts = STATUSES.map(s => ({ value: s, label: t(`reservations.${s}`) }))
+  const occasionOpts = [{ value: '', label: '— Choisir —' }, ...OCCASIONS.map(o => ({ value: o, label: o }))]
   const nights = form.check_in && form.check_out ? Math.max(0, nightCount(form.check_in, form.check_out)) : 0
   const extrasTotal = form.extras.reduce((s, e) => s + e.price, 0)
+  const blacklistMatch = !reservation ? checkBlacklist(form.client_name, form.client_phone, form.client_email) : null
 
   return (
     <Modal
@@ -266,13 +290,22 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               <Input label="Heure de départ" type="time" value={form.check_out_time} onChange={e => set('check_out_time', e.target.value)} />
             </div>
             {conflict && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">⚠️ {t('reservations.conflict')}</p>}
+            <div className="grid grid-cols-3 gap-3">
+              <Input label="Adultes" type="number" min={0} value={form.adults} onChange={e => { const v = +e.target.value; setForm(f => ({ ...f, adults: v, guests: v + f.children })) }} />
+              <Input label="Enfants" type="number" min={0} value={form.children} onChange={e => { const v = +e.target.value; setForm(f => ({ ...f, children: v, guests: f.adults + v })) }} />
+              <Input label="Total voyageurs" type="number" min={1} value={form.guests} onChange={e => set('guests', +e.target.value)} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
-              <Input label={t('reservations.guests')} type="number" min={1} value={form.guests} onChange={e => set('guests', +e.target.value)} />
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('reservations.amount')} ({nights} nuits)</label>
-                <input type="number" min={0} value={form.total_amount} onChange={e => set('total_amount', +e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
-              </div>
+              <Select label="Occasion" options={occasionOpts} value={form.occasion} onChange={e => set('occasion', e.target.value)} />
+              <label className="flex items-center gap-3 mt-6 cursor-pointer">
+                <input type="checkbox" checked={form.has_pets} onChange={e => set('has_pets', e.target.checked)} className="accent-brand-800 w-4 h-4" />
+                <span className="text-sm text-gray-700">🐾 Animaux de compagnie</span>
+              </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('reservations.amount')} ({nights} nuits)</label>
+              <input type="number" min={0} value={form.total_amount} onChange={e => set('total_amount', +e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
             </div>
           </div>
         </div>
@@ -281,11 +314,24 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         {!reservation && (
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Client</h3>
+            {blacklistMatch && (
+              <div className="flex items-start gap-3 bg-red-50 border border-red-300 rounded-xl px-4 py-3 mb-3">
+                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-red-800">⛔ Client en liste noire</p>
+                  <p className="text-xs text-red-600 mt-0.5">
+                    {blacklistMatch.full_name && <span>{blacklistMatch.full_name} · </span>}
+                    Motif : {blacklistMatch.reason || 'non précisé'}
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-3">
               <Input label={t('reservations.client_name')} value={form.client_name} onChange={e => set('client_name', e.target.value)} required />
               <Input label={t('reservations.client_phone')} value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
               <Input label={t('reservations.client_email')} type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} />
               <Input label={t('reservations.client_nationality')} value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)} />
+              <Input label="N° Passeport / CIN" value={form.passport_number} onChange={e => set('passport_number', e.target.value)} placeholder="Ex : AB123456" className="sm:col-span-2" />
             </div>
           </div>
         )}

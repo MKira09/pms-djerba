@@ -29,6 +29,19 @@ export default function VillasPage() {
   const limit = PLAN_LIMITS[tenant?.plan ?? 'starter']
   const filtered = villas.filter(v => v.name.toLowerCase().includes(search.toLowerCase()))
 
+  const groups: { type: string; items: Villa[] }[] = Object.entries(
+    filtered.reduce<Record<string, Villa[]>>((acc, v) => {
+      const key = v.property_type || singular
+      if (!acc[key]) acc[key] = []
+      acc[key].push(v)
+      return acc
+    }, {})
+  )
+    .sort(([a], [b]) => a.localeCompare(b, 'fr'))
+    .map(([type, items]) => ({ type, items }))
+
+  const isGrouped = groups.length > 1
+
   async function handleDelete() {
     if (!deleteId) return
     try {
@@ -78,14 +91,27 @@ export default function VillasPage() {
           <p>Aucune {singular.toLowerCase()} pour l'instant. Ajoutez votre première {singular.toLowerCase()} !</p>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(villa => (
-            <VillaCard
-              key={villa.id}
-              villa={villa}
-              onEdit={() => { setEditVilla(villa); setFormOpen(true) }}
-              onDelete={() => setDeleteId(villa.id)}
-            />
+        <div className="space-y-8">
+          {groups.map(({ type, items }) => (
+            <div key={type}>
+              {isGrouped && (
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-base font-semibold text-gray-700">{type}s</h2>
+                  <span className="text-sm text-gray-400 font-medium bg-gray-100 px-2 py-0.5 rounded-full">{items.length}</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              )}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {items.map(villa => (
+                  <VillaCard
+                    key={villa.id}
+                    villa={villa}
+                    onEdit={() => { setEditVilla(villa); setFormOpen(true) }}
+                    onDelete={() => setDeleteId(villa.id)}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

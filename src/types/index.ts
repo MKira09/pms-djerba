@@ -26,8 +26,7 @@ export interface Tenant {
   trial_ends: string | null
   created_at: string
   extras_config?: Extra[] | null
-  property_type?: string | null
-  property_type_custom?: string | null
+  property_types?: string[] | null
   slogan?: string | null
 }
 
@@ -65,6 +64,7 @@ export interface Villa {
   arrival_info: string | null
   photos: string[]
   wifi_password: string | null
+  property_type?: string | null
   created_at: string
   updated_at: string
 }

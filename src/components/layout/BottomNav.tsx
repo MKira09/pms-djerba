@@ -6,11 +6,11 @@ import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 
 export default function BottomNav() {
   const { t } = useTranslation()
-  const { plural } = usePropertyTerm()
+  const { plural, isMultiType } = usePropertyTerm()
 
   const NAV = [
     { to: '/dashboard',    icon: LayoutDashboard, label: t('nav.dashboard').split(' ')[0] },
-    { to: '/villas',       icon: Home,            label: plural },
+    { to: '/villas',       icon: Home,            label: isMultiType ? 'Biens' : plural },
     { to: '/calendar',     icon: Calendar,        label: t('nav.calendar') },
     { to: '/reservations', icon: ClipboardList,   label: t('nav.reservations').split(' ')[0] },
     { to: '/team',         icon: Users,           label: t('nav.team') },

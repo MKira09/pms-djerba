@@ -19,12 +19,12 @@ const BOTTOM_NAV = [
 export default function Sidebar() {
   const { t } = useTranslation()
   const { logout, profile, tenant, isDemoMode } = useAuthStore()
-  const { plural } = usePropertyTerm()
+  const { plural, isMultiType } = usePropertyTerm()
   const navigate = useNavigate()
 
   const NAV = [
     { to: '/dashboard',      icon: LayoutDashboard, label: t('nav.dashboard') },
-    { to: '/villas',         icon: Home,            label: plural },
+    { to: '/villas',         icon: Home,            label: isMultiType ? 'Mes biens' : plural },
     { to: '/calendar',       icon: Calendar,        label: t('nav.calendar') },
     { to: '/reservations',   icon: ClipboardList,   label: t('nav.reservations') },
     { to: '/team',           icon: Users,           label: t('nav.team') },

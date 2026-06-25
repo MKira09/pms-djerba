@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -8,19 +8,9 @@ import Select from '@/components/ui/Select'
 import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
 import { supabase } from '@/lib/supabase'
+import { PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
-
-const PROPERTY_TYPE_OPTIONS = [
-  { value: 'Villa', label: 'Villa' },
-  { value: 'Appartement', label: 'Appartement' },
-  { value: 'Maison', label: 'Maison' },
-  { value: 'Riad', label: 'Riad' },
-  { value: 'Chalet', label: 'Chalet' },
-  { value: 'Bungalow', label: 'Bungalow' },
-  { value: 'Studio', label: 'Studio' },
-  { value: 'Autre', label: 'Autre (personnalisé)' },
-]
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
@@ -29,10 +19,19 @@ export default function SettingsPage() {
   const [name, setName] = useState(profile?.full_name ?? '')
   const [company, setCompany] = useState(tenant?.name ?? '')
   const [slogan, setSlogan] = useState(tenant?.slogan ?? '')
-  const [propertyType, setPropertyType] = useState(tenant?.property_type ?? 'Villa')
-  const [propertyTypeCustom, setPropertyTypeCustom] = useState(tenant?.property_type_custom ?? '')
+  const [propertyTypes, setPropertyTypes] = useState<string[]>(
+    tenant?.property_types?.length ? tenant.property_types : ['Villa']
+  )
   const [savingAgency, setSavingAgency] = useState(false)
   const [localExtras, setLocalExtras] = useState<Extra[]>([])
+
+  function toggleType(type: string) {
+    setPropertyTypes(prev =>
+      prev.includes(type)
+        ? prev.length > 1 ? prev.filter(t => t !== type) : prev
+        : [...prev, type]
+    )
+  }
 
   useEffect(() => { fetchExtras() }, [])
   useEffect(() => { setLocalExtras(extras) }, [extras])
@@ -53,8 +52,7 @@ export default function SettingsPage() {
       const updates = {
         name: company.trim() || tenant.name,
         slogan: slogan.trim() || null,
-        property_type: propertyType,
-        property_type_custom: propertyType === 'Autre' ? propertyTypeCustom.trim() : null,
+        property_types: propertyTypes,
       }
       if (!isDemoMode) {
         const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
@@ -109,46 +107,39 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* Property type */}
+      {/* Property types */}
       <Card>
-        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <Home className="h-4 w-4 text-brand-700" /> Type de biens
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <Home className="h-4 w-4 text-brand-700" /> Types de biens gérés
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Choisissez le terme utilisé pour désigner vos propriétés dans toute l'application.
+          Cochez tous les types de biens que vous gérez. Vous pourrez assigner un type à chaque bien dans son formulaire.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-          {PROPERTY_TYPE_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setPropertyType(opt.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors text-center ${
-                propertyType === opt.value
-                  ? 'bg-brand-800 text-white border-brand-800'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+          {PROPERTY_TYPE_LIST.map(type => {
+            const checked = propertyTypes.includes(type)
+            return (
+              <button
+                key={type}
+                onClick={() => toggleType(type)}
+                className={`relative flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
+                  checked
+                    ? 'bg-brand-800 text-white border-brand-800'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                }`}
+              >
+                {checked && <Check className="h-3.5 w-3.5 shrink-0" />}
+                {type}
+              </button>
+            )
+          })}
         </div>
-        {propertyType === 'Autre' && (
-          <Input
-            label="Terme personnalisé (singulier)"
-            value={propertyTypeCustom}
-            onChange={e => setPropertyTypeCustom(e.target.value)}
-            placeholder="Ex : Maison de vacances"
-            className="max-w-xs"
-          />
-        )}
-        {propertyType !== 'Autre' && (
-          <p className="text-xs text-gray-400">
-            Le terme "<strong>{propertyType}</strong>" remplacera "Villa" dans les menus, formulaires et tableaux de bord.
-          </p>
-        )}
-        <div className="mt-4">
-          <Button onClick={handleSaveAgency} loading={savingAgency}>Enregistrer</Button>
-        </div>
+        <p className="text-xs text-gray-400 mb-4">
+          {propertyTypes.length === 1
+            ? `Menu affiché : "${propertyTypes[0]}s" · Un seul type sélectionné`
+            : `Menu affiché : "Mes biens" · ${propertyTypes.length} types sélectionnés (${propertyTypes.join(', ')})`}
+        </p>
+        <Button onClick={handleSaveAgency} loading={savingAgency}>Enregistrer</Button>
       </Card>
 
       {/* Language */}

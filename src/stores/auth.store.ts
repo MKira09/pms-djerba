@@ -28,6 +28,8 @@ const DEMO_TENANT: Tenant = {
   plan: 'agence',
   trial_ends: null,
   created_at: new Date().toISOString(),
+  property_types: ['Villa', 'Appartement'],
+  slogan: 'Votre séjour de rêve à Djerba',
 }
 
 export const useAuthStore = create<AuthState>()(

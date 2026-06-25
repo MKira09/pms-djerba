@@ -1,5 +1,9 @@
 import { useAuthStore } from '@/stores/auth.store'
 
+export const PROPERTY_TYPE_LIST = [
+  'Villa', 'Appartement', 'Maison', 'Riad', 'Chalet', 'Bungalow', 'Studio',
+]
+
 const PLURALS: Record<string, string> = {
   Villa: 'Villas',
   Appartement: 'Appartements',
@@ -12,13 +16,18 @@ const PLURALS: Record<string, string> = {
 
 export function usePropertyTerm() {
   const { tenant } = useAuthStore()
-  const type = tenant?.property_type ?? 'Villa'
-  const custom = (tenant?.property_type_custom ?? '').trim()
+  const types = (tenant?.property_types?.length ?? 0) > 0
+    ? (tenant!.property_types as string[])
+    : ['Villa']
 
-  const singular = type === 'Autre' ? (custom || 'Bien') : type
-  const plural = type === 'Autre'
-    ? (custom ? `${custom}s` : 'Biens')
-    : (PLURALS[type] ?? `${type}s`)
+  const isMultiType = types.length > 1
 
-  return { singular, plural }
+  if (isMultiType) {
+    return { singular: 'bien', plural: 'biens', isMultiType: true, types }
+  }
+
+  const type = types[0]
+  const plural = PLURALS[type] ?? `${type}s`
+
+  return { singular: type, plural, isMultiType: false, types }
 }

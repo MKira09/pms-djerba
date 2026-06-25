@@ -9,7 +9,7 @@ import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { usePropertyTerm } from '@/hooks/usePropertyTerm'
+import { usePropertyTerm, PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import { supabase } from '@/lib/supabase'
 import { AMENITY_OPTIONS, cn } from '@/lib/utils'
 import type { Villa, VillaStatus } from '@/types'
@@ -22,11 +22,12 @@ const EMPTY: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
   name: '', description: '', address: '', city: 'Djerba',
   capacity: 4, bedrooms: 2, bathrooms: 1, base_price: 300,
   status: 'active', amenities: [], access_code: '', arrival_info: '', photos: [], wifi_password: '',
+  property_type: null,
 }
 
 export default function VillaForm({ open, villa, onClose }: Props) {
   const { t } = useTranslation()
-  const { singular } = usePropertyTerm()
+  const { singular, isMultiType, types } = usePropertyTerm()
   const { add, update } = useVillasStore()
   const { tenant } = useAuthStore()
   const [form, setForm] = useState(EMPTY)
@@ -107,6 +108,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
   }
 
   const statusOpts = STATUS_OPTIONS.map(s => ({ value: s, label: t(`villas.${s}`) }))
+  const typeOpts = (isMultiType ? types : PROPERTY_TYPE_LIST).map(t => ({ value: t, label: t }))
   const photos = form.photos ?? []
 
   return (
@@ -125,7 +127,15 @@ export default function VillaForm({ open, villa, onClose }: Props) {
       <form id="villa-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <Input label={`Nom de la ${singular.toLowerCase()}`} value={form.name} onChange={e => set('name', e.target.value)} required />
-          <Select label={t('villas.status')} value={form.status} onChange={e => set('status', e.target.value as VillaStatus)} options={statusOpts} />
+          <div className="grid grid-cols-2 gap-3">
+            <Select label={t('villas.status')} value={form.status} onChange={e => set('status', e.target.value as VillaStatus)} options={statusOpts} />
+            <Select
+              label="Type de bien"
+              value={form.property_type ?? types[0]}
+              onChange={e => set('property_type', e.target.value)}
+              options={typeOpts}
+            />
+          </div>
         </div>
 
         <Textarea label={t('villas.description')} value={form.description ?? ''} onChange={e => set('description', e.target.value)} rows={2} />

@@ -118,6 +118,7 @@ export default function VillasPage() {
 
 function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => void; onDelete: () => void }) {
   const { t } = useTranslation()
+  const { isMultiType } = usePropertyTerm()
   return (
     <Card padding={false} className="overflow-hidden">
       {/* Photo */}
@@ -129,10 +130,15 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
             <span className="text-4xl">🏖️</span>
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
           <Badge className={VILLA_STATUS_COLORS[villa.status]} dot>
             {t(`villas.${villa.status}`)}
           </Badge>
+          {isMultiType && villa.property_type && (
+            <span className="bg-white/90 text-brand-800 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+              {villa.property_type}
+            </span>
+          )}
         </div>
       </div>
 

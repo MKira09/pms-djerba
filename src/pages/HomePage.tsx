@@ -35,14 +35,14 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    // Real pebble beach — Mediterranean shoreline, stones and sea
-    src: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=700&q=85',
+    // Pebble beach — rocky Mediterranean shoreline with clear water
+    src: 'https://images.unsplash.com/photo-1473172707857-f9e276582ab6?auto=format&fit=crop&w=700&q=85',
     label: 'Galets de plage',
     span: 'normal',
   },
   {
-    // Bougainvillea / Mediterranean flowers — soft pink, warm tones
-    src: 'https://images.unsplash.com/photo-1490750967868-88df5691cc06?auto=format&fit=crop&w=700&q=85',
+    // Pink bougainvillea — Mediterranean flowers climbing white wall
+    src: 'https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&w=700&q=85',
     label: 'Fleurs méditerranéennes',
     span: 'normal',
   },

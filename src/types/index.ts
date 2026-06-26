@@ -28,6 +28,7 @@ export interface Tenant {
   extras_config?: Extra[] | null
   property_types?: string[] | null
   slogan?: string | null
+  founding_member?: boolean | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

@@ -30,6 +30,7 @@ const DEMO_TENANT: Tenant = {
   created_at: new Date().toISOString(),
   property_types: ['Villa', 'Appartement'],
   slogan: 'Votre séjour de rêve à Djerba',
+  founding_member: true,
 }
 
 export const useAuthStore = create<AuthState>()(

@@ -30,7 +30,8 @@ export default function VillasPage() {
 
   useEffect(() => { fetch() }, [])
 
-  const limit = PLAN_LIMITS[tenant?.plan ?? 'starter']
+  const isFoundingMember = !!tenant?.founding_member
+  const limit = isFoundingMember ? Infinity : PLAN_LIMITS[tenant?.plan ?? 'starter']
   const filtered = villas.filter(v => {
     const matchSearch = v.name.toLowerCase().includes(search.toLowerCase())
     const matchType = !typeFilter || (v.property_type || singular) === typeFilter
@@ -76,7 +77,13 @@ export default function VillasPage() {
           <h1 className="text-2xl font-bold text-gray-900">
             {typeFilter && isMultiType ? `Mes ${typeFilter}s` : `Mes ${plural}`}
           </h1>
-          <p className="text-sm text-gray-500">{villas.filter(v => v.status === 'active').length} actifs · limite plan : {limit}</p>
+          <p className="text-sm text-gray-500">
+            {villas.filter(v => v.status === 'active').length} actifs
+            {isFoundingMember
+              ? <span className="ml-2 text-amber-600 font-medium">★ Membre fondateur — biens illimités</span>
+              : <> · limite plan : {limit}</>
+            }
+          </p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
           Ajouter une {singular}

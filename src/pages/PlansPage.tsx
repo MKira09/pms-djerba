@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Home, Check, Loader2 } from 'lucide-react'
+import { Home, Check, Loader2, Star } from 'lucide-react'
 import Button from '@/components/ui/Button'
+import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
 const PLANS = [
@@ -52,9 +53,20 @@ const PLANS = [
   },
 ]
 
+const FOUNDING_MAX = 5
+
 export default function PlansPage() {
   const navigate = useNavigate()
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [foundingCount, setFoundingCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    supabase.rpc('get_founding_member_count').then(({ data }) => {
+      if (typeof data === 'number') setFoundingCount(data)
+    })
+  }, [])
+
+  const remaining = foundingCount !== null ? Math.max(0, FOUNDING_MAX - foundingCount) : null
 
   async function handleChoosePlan(planId: string) {
     setLoadingPlan(planId)
@@ -91,6 +103,30 @@ export default function PlansPage() {
           <Button variant="outline" size="sm" onClick={() => navigate('/login')}>Se connecter</Button>
         </div>
       </header>
+
+      {/* Founding member banner */}
+      {(remaining === null || remaining > 0) && (
+        <div className="max-w-3xl mx-auto px-4 mt-4">
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-amber-400 rounded-xl shrink-0">
+              <Star className="h-5 w-5 text-white fill-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-amber-900">Offre de lancement — Membres fondateurs</p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                Les 5 premiers clients bénéficient de <strong>biens illimités à vie</strong>, quel que soit le plan choisi.
+              </p>
+            </div>
+            <div className="shrink-0 text-center bg-amber-400 text-amber-900 font-bold rounded-xl px-4 py-2 text-sm">
+              {remaining !== null
+                ? remaining > 0
+                  ? <>{remaining} place{remaining > 1 ? 's' : ''} restante{remaining > 1 ? 's' : ''}</>
+                  : 'Complet'
+                : '…'}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <div className="text-center py-14 px-4">

@@ -20,6 +20,7 @@ import CommunicationsPage from '@/pages/CommunicationsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SubscriptionPage from '@/pages/SubscriptionPage'
 import BookingPage from '@/pages/BookingPage'
+import HomePage from '@/pages/HomePage'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
 
@@ -60,6 +61,9 @@ export default function App() {
         }}
       />
       <Routes>
+        {/* Landing */}
+        <Route path="/" element={<HomePage />} />
+
         {/* Public */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -85,7 +89,7 @@ export default function App() {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

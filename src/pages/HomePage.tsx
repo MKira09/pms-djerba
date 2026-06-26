@@ -17,37 +17,37 @@ const C = {
 /* ─────── Gallery images ─────── */
 const GALLERY = [
   {
-    // Luxury outdoor lounge beige & white — villa with olive tree
-    src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=85',
-    label: 'Salon extérieur',
+    // White minimalist villa front view with pool, blue sky, Mediterranean luxury
+    src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=85',
+    label: 'Villa méditerranéenne',
     span: 'row',
   },
   {
-    // Modern pool with terrace — white minimalist villa
+    // Modern pool with terrace — white minimalist villa (KEEP)
     src: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=700&q=85',
     label: 'Terrasse & piscine',
     span: 'normal',
   },
   {
-    // White minimalist villa exterior with arched architecture
-    src: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=700&q=85',
-    label: 'Villa blanche',
+    // Turquoise Mediterranean sea — clear water, blue tones
+    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
+    label: 'Mer turquoise',
     span: 'normal',
   },
   {
-    // Luxury outdoor sofa set with pool view
-    src: 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=700&q=85',
-    label: 'Vue sur piscine',
+    // Real pebble beach — Mediterranean shoreline, stones and sea
+    src: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=700&q=85',
+    label: 'Galets de plage',
     span: 'normal',
   },
   {
-    // Beige terrace with modern furniture
-    src: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=700&q=85',
-    label: 'Terrasse beige',
+    // Golden sunset over the sea / terrace view
+    src: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=700&q=85',
+    label: 'Coucher de soleil',
     span: 'normal',
   },
   {
-    // Elegant villa pool at dusk — cinematic wide shot
+    // Elegant villa pool at dusk — cinematic wide shot (KEEP)
     src: 'https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=1400&q=85',
     label: 'Villa & piscine',
     span: 'col',

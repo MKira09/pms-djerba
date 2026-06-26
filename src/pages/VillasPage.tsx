@@ -20,6 +20,7 @@ export default function VillasPage() {
   const { villas, fetch, remove, loading } = useVillasStore()
   const { tenant } = useAuthStore()
   const { singular, plural, isMultiType } = usePropertyTerm()
+  const searchLabel = isMultiType ? 'un bien' : `une ${singular.toLowerCase()}`
   const [searchParams] = useSearchParams()
   const typeFilter = searchParams.get('type')
   const [search, setSearch] = useState('')
@@ -84,7 +85,7 @@ export default function VillasPage() {
 
       {/* Search */}
       <Input
-        placeholder={`${t('common.search')} une ${singular.toLowerCase()}…`}
+        placeholder={`${t('common.search')} ${searchLabel}…`}
         value={search}
         onChange={e => setSearch(e.target.value)}
         left={<Search className="h-4 w-4" />}

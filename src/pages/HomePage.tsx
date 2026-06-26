@@ -17,33 +17,39 @@ const C = {
 /* ─────── Gallery images ─────── */
 const GALLERY = [
   {
-    src: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=900&q=85',
-    label: 'Piscine à débordement',
+    // Luxury outdoor lounge beige & white — villa with olive tree
+    src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=85',
+    label: 'Salon extérieur',
     span: 'row',
   },
   {
-    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
-    label: 'Mer turquoise',
+    // Modern pool with terrace — white minimalist villa
+    src: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=700&q=85',
+    label: 'Terrasse & piscine',
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=700&q=85',
-    label: 'Volets méditerranéens',
+    // White minimalist villa exterior with arched architecture
+    src: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=700&q=85',
+    label: 'Villa blanche',
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=700&q=85',
-    label: 'Salon extérieur',
+    // Luxury outdoor sofa set with pool view
+    src: 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=700&q=85',
+    label: 'Vue sur piscine',
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1495841674395-62e7a42b00a9?auto=format&fit=crop&w=700&q=85',
-    label: 'Fleurs de jasmin',
+    // Beige terrace with modern furniture
+    src: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=700&q=85',
+    label: 'Terrasse beige',
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=900&q=85',
-    label: 'Galets de mer',
+    // Elegant villa pool at dusk — cinematic wide shot
+    src: 'https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=1400&q=85',
+    label: 'Villa & piscine',
     span: 'col',
   },
 ]
@@ -180,8 +186,8 @@ export default function HomePage() {
         {/* Background sea */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1920&q=90)',
-          backgroundSize: 'cover', backgroundPosition: 'center 40%',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1920&q=90)',
+          backgroundSize: 'cover', backgroundPosition: 'center 55%',
         }} />
         {/* Overlay */}
         <div style={{

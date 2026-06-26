@@ -40,8 +40,8 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=700&q=85',
-    label: 'Fleurs méditerranéennes',
+    src: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=700&q=85',
+    label: 'Mer turquoise',
     span: 'normal',
   },
   {

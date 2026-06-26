@@ -186,8 +186,8 @@ export default function HomePage() {
         {/* Background sea */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=90)',
-          backgroundSize: 'cover', backgroundPosition: 'center 45%',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1920&q=90)',
+          backgroundSize: 'cover', backgroundPosition: 'center 50%',
         }} />
         {/* Overlay */}
         <div style={{

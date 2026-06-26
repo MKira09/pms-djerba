@@ -35,7 +35,7 @@ const LINK_CLASS = (isActive: boolean) => cn(
 export default function Sidebar() {
   const { t } = useTranslation()
   const { logout, profile, tenant, isDemoMode } = useAuthStore()
-  const { plural, isMultiType, types } = usePropertyTerm()
+  const { isMultiType, types } = usePropertyTerm()
   const { villas } = useVillasStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -91,7 +91,7 @@ export default function Sidebar() {
         {!isMultiType ? (
           <NavLink to="/villas" className={({ isActive }) => LINK_CLASS(isActive)}>
             <Home className="h-5 w-5 flex-shrink-0" />
-            <span className="flex-1">Mes {plural}</span>
+            <span className="flex-1">Mes biens</span>
             {villas.length > 0 && (
               <span className="text-[11px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">
                 {villas.length}

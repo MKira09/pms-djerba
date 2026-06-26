@@ -41,9 +41,9 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    // Golden sunset over the sea / terrace view
-    src: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=700&q=85',
-    label: 'Coucher de soleil',
+    // Bougainvillea / Mediterranean flowers — soft pink, warm tones
+    src: 'https://images.unsplash.com/photo-1490750967868-88df5691cc06?auto=format&fit=crop&w=700&q=85',
+    label: 'Fleurs méditerranéennes',
     span: 'normal',
   },
   {
@@ -186,8 +186,8 @@ export default function HomePage() {
         {/* Background sea */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1920&q=90)',
-          backgroundSize: 'cover', backgroundPosition: 'center 55%',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=90)',
+          backgroundSize: 'cover', backgroundPosition: 'center 45%',
         }} />
         {/* Overlay */}
         <div style={{

@@ -35,14 +35,12 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    // Pebble beach — rocky Mediterranean shoreline with clear water
-    src: 'https://images.unsplash.com/photo-1473172707857-f9e276582ab6?auto=format&fit=crop&w=700&q=85',
-    label: 'Galets de plage',
+    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
+    label: 'Plage',
     span: 'normal',
   },
   {
-    // Pink bougainvillea on white wall — reliable Unsplash photo
-    src: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=700&q=85',
+    src: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=700&q=85',
     label: 'Fleurs méditerranéennes',
     span: 'normal',
   },
@@ -186,7 +184,7 @@ export default function HomePage() {
         {/* Background sea */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=90)',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1920&q=90)',
           backgroundSize: 'cover', backgroundPosition: 'center center',
         }} />
         {/* Overlay */}

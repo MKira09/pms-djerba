@@ -23,6 +23,9 @@ export interface Extra {
   id: string
   name: string
   price: number
+  description?: string
+  icon?: string
+  enabled?: boolean  // undefined = true (actif par défaut)
 }
 
 // ─── Tenant ────────────────────────────────────────────────────────────────

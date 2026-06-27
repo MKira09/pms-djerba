@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2 } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
+import Modal from '@/components/ui/Modal'
 import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
 import { supabase } from '@/lib/supabase'
@@ -12,10 +13,14 @@ import { PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
+const EMOJI_PRESETS = ['🧹', '👨‍🍳', '🚗', '🏖️', '🛏️', '🛁', '🍳', '🚁', '🎉', '🌊', '🧺', '🐾', '🚤', '🍾', '🧴']
+
+const EMPTY_FORM = { name: '', price: 0, description: '', icon: '' }
+
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { profile, tenant, isDemoMode, updateTenant } = useAuthStore()
-  const { extras, fetch: fetchExtras, save: saveExtras } = useExtrasStore()
+  const { extras, fetch: fetchExtras, addExtra, updateExtra, removeExtra, toggleExtra } = useExtrasStore()
   const [name, setName] = useState(profile?.full_name ?? '')
   const [company, setCompany] = useState(tenant?.name ?? '')
   const [slogan, setSlogan] = useState(tenant?.slogan ?? '')
@@ -23,9 +28,15 @@ export default function SettingsPage() {
     tenant?.property_types?.length ? tenant.property_types : ['Villa']
   )
   const [savingAgency, setSavingAgency] = useState(false)
-  const [localExtras, setLocalExtras] = useState<Extra[]>([])
   const [emailEnabled, setEmailEnabled] = useState(tenant?.welcome_email_enabled !== false)
   const [savingEmail, setSavingEmail] = useState(false)
+
+  // Extra form state
+  const [extraFormOpen, setExtraFormOpen] = useState(false)
+  const [editingExtra, setEditingExtra] = useState<Extra | null>(null)
+  const [extraForm, setExtraForm] = useState(EMPTY_FORM)
+  const [savingExtra, setSavingExtra] = useState(false)
+  const [deleteExtraId, setDeleteExtraId] = useState<string | null>(null)
 
   function toggleType(type: string) {
     setPropertyTypes(prev =>
@@ -36,15 +47,53 @@ export default function SettingsPage() {
   }
 
   useEffect(() => { fetchExtras() }, [])
-  useEffect(() => { setLocalExtras(extras) }, [extras])
 
-  function updateExtraPrice(id: string, price: number) {
-    setLocalExtras(prev => prev.map(e => e.id === id ? { ...e, price } : e))
+  function openExtraForm(extra: Extra | null) {
+    setEditingExtra(extra)
+    setExtraForm(extra
+      ? { name: extra.name, price: extra.price, description: extra.description ?? '', icon: extra.icon ?? '' }
+      : EMPTY_FORM
+    )
+    setExtraFormOpen(true)
   }
 
-  async function handleSaveExtras() {
-    await saveExtras(localExtras)
-    toast.success('Tarifs extras enregistrés.')
+  async function handleSaveExtra(e: React.FormEvent) {
+    e.preventDefault()
+    if (!extraForm.name.trim()) { toast.error('Le nom est requis.'); return }
+    setSavingExtra(true)
+    try {
+      const data = {
+        name: extraForm.name.trim(),
+        price: extraForm.price,
+        description: extraForm.description.trim() || undefined,
+        icon: extraForm.icon.trim() || undefined,
+        enabled: true,
+      }
+      if (editingExtra) {
+        await updateExtra(editingExtra.id, data)
+        toast.success('Service modifié.')
+      } else {
+        await addExtra(data)
+        toast.success('Service ajouté !')
+      }
+      setExtraFormOpen(false)
+    } catch {
+      toast.error('Erreur lors de la sauvegarde.')
+    } finally {
+      setSavingExtra(false)
+    }
+  }
+
+  async function handleDeleteExtra() {
+    if (!deleteExtraId) return
+    try {
+      await removeExtra(deleteExtraId)
+      toast.success('Service supprimé.')
+    } catch {
+      toast.error('Erreur lors de la suppression.')
+    } finally {
+      setDeleteExtraId(null)
+    }
   }
 
   async function handleSaveEmailSettings() {
@@ -193,30 +242,72 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* Extras */}
+      {/* ─── Extras & Services ─── */}
       <Card>
-        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <ShoppingBag className="h-4 w-4 text-brand-700" /> Extras & Services
-        </h2>
-        <p className="text-xs text-gray-400 mb-4">Configurez les prix des extras proposés lors des réservations.</p>
-        <div className="space-y-3">
-          {localExtras.map(extra => (
-            <div key={extra.id} className="flex items-center gap-3">
-              <span className="flex-1 text-sm text-gray-700">{extra.name}</span>
-              <div className="flex items-center gap-2 w-40">
-                <Input
-                  type="number"
-                  min={0}
-                  value={extra.price}
-                  onChange={e => updateExtraPrice(extra.id, +e.target.value)}
-                />
-                <span className="text-sm text-gray-500 whitespace-nowrap">TND</span>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-brand-700" /> Extras & Services
+          </h2>
+          <button
+            onClick={() => openExtraForm(null)}
+            className="flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-900 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Ajouter un service
+          </button>
         </div>
-        <div className="mt-4">
-          <Button onClick={handleSaveExtras}>Enregistrer les prix</Button>
+        <p className="text-xs text-gray-400 mb-4">
+          Ces services s'affichent dans le formulaire de réservation. Désactivez-en pour les masquer temporairement.
+        </p>
+
+        <div className="space-y-2">
+          {extras.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6 italic">Aucun service configuré.</p>
+          )}
+          {extras.map(extra => {
+            const active = extra.enabled !== false
+            return (
+              <div key={extra.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'}`}>
+                {/* Icon */}
+                <span className="text-2xl w-8 text-center flex-shrink-0">{extra.icon || '📦'}</span>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${active ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                    {extra.name}
+                  </p>
+                  {extra.description && (
+                    <p className="text-xs text-gray-400 truncate">{extra.description}</p>
+                  )}
+                  <p className="text-sm font-semibold text-brand-800 mt-0.5">{extra.price} TND</p>
+                </div>
+
+                {/* Toggle */}
+                <button
+                  onClick={() => toggleExtra(extra.id)}
+                  title={active ? 'Désactiver' : 'Activer'}
+                  className={`w-10 h-6 rounded-full relative transition-colors flex-shrink-0 ${active ? 'bg-brand-700' : 'bg-gray-300'}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${active ? 'left-5' : 'left-1'}`} />
+                </button>
+
+                {/* Edit */}
+                <button
+                  onClick={() => openExtraForm(extra)}
+                  className="p-1.5 text-gray-400 hover:text-brand-700 hover:bg-brand-50 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+
+                {/* Delete */}
+                <button
+                  onClick={() => setDeleteExtraId(extra.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            )
+          })}
         </div>
       </Card>
 
@@ -256,6 +347,106 @@ export default function SettingsPage() {
           </button>
         </label>
       </Card>
+
+      {/* ─── Modal add/edit extra ─── */}
+      <Modal
+        open={extraFormOpen}
+        onClose={() => setExtraFormOpen(false)}
+        title={editingExtra ? 'Modifier le service' : 'Nouveau service'}
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setExtraFormOpen(false)}>{t('common.cancel')}</Button>
+            <Button form="extra-form" type="submit" loading={savingExtra}>{t('common.save')}</Button>
+          </>
+        }
+      >
+        <form id="extra-form" onSubmit={handleSaveExtra} className="space-y-4">
+          {/* Icon picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Icône / Emoji</label>
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                value={extraForm.icon}
+                onChange={e => setExtraForm(f => ({ ...f, icon: e.target.value }))}
+                placeholder="🏖️"
+                maxLength={4}
+                className="w-16 h-10 text-center text-xl border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-400"
+              />
+              <span className="text-xs text-gray-400">Saisir un emoji ou choisir :</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {EMOJI_PRESETS.map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => setExtraForm(f => ({ ...f, icon: emoji }))}
+                  className={`w-9 h-9 text-lg rounded-lg border transition-colors ${extraForm.icon === emoji ? 'border-brand-400 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Name */}
+          <Input
+            label="Nom du service"
+            value={extraForm.name}
+            onChange={e => setExtraForm(f => ({ ...f, name: e.target.value }))}
+            placeholder="Ex : Petit déjeuner, Transfert aéroport…"
+            required
+          />
+
+          {/* Price + currency */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Input
+                label="Prix"
+                type="number"
+                min={0}
+                value={extraForm.price}
+                onChange={e => setExtraForm(f => ({ ...f, price: +e.target.value }))}
+              />
+            </div>
+            <div className="w-24">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Devise</label>
+              <div className="flex items-center h-10 px-3 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-500 font-medium">
+                TND
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Description <span className="font-normal text-gray-400">(optionnel)</span>
+            </label>
+            <input
+              value={extraForm.description}
+              onChange={e => setExtraForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Ex : Inclus café, jus, viennoiseries…"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-400"
+            />
+          </div>
+        </form>
+      </Modal>
+
+      {/* ─── Modal delete confirm ─── */}
+      <Modal
+        open={!!deleteExtraId}
+        onClose={() => setDeleteExtraId(null)}
+        title="Supprimer le service"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleteExtraId(null)}>{t('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleDeleteExtra}>Supprimer</Button>
+          </>
+        }
+      >
+        <p className="text-gray-600">Confirmer la suppression de ce service ? Il sera retiré de tous les formulaires de réservation.</p>
+      </Modal>
     </div>
   )
 }

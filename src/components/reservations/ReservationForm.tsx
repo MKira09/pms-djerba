@@ -95,7 +95,8 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { villas } = useVillasStore()
   const { computePrice } = usePricingStore()
   const { tenant } = useAuthStore()
-  const { extras: availableExtras, fetch: fetchExtras } = useExtrasStore()
+  const { extras: allExtras, fetch: fetchExtras } = useExtrasStore()
+  const availableExtras = allExtras.filter(e => e.enabled !== false)
   const { fetch: fetchBlacklist, check: checkBlacklist } = useBlacklistStore()
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
@@ -344,17 +345,21 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               {availableExtras.map(extra => {
                 const checked = form.extras.some(e => e.id === extra.id)
                 return (
-                  <label key={extra.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
+                  <label key={extra.id} className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${checked ? 'border-brand-400 bg-brand-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <div className="flex items-center gap-3 min-w-0">
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleExtra(extra)}
-                        className="accent-brand-800 w-4 h-4"
+                        className="accent-brand-800 w-4 h-4 flex-shrink-0"
                       />
-                      <span className="text-sm text-gray-700">{extra.name}</span>
+                      {extra.icon && <span className="text-lg flex-shrink-0">{extra.icon}</span>}
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-700 font-medium">{extra.name}</p>
+                        {extra.description && <p className="text-xs text-gray-400 truncate">{extra.description}</p>}
+                      </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">{extra.price} TND</span>
+                    <span className="text-sm font-semibold text-gray-900 flex-shrink-0 ml-2">{extra.price} TND</span>
                   </label>
                 )
               })}

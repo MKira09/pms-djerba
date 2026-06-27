@@ -28,8 +28,24 @@ const ADMIN_EMAIL = 'prokmbconsulting@gmail.com'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { profile } = useAuthStore()
-  if (!profile) return <Navigate to="/login" replace />
-  return <>{children}</>
+  const [sessionChecked, setSessionChecked] = useState(false)
+  const [hasSession, setHasSession] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session)
+      setSessionChecked(true)
+    })
+  }, [])
+
+  // Profile already in store (persisted or just logged in) → pass through
+  if (profile) return <>{children}</>
+  // Waiting for session check → show nothing briefly
+  if (!sessionChecked) return null
+  // No session at all → redirect to login
+  if (!hasSession) return <Navigate to="/login" replace />
+  // Session exists but profile not yet in store → wait for onAuthStateChange
+  return null
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -51,6 +67,31 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const { profile: currentProfile, isDemoMode, setProfile, setTenant, logout } = useAuthStore.getState()
+        if (isDemoMode) return
+
+        if (!session) {
+          logout()
+          return
+        }
+
+        // Session detected but store empty → initialize (magic link, invite, page refresh)
+        if (currentProfile) return
+        const { data: p } = await supabase
+          .from('profiles').select('*').eq('id', session.user.id).single()
+        if (!p) return
+        setProfile(p)
+        const { data: t } = await supabase
+          .from('tenants').select('*').eq('id', p.tenant_id).single()
+        if (t) setTenant(t)
+      }
+    )
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <BrowserRouter>
       <Toaster

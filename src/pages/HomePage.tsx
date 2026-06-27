@@ -17,7 +17,7 @@ const C = {
 /* ─────── Gallery images ─────── */
 const GALLERY = [
   {
-    src: 'https://images.unsplash.com/photo-cmbbwn-2Ilw?auto=format&fit=crop&w=900&q=85',
+    src: 'https://images.unsplash.com/photo-1580596090683-f4711170117b?auto=format&fit=crop&w=900&q=85',
     label: 'FLEURS',
     span: 'row',
   },
@@ -32,7 +32,7 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-AHlPuTYE2qA?auto=format&fit=crop&w=700&q=85',
+    src: 'https://plus.unsplash.com/premium_photo-1712736395967-b2a9bf7dfba4?auto=format&fit=crop&w=700&q=85',
     label: 'PLAGE',
     span: 'normal',
   },
@@ -47,8 +47,8 @@ const GALLERY = [
     span: 'col',
   },
   {
-    src: 'https://images.unsplash.com/photo-q8hSwN-SVnA?auto=format&fit=crop&w=1400&q=85',
-    label: 'CHAISE',
+    src: 'https://plus.unsplash.com/premium_photo-1668073438184-3ff63f4a7744?auto=format&fit=crop&w=1400&q=85',
+    label: 'VILLAGE',
     span: 'col',
   },
 ]

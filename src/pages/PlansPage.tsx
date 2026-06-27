@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Home, Check, Loader2, Star } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth.store'
 import toast from 'react-hot-toast'
 
 const PLANS = [
@@ -55,10 +56,38 @@ const PLANS = [
 
 const FOUNDING_MAX = 5
 
+function hasFullAccess(t: { founding_member?: boolean | null; plan: string; trial_ends: string | null }) {
+  if (t.founding_member === true) return true
+  if ((t.plan === 'pro' || t.plan === 'agence') && t.trial_ends === null) return true
+  return false
+}
+
 export default function PlansPage() {
   const navigate = useNavigate()
+  const { tenant } = useAuthStore()
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [foundingCount, setFoundingCount] = useState<number | null>(null)
+
+  // Redirect users who already have full access (founding member or paid pro/agence)
+  useEffect(() => {
+    async function checkAccess() {
+      // Fast path: tenant already in store
+      if (tenant && hasFullAccess(tenant)) {
+        navigate('/dashboard', { replace: true })
+        return
+      }
+      // Slow path: user arrived via magic link — session exists but store is empty
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('profiles').select('tenant_id').eq('id', user.id).single()
+      if (!profile) return
+      const { data: t } = await supabase
+        .from('tenants').select('founding_member, plan, trial_ends').eq('id', profile.tenant_id).single()
+      if (t && hasFullAccess(t)) navigate('/dashboard', { replace: true })
+    }
+    checkAccess()
+  }, [tenant])
 
   useEffect(() => {
     supabase.rpc('get_founding_member_count').then(({ data }) => {

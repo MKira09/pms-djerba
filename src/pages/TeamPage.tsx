@@ -56,7 +56,7 @@ function MemberForm({ open, member, onClose }: { open: boolean; member: TeamMemb
       <form id="member-form" onSubmit={handleSubmit} className="space-y-4">
         <Input label={t('team.full_name')} value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} required />
         <Select label={t('team.role')} options={roleOpts} value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as TeamRole }))} />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Input label={t('team.phone')} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
           <Input label={t('common.email')} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
         </div>
@@ -118,7 +118,7 @@ function TaskForm({ open, task, onClose }: { open: boolean; task: CleaningTask |
           <Select label="Villa" options={villaOpts} value={form.villa_id} onChange={e => setForm(f => ({ ...f, villa_id: e.target.value }))} placeholder="— Choisir —" required />
           <Select label={t('team.assigned_to')} options={memberOpts} value={form.assigned_to} onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))} />
         </div>
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <Select label={t('team.task_type')} options={typeOpts} value={form.task_type} onChange={e => setForm(f => ({ ...f, task_type: e.target.value as TaskType }))} />
           <Input label={t('team.scheduled_date')} type="date" value={form.scheduled_date} onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))} />
           <Select label={t('common.status')} options={statusOpts} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))} />
@@ -167,7 +167,7 @@ export default function TeamPage() {
     <div className="space-y-5 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900">{t('team.title')}</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" icon={<Plus className="h-4 w-4" />} onClick={() => { setEditTask(null); setTaskFormOpen(true) }}>
             {t('team.add_task')}
           </Button>

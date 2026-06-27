@@ -68,7 +68,7 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-1">Gérez vos locations saisonnières en toute simplicité</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('auth.welcome_back')}</h2>
 
           <form onSubmit={handleLogin} className="space-y-4">

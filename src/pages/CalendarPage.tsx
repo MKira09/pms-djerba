@@ -98,14 +98,14 @@ export default function CalendarPage() {
         {/* Day headers */}
         <div className="grid grid-cols-7 border-b border-gray-200">
           {DAYS_FR.map(d => (
-            <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500">{d}</div>
+            <div key={d} className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500">{d}</div>
           ))}
         </div>
 
         {/* Weeks */}
         <div className="grid grid-cols-7">
           {days.map((day, i) => {
-            if (!day) return <div key={`pad-${i}`} className="min-h-[90px] border-b border-r border-gray-100 bg-gray-50/50" />
+            if (!day) return <div key={`pad-${i}`} className="min-h-[48px] sm:min-h-[90px] border-b border-r border-gray-100 bg-gray-50/50" />
             const dayRes = getReservationsForDay(day)
             const inMonth = isSameMonth(day, month)
             const today = isToday(day)
@@ -115,19 +115,19 @@ export default function CalendarPage() {
                 key={day.toISOString()}
                 onClick={() => handleDayClick(day)}
                 className={cn(
-                  'min-h-[90px] border-b border-r border-gray-100 p-1.5 text-left align-top',
+                  'min-h-[48px] sm:min-h-[90px] border-b border-r border-gray-100 p-1 sm:p-1.5 text-left align-top',
                   'hover:bg-brand-50 transition-colors',
                   !inMonth && 'bg-gray-50/50',
                   today && 'bg-brand-50'
                 )}
               >
                 <span className={cn(
-                  'inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium mb-1',
+                  'inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium mb-0.5 sm:mb-1',
                   today ? 'bg-brand-800 text-white' : inMonth ? 'text-gray-700' : 'text-gray-300'
                 )}>
                   {format(day, 'd')}
                 </span>
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 hidden sm:block">
                   {dayRes.slice(0, 3).map(r => (
                     <div
                       key={r.id}
@@ -142,6 +142,15 @@ export default function CalendarPage() {
                     <div className="text-[10px] text-gray-400 px-1">+{dayRes.length - 3}</div>
                   )}
                 </div>
+                {/* Mobile: dot indicator only */}
+                {dayRes.length > 0 && (
+                  <div className="sm:hidden flex gap-0.5 flex-wrap mt-0.5">
+                    {dayRes.slice(0, 3).map(r => (
+                      <span key={r.id} className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: SOURCE_HEX[r.source] ?? '#9CA3AF' }} />
+                    ))}
+                    {dayRes.length > 3 && <span className="text-[8px] text-gray-400">+{dayRes.length - 3}</span>}
+                  </div>
+                )}
               </button>
             )
           })}

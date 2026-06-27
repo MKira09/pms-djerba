@@ -91,8 +91,35 @@ export default function BlacklistPage() {
         className="max-w-sm"
       />
 
-      {/* Table */}
-      <Card padding={false}>
+      {/* Mobile cards */}
+      {loading ? (
+        <div className="md:hidden py-12 text-center text-gray-400">Chargement…</div>
+      ) : filtered.length === 0 ? (
+        <div className="md:hidden py-12 text-center text-gray-400">
+          <ShieldAlert className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+          <p>Aucun client en liste noire</p>
+        </div>
+      ) : (
+        <div className="md:hidden space-y-3">
+          {filtered.map(e => (
+            <Card key={e.id} className="space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-gray-900">{e.full_name || '—'}</p>
+                <button onClick={() => setDeleteEntry(e)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-md flex-shrink-0">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              {e.phone && <p className="text-sm text-gray-600">📞 {e.phone}</p>}
+              {e.email && <p className="text-sm text-gray-600">✉️ {e.email}</p>}
+              {e.reason && <p className="text-sm text-gray-500 italic truncate">"{e.reason}"</p>}
+              {e.created_at && <p className="text-xs text-gray-400">{format(parseISO(e.created_at), 'dd/MM/yyyy')}</p>}
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop table */}
+      <Card padding={false} className="hidden md:block">
         {loading ? (
           <div className="py-12 text-center text-gray-400">Chargement…</div>
         ) : filtered.length === 0 ? (

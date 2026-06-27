@@ -88,8 +88,45 @@ export default function ReservationsPage() {
         <Select options={sourceOpts} value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="w-40" />
       </div>
 
-      {/* Table */}
-      <Card padding={false} className="overflow-x-auto">
+      {/* Mobile cards — visible on small screens only */}
+      {filtered.length === 0 ? (
+        <div className="md:hidden py-12 text-center text-gray-400">{t('reservations.no_reservations')}</div>
+      ) : (
+        <div className="md:hidden space-y-3">
+          {filtered.map(r => {
+            const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
+            return (
+              <Card key={r.id} className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{r.client?.full_name ?? '—'}</p>
+                    <p className="text-sm text-gray-500 truncate">{r.villa?.name ?? '—'}</p>
+                  </div>
+                  <Badge className={STATUS_COLORS[r.status]} dot>{t(`reservations.${r.status}`)}</Badge>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <span>📅 {format(parseISO(r.check_in), 'dd/MM')} → {format(parseISO(r.check_out), 'dd/MM')}</span>
+                  <span className="text-gray-400">· {nights} nuit{nights > 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>
+                    <span className="text-sm font-bold text-brand-800">{fmtCurrency(r.total_amount)}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => handleSendWelcomeEmail(r.id)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded-md" title="Email de bienvenue"><Mail className="h-4 w-4" /></button>
+                    <button onClick={() => { setEditRes(r); setFormOpen(true) }} className="p-1.5 text-gray-400 hover:text-brand-700 rounded-md"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => setDeleteId(r.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-md"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Desktop table — hidden on mobile */}
+      <Card padding={false} className="hidden md:block overflow-x-auto">
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-400">{t('reservations.no_reservations')}</div>
         ) : (

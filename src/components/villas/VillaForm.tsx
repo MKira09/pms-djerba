@@ -138,7 +138,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
       <form id="villa-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <Input label={`Nom de la ${singular.toLowerCase()}`} value={form.name} onChange={e => set('name', e.target.value)} required />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 xs:grid-cols-2 gap-3">
             <Select label={t('villas.status')} value={form.status} onChange={e => set('status', e.target.value as VillaStatus)} options={statusOpts} />
             <Select
               label="Type de bien"
@@ -235,7 +235,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
           </h3>
 
           {/* Code + WiFi */}
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Input label="Code d'accès" value={form.access_code ?? ''} onChange={e => set('access_code', e.target.value)} placeholder="Ex: 1234" />
             <Input label="Réseau WiFi" value={form.wifi_network ?? ''} onChange={e => set('wifi_network', e.target.value)} placeholder="Nom du réseau" />
             <Input label="Mot de passe WiFi" value={form.wifi_password ?? ''} onChange={e => set('wifi_password', e.target.value)} placeholder="Mot de passe" />

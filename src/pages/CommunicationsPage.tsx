@@ -58,7 +58,7 @@ export default function CommunicationsPage() {
         <p className="text-sm text-gray-500">Automatisez les messages envoyés à vos clients</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-6">
         {/* Trigger list */}
         <div className="space-y-3">
           {TRIGGERS.map(({ key, icon: Icon, label, timing, color }) => (

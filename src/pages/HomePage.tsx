@@ -17,8 +17,8 @@ const C = {
 /* ─────── Gallery images ─────── */
 const GALLERY = [
   {
-    src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=85',
-    label: 'VILLA & PISCINE',
+    src: 'https://images.unsplash.com/photo-cmbbwn-2Ilw?auto=format&fit=crop&w=900&q=85',
+    label: 'FLEURS',
     span: 'row',
   },
   {
@@ -27,18 +27,16 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    src: '/mer-turquoise.png',
+    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
     label: 'MER TURQUOISE',
     span: 'normal',
   },
   {
-    // Tropical beach with palm tree — white sand, clear water
-    src: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&w=700&q=85',
+    src: 'https://images.unsplash.com/photo-AHlPuTYE2qA?auto=format&fit=crop&w=700&q=85',
     label: 'PLAGE',
     span: 'normal',
   },
   {
-    // Turquoise sea from above — aerial view
     src: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=700&q=85',
     label: 'MER TURQUOISE',
     span: 'normal',
@@ -46,6 +44,11 @@ const GALLERY = [
   {
     src: 'https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=1400&q=85',
     label: 'VILLA & PISCINE',
+    span: 'col',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-q8hSwN-SVnA?auto=format&fit=crop&w=1400&q=85',
+    label: 'CHAISE',
     span: 'col',
   },
 ]
@@ -372,6 +375,24 @@ export default function HomePage() {
             }}>
               <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
                 {GALLERY[5].label}
+              </span>
+            </div>
+          </div>
+
+          {/* 7th image — CHAISE strip */}
+          <div style={{ marginTop: 12, position: 'relative', height: 240, overflow: 'hidden' }}>
+            <img
+              src={GALLERY[6].src}
+              alt={GALLERY[6].label}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+            />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to right, rgba(12,68,124,0.5) 0%, transparent 40%, transparent 60%, rgba(12,68,124,0.5) 100%)',
+              display: 'flex', alignItems: 'flex-end', padding: '20px 28px',
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
+                {GALLERY[6].label}
               </span>
             </div>
           </div>

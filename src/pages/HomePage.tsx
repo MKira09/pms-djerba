@@ -362,14 +362,14 @@ export default function HomePage() {
         <div style={{ maxWidth: 1080, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
             <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-              La plateforme
+              Zéro complication
             </span>
             <h2 style={{
               fontFamily: "'Cormorant', serif",
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
             }}>
-              Tout ce dont vous avez besoin,<br />rien de superflu
+              Réservations, clients, revenus — tout au même endroit.
             </h2>
           </div>
 

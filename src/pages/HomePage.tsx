@@ -27,8 +27,7 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    // Turquoise pool water close-up — pebble-like texture, sea glass tones
-    src: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=700&q=85',
+    src: '/mer-turquoise.png',
     label: 'MER TURQUOISE',
     span: 'normal',
   },

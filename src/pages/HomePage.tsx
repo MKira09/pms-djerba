@@ -284,7 +284,7 @@ export default function HomePage() {
             fontSize: 34, fontWeight: 500, fontStyle: 'italic',
             color: C.navy, lineHeight: 1.5, letterSpacing: '-0.01em',
           }}>
-            Pilotez vos villas, appartements et riads depuis une interface pensée pour l'excellence.
+            Gérez vos biens, choisissez vos clients, gardez 100% de vos revenus.
           </p>
           <div style={{ width: 40, height: 2, background: C.teal, margin: '40px auto 0' }} />
         </div>
@@ -308,7 +308,7 @@ export default function HomePage() {
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
             }}>
-              Djerba, à votre portée
+              De la Méditerranée à l'Atlantique, où que vous soyez.
             </h2>
           </div>
 

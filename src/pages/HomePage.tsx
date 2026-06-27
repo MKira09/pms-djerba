@@ -17,37 +17,36 @@ const C = {
 /* ─────── Gallery images ─────── */
 const GALLERY = [
   {
-    // White minimalist villa front view with pool, blue sky, Mediterranean luxury
     src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=85',
-    label: 'Villa méditerranéenne',
+    label: 'VILLA & PISCINE',
     span: 'row',
   },
   {
-    // Modern pool with terrace — white minimalist villa (KEEP)
     src: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=700&q=85',
-    label: 'Terrasse & piscine',
+    label: 'TERRASSE & PISCINE',
     span: 'normal',
   },
   {
-    // Turquoise Mediterranean sea — clear water, blue tones
-    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
-    label: 'Mer turquoise',
+    // Turquoise pool water close-up — pebble-like texture, sea glass tones
+    src: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=700&q=85',
+    label: 'MER TURQUOISE',
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=85',
-    label: 'Plage',
+    // Tropical beach with palm tree — white sand, clear water
+    src: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&w=700&q=85',
+    label: 'PLAGE',
     span: 'normal',
   },
   {
+    // Turquoise sea from above — aerial view
     src: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=700&q=85',
-    label: 'Mer turquoise',
+    label: 'MER TURQUOISE',
     span: 'normal',
   },
   {
-    // Elegant villa pool at dusk — cinematic wide shot (KEEP)
     src: 'https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=1400&q=85',
-    label: 'Villa & piscine',
+    label: 'VILLA & PISCINE',
     span: 'col',
   },
 ]
@@ -185,7 +184,7 @@ export default function HomePage() {
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'url(https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1920&q=90)',
-          backgroundSize: 'cover', backgroundPosition: 'center center',
+          backgroundSize: 'cover', backgroundPosition: 'center 30%',
         }} />
         {/* Overlay */}
         <div style={{

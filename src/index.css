@@ -66,9 +66,26 @@
   .lp-nav-links { display: none !important; }
   .lp-section-pad { padding: 64px 20px !important; }
   .lp-plan-pad { padding: 40px 24px !important; }
-  .lp-feat-grid { grid-template-columns: repeat(2,1fr) !important; }
   .lp-feat-border-r { border-right: none !important; }
-  .lp-footer { flex-direction: column !important; gap: 16px !important; text-align: center !important; }
+  .lp-footer { flex-direction: column !important; align-items: center !important; text-align: center !important; padding: 24px 20px !important; }
+
+  /* Hero texts */
+  .lp-hero-brand   { font-size: 48px !important; }
+  .lp-hero-tagline { font-size: 20px !important; }
+
+  /* Features — 1 column, centré */
+  .lp-feat-grid { grid-template-columns: 1fr !important; }
+  .lp-feat-item {
+    border-right: none !important;
+    border-bottom: 1px solid #EDE8DF !important;
+    padding: 36px 28px !important;
+    text-align: center !important;
+  }
+  .lp-feat-item:last-child { border-bottom: none !important; }
+
+  /* Pricing — 1 colonne */
+  .lp-plans-grid    { grid-template-columns: 1fr !important; }
+  .lp-plan-featured { transform: none !important; }
 
   /* Gallery h2 — fit on mobile */
   .lp-gallery-h2 { font-size: 28px !important; }

@@ -205,7 +205,7 @@ export default function HomePage() {
           </div>
 
           {/* Brand name */}
-          <div style={{
+          <div className="lp-hero-brand" style={{
             fontFamily: "'Cormorant', serif",
             fontSize: 72, fontWeight: 600,
             color: C.white, lineHeight: 1,
@@ -215,7 +215,7 @@ export default function HomePage() {
           </div>
 
           {/* Tagline */}
-          <p style={{
+          <p className="lp-hero-tagline" style={{
             fontFamily: "'Cormorant', serif",
             fontSize: 22, fontWeight: 400, fontStyle: 'italic',
             color: 'rgba(255,255,255,0.88)',
@@ -343,7 +343,7 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div style={{
+          <div className="lp-feat-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 2,
@@ -352,6 +352,7 @@ export default function HomePage() {
             {FEATURES.map((f, i) => (
               <div
                 key={i}
+                className="lp-feat-item"
                 style={{
                   padding: '56px 44px',
                   background: C.white,
@@ -460,10 +461,11 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {PLANS.map((plan, i) => (
               <div
                 key={i}
+                className={plan.cta ? 'lp-plan-featured' : undefined}
                 style={{
                   background: plan.cta ? C.navy : C.white,
                   padding: '52px 36px',
@@ -606,7 +608,7 @@ export default function HomePage() {
       {/* ════════════════════════════════
           FOOTER
       ════════════════════════════════ */}
-      <footer style={{
+      <footer className="lp-footer" style={{
         background: C.navy, padding: '32px 48px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 16,

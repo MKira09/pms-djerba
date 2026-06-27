@@ -33,6 +33,7 @@ const PLANS = [
 export default function SubscriptionPage() {
   const { tenant } = useAuthStore()
   const currentPlan = tenant?.plan ?? 'starter'
+  const isFoundingMember = tenant?.founding_member === true
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -40,6 +41,19 @@ export default function SubscriptionPage() {
         <h1 className="text-2xl font-bold text-gray-900">Abonnement</h1>
         <p className="text-sm text-gray-500">Gérez votre plan et vos paiements</p>
       </div>
+
+      {isFoundingMember && (
+        <div className="flex items-center gap-3 px-5 py-4 rounded-xl bg-amber-50 border border-amber-200">
+          <span className="text-2xl">🌟</span>
+          <div>
+            <p className="font-semibold text-amber-900">Membre fondateur — Accès Pro gratuit à vie</p>
+            <p className="text-sm text-amber-700 mt-0.5">
+              Vous faites partie des premiers membres de VillaHub. Votre accès Pro est offert
+              définitivement, sans frais ni renouvellement.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-5">
         {PLANS.map(plan => (
@@ -71,7 +85,15 @@ export default function SubscriptionPage() {
               ))}
             </ul>
 
-            {currentPlan === plan.key ? (
+            {isFoundingMember && plan.key === 'pro' ? (
+              <div className="w-full py-2 text-center text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                🌟 Inclus — Membre fondateur
+              </div>
+            ) : isFoundingMember ? (
+              <div className="w-full py-2 text-center text-sm text-gray-400 rounded-lg border border-gray-100 bg-gray-50">
+                Non requis
+              </div>
+            ) : currentPlan === plan.key ? (
               <div className="w-full py-2 text-center text-sm font-medium text-success-700 bg-success-50 rounded-lg border border-success-200">
                 ✓ Plan actuel
               </div>

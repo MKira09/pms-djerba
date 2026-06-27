@@ -38,7 +38,7 @@ const GALLERY = [
   },
   {
     src: 'https://images.unsplash.com/photo-1657521756507-03b02c8ead16?auto=format&fit=crop&w=700&q=85',
-    label: 'MER TURQUOISE',
+    label: 'ENTRÉE',
     span: 'normal',
   },
 ]

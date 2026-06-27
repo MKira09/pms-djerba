@@ -37,7 +37,7 @@ const GALLERY = [
     span: 'normal',
   },
   {
-    src: 'https://images.unsplash.com/photo-1651108066109-15a97d54ced3?auto=format&fit=crop&w=700&q=85',
+    src: 'https://images.unsplash.com/photo-1657521756507-03b02c8ead16?auto=format&fit=crop&w=700&q=85',
     label: 'MER TURQUOISE',
     span: 'normal',
   },

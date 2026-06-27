@@ -31,6 +31,7 @@ const DEMO_TENANT: Tenant = {
   property_types: ['Villa', 'Appartement'],
   slogan: 'Votre séjour de rêve à Djerba',
   founding_member: true,
+  welcome_email_enabled: true,
 }
 
 export const useAuthStore = create<AuthState>()(

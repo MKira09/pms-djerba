@@ -11,6 +11,13 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'issue'
 export type EmailTrigger = 'booking_confirmed' | 'reminder_checkin' | 'welcome' | 'review_request'
 export type Lang = 'fr' | 'ar' | 'en'
 
+// ─── Contact number ────────────────────────────────────────────────────────
+export interface ContactNumber {
+  name: string
+  role: string
+  phone: string
+}
+
 // ─── Extra ─────────────────────────────────────────────────────────────────
 export interface Extra {
   id: string
@@ -29,6 +36,7 @@ export interface Tenant {
   property_types?: string[] | null
   slogan?: string | null
   founding_member?: boolean | null
+  welcome_email_enabled?: boolean | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────
@@ -64,7 +72,9 @@ export interface Villa {
   access_code: string | null
   arrival_info: string | null
   photos: string[]
+  wifi_network?: string | null
   wifi_password: string | null
+  contact_numbers?: ContactNumber[] | null
   property_type?: string | null
   created_at: string
   updated_at: string

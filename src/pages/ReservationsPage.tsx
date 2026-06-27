@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import Button from '@/components/ui/Button'
@@ -10,6 +10,7 @@ import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Modal from '@/components/ui/Modal'
 import ReservationForm from '@/components/reservations/ReservationForm'
+import { supabase } from '@/lib/supabase'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
@@ -39,6 +40,19 @@ export default function ReservationsPage() {
     const matchSource = sourceFilter === 'all' || r.source === sourceFilter
     return matchSearch && matchStatus && matchVilla && matchSource
   }).sort((a, b) => b.check_in.localeCompare(a.check_in))
+
+  async function handleSendWelcomeEmail(reservationId: string) {
+    const tid = toast.loading('Envoi de l\'email…')
+    try {
+      const { error } = await supabase.functions.invoke('send-welcome-email', {
+        body: { reservation_id: reservationId },
+      })
+      if (error) throw error
+      toast.success('Email de bienvenue envoyé !', { id: tid })
+    } catch (e: unknown) {
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : 'inconnue'), { id: tid })
+    }
+  }
 
   async function handleDelete() {
     if (!deleteId) return
@@ -130,6 +144,13 @@ export default function ReservationsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 justify-end">
+                        <button
+                          onClick={() => handleSendWelcomeEmail(r.id)}
+                          className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors"
+                          title="Envoyer email de bienvenue"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </button>
                         <button onClick={() => { setEditRes(r); setFormOpen(true) }} className="p-1.5 text-gray-400 hover:text-brand-700 hover:bg-brand-50 rounded-md transition-colors">
                           <Pencil className="h-4 w-4" />
                         </button>

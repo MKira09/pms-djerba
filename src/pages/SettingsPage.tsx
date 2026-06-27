@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -24,6 +24,8 @@ export default function SettingsPage() {
   )
   const [savingAgency, setSavingAgency] = useState(false)
   const [localExtras, setLocalExtras] = useState<Extra[]>([])
+  const [emailEnabled, setEmailEnabled] = useState(tenant?.welcome_email_enabled !== false)
+  const [savingEmail, setSavingEmail] = useState(false)
 
   function toggleType(type: string) {
     setPropertyTypes(prev =>
@@ -43,6 +45,23 @@ export default function SettingsPage() {
   async function handleSaveExtras() {
     await saveExtras(localExtras)
     toast.success('Tarifs extras enregistrés.')
+  }
+
+  async function handleSaveEmailSettings() {
+    if (!tenant) return
+    setSavingEmail(true)
+    try {
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update({ welcome_email_enabled: emailEnabled }).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant({ welcome_email_enabled: emailEnabled })
+      toast.success('Paramètres email enregistrés.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingEmail(false)
+    }
   }
 
   async function handleSaveAgency() {
@@ -199,6 +218,27 @@ export default function SettingsPage() {
         <div className="mt-4">
           <Button onClick={handleSaveExtras}>Enregistrer les prix</Button>
         </div>
+      </Card>
+
+      {/* Welcome email */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <Mail className="h-4 w-4 text-brand-700" /> Email de bienvenue
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Un email est envoyé automatiquement au client 2 heures avant son arrivée avec le code d'accès, le WiFi et les contacts.
+        </p>
+        <label className="flex items-center justify-between cursor-pointer mb-4">
+          <span className="text-sm text-gray-700">Activer l'email de bienvenue automatique</span>
+          <button
+            type="button"
+            onClick={() => setEmailEnabled(v => !v)}
+            className={`w-11 h-6 rounded-full relative transition-colors ${emailEnabled ? 'bg-brand-700' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${emailEnabled ? 'left-6' : 'left-1'}`} />
+          </button>
+        </label>
+        <Button onClick={handleSaveEmailSettings} loading={savingEmail}>Enregistrer</Button>
       </Card>
 
       {/* Dark mode */}

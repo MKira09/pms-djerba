@@ -102,6 +102,12 @@
   .lp-gi-4 { grid-column: 2; grid-row: 3; }
 }
 
+/* Tablet : 2 colonnes pour les 4 plans (entre 769px et 1100px) */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .lp-plans-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+  .lp-plan-featured { transform: none !important; }
+}
+
 @keyframes lp-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

@@ -65,9 +65,23 @@ const FEATURES = [
 ]
 
 const PLANS = [
-  { name: 'Starter', price: 29, detail: '3 biens · 1 utilisateur', cta: false },
-  { name: 'Pro', price: 59, detail: '10 biens · 5 utilisateurs', cta: true },
-  { name: 'Agence', price: 99, detail: 'Biens illimités · Équipe illimitée', cta: false },
+  { name: 'Starter',      price: 29,  detail: '3 biens · 1 utilisateur',          cta: false },
+  { name: 'Pro',          price: 59,  detail: '10 biens · 5 utilisateurs',         cta: true  },
+  { name: 'Agence',       price: 99,  detail: 'Biens illimités · Équipe illimitée', cta: false },
+  {
+    name: 'CLÉS EN MAIN',
+    isQuote: true,
+    detail: 'Service clé en main',
+    description: 'Votre logiciel, configuré par notre équipe',
+    cta: false,
+    features: [
+      'Installation complète de VillaHub',
+      'Ajout de toutes vos villas',
+      'Formation d\'1h en visio',
+      'Support prioritaire 30 jours',
+      'Nombre de biens selon devis',
+    ],
+  },
 ]
 
 /* ─────── Component ─────── */
@@ -447,7 +461,7 @@ export default function HomePage() {
           TARIFS
       ════════════════════════════════ */}
       <section id="tarifs" style={{ background: C.sand, padding: '112px 48px' }}>
-        <div style={{ maxWidth: 940, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
             <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
               Tarifs
@@ -461,7 +475,7 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
             {PLANS.map((plan, i) => (
               <div
                 key={i}
@@ -496,46 +510,110 @@ export default function HomePage() {
                   {plan.detail}
                 </p>
 
-                <div style={{
-                  fontFamily: "'Cormorant', serif",
-                  fontSize: 56, fontWeight: 600,
-                  color: plan.cta ? C.teal : C.navy,
-                  lineHeight: 1, marginBottom: 4,
-                }}>
-                  {plan.price}€
-                </div>
-                <p style={{ color: plan.cta ? 'rgba(255,255,255,0.4)' : C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32 }}>
-                  par mois
-                </p>
+                {'isQuote' in plan ? (
+                  /* ── CLÉS EN MAIN : Sur devis ── */
+                  <>
+                    <div style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 38, fontWeight: 600,
+                      color: C.navy, lineHeight: 1, marginBottom: 4,
+                    }}>
+                      Sur devis
+                    </div>
+                    <p style={{ color: C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32 }}>
+                      {(plan as { description: string }).description}
+                    </p>
 
-                <div style={{ width: '100%', height: 1, background: plan.cta ? 'rgba(255,255,255,0.08)' : C.sandDk, marginBottom: 32 }} />
+                    <div style={{ width: '100%', height: 1, background: C.sandDk, marginBottom: 24 }} />
 
-                <div style={{
-                  fontFamily: "'Cormorant', serif",
-                  fontSize: 28, fontWeight: 600,
-                  color: plan.cta ? C.white : C.navy,
-                  marginBottom: 32,
-                }}>
-                  {plan.name}
-                </div>
+                    <div style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 22, fontWeight: 600,
+                      color: C.navy, marginBottom: 20,
+                    }}>
+                      {plan.name}
+                    </div>
 
-                <button
-                  onClick={() => navigate('/plans')}
-                  style={{
-                    width: '100%', padding: '14px',
-                    background: plan.cta ? C.teal : 'transparent',
-                    color: plan.cta ? C.white : C.navy,
-                    border: plan.cta ? 'none' : `1px solid ${C.sandDk}`,
-                    borderRadius: 2,
-                    fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
-                    textTransform: 'uppercase', cursor: 'pointer',
-                    transition: 'opacity 0.2s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                >
-                  Choisir ce plan
-                </button>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {(plan as { features: string[] }).features.map((f, j) => (
+                        <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: C.grey, fontWeight: 300, lineHeight: 1.5 }}>
+                          <span style={{ color: C.teal, flexShrink: 0, marginTop: 1 }}>✓</span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <a
+                      href="#contact"
+                      style={{
+                        display: 'block', width: '100%', padding: '14px',
+                        background: 'transparent',
+                        color: C.navy,
+                        border: `1px solid ${C.sandDk}`,
+                        borderRadius: 2,
+                        fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+                        textTransform: 'uppercase', cursor: 'pointer',
+                        textDecoration: 'none', textAlign: 'center',
+                        transition: 'border-color 0.2s, color 0.2s',
+                        boxSizing: 'border-box',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = C.teal
+                        e.currentTarget.style.color = C.teal
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = C.sandDk
+                        e.currentTarget.style.color = C.navy
+                      }}
+                    >
+                      Nous contacter
+                    </a>
+                  </>
+                ) : (
+                  /* ── Plans standards ── */
+                  <>
+                    <div style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 56, fontWeight: 600,
+                      color: plan.cta ? C.teal : C.navy,
+                      lineHeight: 1, marginBottom: 4,
+                    }}>
+                      {(plan as { price: number }).price}€
+                    </div>
+                    <p style={{ color: plan.cta ? 'rgba(255,255,255,0.4)' : C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32 }}>
+                      par mois
+                    </p>
+
+                    <div style={{ width: '100%', height: 1, background: plan.cta ? 'rgba(255,255,255,0.08)' : C.sandDk, marginBottom: 32 }} />
+
+                    <div style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 28, fontWeight: 600,
+                      color: plan.cta ? C.white : C.navy,
+                      marginBottom: 32,
+                    }}>
+                      {plan.name}
+                    </div>
+
+                    <button
+                      onClick={() => navigate('/plans')}
+                      style={{
+                        width: '100%', padding: '14px',
+                        background: plan.cta ? C.teal : 'transparent',
+                        color: plan.cta ? C.white : C.navy,
+                        border: plan.cta ? 'none' : `1px solid ${C.sandDk}`,
+                        borderRadius: 2,
+                        fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+                        textTransform: 'uppercase', cursor: 'pointer',
+                        transition: 'opacity 0.2s',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      Choisir ce plan
+                    </button>
+                  </>
+                )}
               </div>
             ))}
           </div>

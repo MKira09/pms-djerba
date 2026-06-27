@@ -362,7 +362,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1080, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
             <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-              Zéro complication
+              ZÉRO COMPLICATION
             </span>
             <h2 style={{
               fontFamily: "'Cormorant', serif",

@@ -41,11 +41,6 @@ const GALLERY = [
     label: 'MER TURQUOISE',
     span: 'normal',
   },
-  {
-    src: 'https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=1400&q=85',
-    label: 'VILLA & PISCINE',
-    span: 'col',
-  },
 ]
 
 const FEATURES = [
@@ -356,23 +351,6 @@ export default function HomePage() {
             />
           </div>
 
-          {/* 6th image — full width cinematic strip */}
-          <div style={{ marginTop: 12, position: 'relative', height: 240, overflow: 'hidden' }}>
-            <img
-              src={GALLERY[5].src}
-              alt={GALLERY[5].label}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', display: 'block' }}
-            />
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to right, rgba(12,68,124,0.5) 0%, transparent 40%, transparent 60%, rgba(12,68,124,0.5) 100%)',
-              display: 'flex', alignItems: 'flex-end', padding: '20px 28px',
-            }}>
-              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
-                {GALLERY[5].label}
-              </span>
-            </div>
-          </div>
 
         </div>
       </section>

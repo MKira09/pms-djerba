@@ -303,7 +303,7 @@ export default function HomePage() {
             }}>
               L'art de vivre méditerranéen
             </span>
-            <h2 style={{
+            <h2 className="lp-gallery-h2" style={{
               fontFamily: "'Cormorant', serif",
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
@@ -313,42 +313,12 @@ export default function HomePage() {
           </div>
 
           {/* Grid — editorial layout */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1.4fr 1fr 1fr',
-            gridTemplateRows: '300px 300px',
-            gap: 12,
-          }}>
-            {/* 1 — tall left (pool) */}
-            <GalleryImg
-              src={GALLERY[0].src}
-              label={GALLERY[0].label}
-              style={{ gridColumn: '1', gridRow: '1 / 3' }}
-            />
-            {/* 2 — top middle (mer) */}
-            <GalleryImg
-              src={GALLERY[1].src}
-              label={GALLERY[1].label}
-              style={{ gridColumn: '2', gridRow: '1' }}
-            />
-            {/* 3 — top right (volets) */}
-            <GalleryImg
-              src={GALLERY[2].src}
-              label={GALLERY[2].label}
-              style={{ gridColumn: '3', gridRow: '1' }}
-            />
-            {/* 4 — bottom middle (salon extérieur) */}
-            <GalleryImg
-              src={GALLERY[3].src}
-              label={GALLERY[3].label}
-              style={{ gridColumn: '2', gridRow: '2' }}
-            />
-            {/* 5 — bottom right spanning: fleurs */}
-            <GalleryImg
-              src={GALLERY[4].src}
-              label={GALLERY[4].label}
-              style={{ gridColumn: '3', gridRow: '2' }}
-            />
+          <div className="lp-gallery-grid">
+            <GalleryImg src={GALLERY[0].src} label={GALLERY[0].label} className="lp-gi-0" />
+            <GalleryImg src={GALLERY[1].src} label={GALLERY[1].label} className="lp-gi-1" />
+            <GalleryImg src={GALLERY[2].src} label={GALLERY[2].label} className="lp-gi-2" />
+            <GalleryImg src={GALLERY[3].src} label={GALLERY[3].label} className="lp-gi-3" />
+            <GalleryImg src={GALLERY[4].src} label={GALLERY[4].label} className="lp-gi-4" />
           </div>
 
 
@@ -675,9 +645,9 @@ export default function HomePage() {
 
 /* ─── Sub-components ─── */
 
-function GalleryImg({ src, label, style }: { src: string; label: string; style?: React.CSSProperties }) {
+function GalleryImg({ src, label, style, className }: { src: string; label: string; style?: React.CSSProperties; className?: string }) {
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', ...style }}>
+    <div className={className} style={{ position: 'relative', overflow: 'hidden', ...style }}>
       <img
         src={src}
         alt={label}
@@ -690,7 +660,7 @@ function GalleryImg({ src, label, style }: { src: string; label: string; style?:
         background: 'linear-gradient(to top, rgba(12,68,124,0.55) 0%, transparent 60%)',
         padding: '24px 20px 14px',
       }}>
-        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, fontWeight: 300, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, fontWeight: 300, letterSpacing: '0.16em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
           {label}
         </span>
       </div>

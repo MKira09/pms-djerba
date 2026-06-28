@@ -135,31 +135,56 @@ export default function SettingsPage() {
     try {
       let newLogoUrl: string | null = tenant.logo_url ?? null
 
-      if (logoFile && !isDemoMode) {
-        const ext = logoFile.name.split('.').pop() ?? 'png'
-        const path = `${tenant.id}/logo.${ext}`
-        const { error: upErr } = await supabase.storage.from('logos').upload(path, logoFile, { upsert: true })
-        if (upErr) throw upErr
-        const { data } = supabase.storage.from('logos').getPublicUrl(path)
-        newLogoUrl = data.publicUrl
+      // --- Upload logo if a new file was selected ---
+      if (logoFile) {
+        if (isDemoMode) {
+          // In demo mode use the local object URL as a preview stand-in
+          newLogoUrl = logoPreview
+        } else {
+          const ext = (logoFile.name.split('.').pop() ?? 'png').toLowerCase()
+          const path = `${tenant.id}/logo.${ext}`
+
+          const { error: upErr } = await supabase.storage
+            .from('logos')
+            .upload(path, logoFile, { upsert: true, contentType: logoFile.type })
+
+          if (upErr) {
+            console.error('[logo upload]', upErr)
+            toast.error(`Upload échoué : ${upErr.message}`)
+            return
+          }
+
+          const { data: urlData } = supabase.storage.from('logos').getPublicUrl(path)
+          // Bust the CDN cache so the new image shows immediately
+          newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`
+        }
       } else if (!logoPreview && tenant.logo_url) {
+        // User cleared the logo
         newLogoUrl = null
       }
 
+      // --- Persist name / slogan / logo_url ---
       const updates = {
         name: company.trim() || tenant.name,
         slogan: slogan.trim() || null,
         logo_url: newLogoUrl,
       }
+
       if (!isDemoMode) {
-        const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
-        if (error) throw error
+        const { error: dbErr } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
+        if (dbErr) {
+          console.error('[save agency]', dbErr)
+          toast.error(`Sauvegarde échouée : ${dbErr.message}`)
+          return
+        }
       }
+
       updateTenant(updates)
       setLogoFile(null)
       toast.success('Paramètres agence enregistrés.')
-    } catch {
-      toast.error('Erreur lors de l\'enregistrement.')
+    } catch (err) {
+      console.error('[handleSaveAgency unexpected]', err)
+      toast.error('Erreur inattendue — voir la console.')
     } finally {
       setSavingAgency(false)
     }

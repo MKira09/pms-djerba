@@ -26,6 +26,7 @@ export interface Extra {
   description?: string
   icon?: string
   enabled?: boolean  // undefined = true (actif par défaut)
+  quantity?: number  // undefined = 1
 }
 
 // ─── Tenant ────────────────────────────────────────────────────────────────

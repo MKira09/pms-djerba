@@ -146,7 +146,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         if (villa) {
           const nights = nightCount(next.check_in, next.check_out)
           const pricePerNight = computePrice(villa.base_price, parseISO(next.check_in))
-          const extrasTotal = next.extras.reduce((s, e) => s + e.price, 0)
+          const extrasTotal = next.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
           next.total_amount = Math.max(0, nights * pricePerNight) + extrasTotal
         }
       }
@@ -155,14 +155,28 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     if (k === 'villa_id' || k === 'check_in' || k === 'check_out') setConflict(false)
   }
 
+  function extraLineTotal(e: Extra) { return e.price * (e.quantity ?? 1) }
+
   function toggleExtra(extra: Extra) {
     setForm(f => {
       const isSelected = f.extras.some(e => e.id === extra.id)
-      const newExtras = isSelected ? f.extras.filter(e => e.id !== extra.id) : [...f.extras, extra]
-      const prevExtrasTotal = f.extras.reduce((s, e) => s + e.price, 0)
-      const newExtrasTotal = newExtras.reduce((s, e) => s + e.price, 0)
-      const base = f.total_amount - prevExtrasTotal
-      return { ...f, extras: newExtras, total_amount: Math.max(0, base) + newExtrasTotal }
+      const newExtras = isSelected
+        ? f.extras.filter(e => e.id !== extra.id)
+        : [...f.extras, { ...extra, quantity: 1 }]
+      const prevTotal = f.extras.reduce((s, e) => s + extraLineTotal(e), 0)
+      const newTotal  = newExtras.reduce((s, e) => s + extraLineTotal(e), 0)
+      return { ...f, extras: newExtras, total_amount: Math.max(0, f.total_amount - prevTotal) + newTotal }
+    })
+  }
+
+  function setExtraQty(extraId: string, qty: number) {
+    setForm(f => {
+      const prevTotal = f.extras.reduce((s, e) => s + extraLineTotal(e), 0)
+      const newExtras = f.extras.map(e =>
+        e.id === extraId ? { ...e, quantity: Math.max(1, qty) } : e
+      )
+      const newTotal = newExtras.reduce((s, e) => s + extraLineTotal(e), 0)
+      return { ...f, extras: newExtras, total_amount: Math.max(0, f.total_amount - prevTotal) + newTotal }
     })
   }
 
@@ -253,7 +267,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const statusOpts = STATUSES.map(s => ({ value: s, label: t(`reservations.${s}`) }))
   const occasionOpts = [{ value: '', label: '— Choisir —' }, ...OCCASIONS.map(o => ({ value: o, label: o }))]
   const nights = form.check_in && form.check_out ? Math.max(0, nightCount(form.check_in, form.check_out)) : 0
-  const extrasTotal = form.extras.reduce((s, e) => s + e.price, 0)
+  const extrasTotal = form.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
   const blacklistMatch = !reservation ? checkBlacklist(form.client_name, form.client_phone, form.client_email) : null
 
   return (
@@ -343,31 +357,73 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Extras & Services</h3>
             <div className="space-y-2">
               {availableExtras.map(extra => {
-                const checked = form.extras.some(e => e.id === extra.id)
+                const selected = form.extras.find(e => e.id === extra.id)
+                const checked  = !!selected
+                const qty      = selected?.quantity ?? 1
+                const subtotal = extra.price * qty
+                const maxQty   = Math.max(1, nights)
                 return (
-                  <label key={extra.id} className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${checked ? 'border-brand-400 bg-brand-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    key={extra.id}
+                    className={`p-3 rounded-lg border transition-colors ${checked ? 'border-brand-400 bg-brand-50' : 'border-gray-200'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Checkbox */}
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleExtra(extra)}
-                        className="accent-brand-800 w-4 h-4 flex-shrink-0"
+                        className="accent-brand-800 w-4 h-4 flex-shrink-0 cursor-pointer"
                       />
+                      {/* Icon + name */}
                       {extra.icon && <span className="text-lg flex-shrink-0">{extra.icon}</span>}
-                      <div className="min-w-0">
-                        <p className="text-sm text-gray-700 font-medium">{extra.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-700 font-medium leading-tight">{extra.name}</p>
                         {extra.description && <p className="text-xs text-gray-400 truncate">{extra.description}</p>}
                       </div>
+                      {/* Right side */}
+                      {checked ? (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+                            <button
+                              type="button"
+                              onClick={() => setExtraQty(extra.id, qty - 1)}
+                              disabled={qty <= 1}
+                              className="px-2 py-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30 text-sm font-bold"
+                            >−</button>
+                            <input
+                              type="number"
+                              min={1}
+                              max={maxQty}
+                              value={qty}
+                              onChange={e => setExtraQty(extra.id, +e.target.value)}
+                              className="w-10 text-center text-sm py-1 border-none outline-none bg-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setExtraQty(extra.id, qty + 1)}
+                              disabled={qty >= maxQty}
+                              className="px-2 py-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30 text-sm font-bold"
+                            >+</button>
+                          </div>
+                          <span className="text-xs text-gray-400 whitespace-nowrap">× {extra.price}</span>
+                          <span className="text-sm font-bold text-brand-800 whitespace-nowrap min-w-[60px] text-right">
+                            {subtotal} TND
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400 flex-shrink-0">{extra.price} TND</span>
+                      )}
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 flex-shrink-0 ml-2">{extra.price} TND</span>
-                  </label>
+                  </div>
                 )
               })}
             </div>
             {extrasTotal > 0 && (
-              <p className="text-xs text-gray-500 mt-2 text-right">
-                Extras : +{extrasTotal} TND · Total : <strong>{form.total_amount} TND</strong>
-              </p>
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500 border-t pt-2">
+                <span>Total extras</span>
+                <span className="font-semibold text-gray-800">+{extrasTotal} TND</span>
+              </div>
             )}
           </div>
         )}

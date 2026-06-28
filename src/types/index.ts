@@ -41,6 +41,7 @@ export interface Tenant {
   slogan?: string | null
   founding_member?: boolean | null
   welcome_email_enabled?: boolean | null
+  logo_url?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

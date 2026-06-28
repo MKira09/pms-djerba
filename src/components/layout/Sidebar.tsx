@@ -64,9 +64,14 @@ export default function Sidebar() {
       {/* Brand */}
       <div className="px-5 py-5 border-b border-brand-700">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-            <Home className="h-5 w-5" />
-          </div>
+          {tenant?.logo_url
+            ? <img src={tenant.logo_url} alt="Logo" className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
+            : (
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Home className="h-5 w-5" />
+              </div>
+            )
+          }
           <div>
             <p className="font-bold text-base leading-tight">VillaHub</p>
             <p className="text-brand-300 text-xs truncate max-w-[140px]">{tenant?.name ?? '—'}</p>

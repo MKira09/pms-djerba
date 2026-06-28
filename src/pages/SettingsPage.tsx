@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -24,10 +24,13 @@ export default function SettingsPage() {
   const [name, setName] = useState(profile?.full_name ?? '')
   const [company, setCompany] = useState(tenant?.name ?? '')
   const [slogan, setSlogan] = useState(tenant?.slogan ?? '')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>(tenant?.logo_url ?? '')
   const [propertyTypes, setPropertyTypes] = useState<string[]>(
     tenant?.property_types?.length ? tenant.property_types : ['Villa']
   )
   const [savingAgency, setSavingAgency] = useState(false)
+  const [savingPropertyTypes, setSavingPropertyTypes] = useState(false)
   const [emailEnabled, setEmailEnabled] = useState(tenant?.welcome_email_enabled !== false)
   const [savingEmail, setSavingEmail] = useState(false)
 
@@ -37,6 +40,19 @@ export default function SettingsPage() {
   const [extraForm, setExtraForm] = useState(EMPTY_FORM)
   const [savingExtra, setSavingExtra] = useState(false)
   const [deleteExtraId, setDeleteExtraId] = useState<string | null>(null)
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Logo trop lourd (max 2 Mo).'); return }
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
+  function clearLogo() {
+    setLogoFile(null)
+    setLogoPreview('')
+  }
 
   function toggleType(type: string) {
     setPropertyTypes(prev =>
@@ -117,21 +133,52 @@ export default function SettingsPage() {
     if (!tenant) return
     setSavingAgency(true)
     try {
+      let newLogoUrl: string | null = tenant.logo_url ?? null
+
+      if (logoFile && !isDemoMode) {
+        const ext = logoFile.name.split('.').pop() ?? 'png'
+        const path = `${tenant.id}/logo.${ext}`
+        const { error: upErr } = await supabase.storage.from('logos').upload(path, logoFile, { upsert: true })
+        if (upErr) throw upErr
+        const { data } = supabase.storage.from('logos').getPublicUrl(path)
+        newLogoUrl = data.publicUrl
+      } else if (!logoPreview && tenant.logo_url) {
+        newLogoUrl = null
+      }
+
       const updates = {
         name: company.trim() || tenant.name,
         slogan: slogan.trim() || null,
-        property_types: propertyTypes,
+        logo_url: newLogoUrl,
       }
       if (!isDemoMode) {
         const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
         if (error) throw error
       }
       updateTenant(updates)
+      setLogoFile(null)
       toast.success('Paramètres agence enregistrés.')
     } catch {
       toast.error('Erreur lors de l\'enregistrement.')
     } finally {
       setSavingAgency(false)
+    }
+  }
+
+  async function handleSavePropertyTypes() {
+    if (!tenant) return
+    setSavingPropertyTypes(true)
+    try {
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update({ property_types: propertyTypes }).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant({ property_types: propertyTypes })
+      toast.success('Types de biens enregistrés.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingPropertyTypes(false)
     }
   }
 
@@ -168,10 +215,49 @@ export default function SettingsPage() {
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-brand-700" /> Agence
         </h2>
-        <div className="space-y-3">
-          <Input label="Nom de l'agence" value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex : Djerba Prestige Villas" />
-          <Input label="Slogan" value={slogan} onChange={e => setSlogan(e.target.value)} placeholder="Ex : Votre séjour de rêve à Djerba" />
-          <p className="text-xs text-gray-400">Le slogan s'affiche dans l'en-tête de l'application.</p>
+        <div className="space-y-4">
+          <Input
+            label="Nom de l'agence"
+            value={company}
+            onChange={e => setCompany(e.target.value)}
+            placeholder="Ex : Djerba Prestige Villas"
+          />
+          <Input
+            label="Slogan"
+            value={slogan}
+            onChange={e => setSlogan(e.target.value)}
+            placeholder="Ex : Votre séjour de rêve à Djerba"
+          />
+          <p className="text-xs text-gray-400 -mt-2">Le nom et le slogan s'affichent dans la barre latérale.</p>
+
+          {/* Logo */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Logo de l'agence</label>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
+                {logoPreview
+                  ? <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                  : <Building2 className="h-6 w-6 text-gray-300" />}
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <label className="cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-brand-700 border border-brand-200 rounded-lg px-3 py-2 hover:bg-brand-50 transition-colors">
+                  <Upload className="h-4 w-4" />
+                  {logoPreview ? 'Changer le logo' : 'Choisir un logo'}
+                  <input type="file" accept="image/*" onChange={handleLogoChange} className="sr-only" />
+                </label>
+                <p className="text-xs text-gray-400">PNG, JPG, SVG · Max 2 Mo · Carré recommandé</p>
+                {logoPreview && (
+                  <button type="button" onClick={clearLogo} className="text-xs text-red-500 hover:underline block">
+                    Supprimer le logo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Button onClick={handleSaveAgency} loading={savingAgency}>
+            Enregistrer les modifications
+          </Button>
         </div>
       </Card>
 
@@ -207,7 +293,7 @@ export default function SettingsPage() {
             ? `Menu affiché : "${propertyTypes[0]}s" · Un seul type sélectionné`
             : `Menu affiché : "Mes biens" · ${propertyTypes.length} types sélectionnés (${propertyTypes.join(', ')})`}
         </p>
-        <Button onClick={handleSaveAgency} loading={savingAgency}>Enregistrer</Button>
+        <Button onClick={handleSavePropertyTypes} loading={savingPropertyTypes}>Enregistrer</Button>
       </Card>
 
       {/* Language */}

@@ -135,7 +135,7 @@ export default function HomePage() {
 
   function handleContact(e: React.FormEvent) {
     e.preventDefault()
-    const s = encodeURIComponent(`VillaHub — contact de ${name}`)
+    const s = encodeURIComponent(`${agencyName || 'VillaHub'} — contact de ${name}`)
     const b = encodeURIComponent(`Nom : ${name}\nEmail : ${email}\n\n${msg}`)
     window.location.href = `mailto:contact@villahub.io?subject=${s}&body=${b}`
   }
@@ -267,7 +267,7 @@ export default function HomePage() {
             color: C.white, lineHeight: 1,
             letterSpacing: '0.04em', marginBottom: 20,
           }}>
-            VillaHub
+            {agencyName || 'VillaHub'}
           </div>
 
           {/* Tagline */}
@@ -734,10 +734,10 @@ export default function HomePage() {
         flexWrap: 'wrap', gap: 16,
       }}>
         <span style={{ fontFamily: "'Cormorant', serif", fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>
-          VillaHub
+          {agencyName || 'VillaHub'}
         </span>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 300 }}>
-          © {new Date().getFullYear()} VillaHub — Tous droits réservés
+          © {new Date().getFullYear()} {agencyName || 'VillaHub'} — Tous droits réservés
         </p>
         <div style={{ display: 'flex', gap: 28 }}>
           {[

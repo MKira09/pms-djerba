@@ -735,15 +735,6 @@ function GalleryImg({ src, label, style, className }: { src: string; label: stri
         onMouseEnter={e => ((e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)')}
         onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = 'scale(1)')}
       />
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        background: 'linear-gradient(to top, rgba(12,68,124,0.55) 0%, transparent 60%)',
-        padding: '24px 20px 14px',
-      }}>
-        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, fontWeight: 300, letterSpacing: '0.16em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-          {label}
-        </span>
-      </div>
     </div>
   )
 }

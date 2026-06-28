@@ -500,6 +500,92 @@ export default function HomePage() {
       )}
 
       {/* ════════════════════════════════
+          NOTRE HISTOIRE
+      ════════════════════════════════ */}
+      <section style={{ background: C.white, padding: '96px 48px' }}>
+        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div style={{
+            display: 'flex', gap: 48, alignItems: 'flex-start',
+            background: C.white,
+            border: '1px solid #E0D8CC',
+            borderRadius: 16,
+            padding: '48px 56px',
+          }}>
+            {/* Initial circle */}
+            <div style={{ flexShrink: 0 }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: '50%',
+                background: C.navy,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: "'Cormorant', serif",
+                fontSize: 36, fontWeight: 600, color: C.white,
+                letterSpacing: '0.02em',
+              }}>
+                K
+              </div>
+            </div>
+
+            {/* Text */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Label */}
+              <p style={{
+                fontFamily: "'Tenor Sans', sans-serif",
+                fontSize: 10, fontWeight: 400,
+                letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: C.grey, marginBottom: 12,
+              }}>
+                Notre histoire
+              </p>
+
+              {/* Subtitle in pivoine */}
+              <p style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 14, fontWeight: 600,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: '#C2185B', marginBottom: 10,
+              }}>
+                Pourquoi Agency Kira ?
+              </p>
+
+              {/* Title */}
+              <h2 style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 30, fontWeight: 600, lineHeight: 1.25,
+                color: C.dark, marginBottom: 20,
+                letterSpacing: '0.01em',
+              }}>
+                Née d'un besoin réel,<br />pas d'une idée abstraite.
+              </h2>
+
+              {/* Body */}
+              <p style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 17, fontWeight: 400, lineHeight: 1.75,
+                color: C.grey,
+              }}>
+                Formée en développement d'entreprise et management stratégique,
+                j'ai créé Agency Kira pour une raison simple — aider une proche
+                à gérer ses villas à Djerba sans se perdre dans des tableurs.
+                En observant autour de moi, j'ai réalisé que beaucoup de propriétaires
+                peinent à s'organiser faute d'un outil vraiment adapté à leur réalité.{' '}
+                <span style={{ fontStyle: 'italic' }}>Parce que vous méritez mieux qu'Excel.</span>
+              </p>
+
+              {/* Signature */}
+              <p style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 20, fontWeight: 600, fontStyle: 'italic',
+                color: C.dark, marginTop: 24,
+                letterSpacing: '0.02em',
+              }}>
+                — Kira
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════
           TARIFS
       ════════════════════════════════ */}
       <section id="tarifs" style={{ background: C.sand, padding: '112px 48px' }}>

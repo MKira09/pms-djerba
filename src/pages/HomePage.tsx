@@ -267,7 +267,7 @@ export default function HomePage() {
             color: C.white, lineHeight: 1,
             letterSpacing: '0.04em', marginBottom: 20,
           }}>
-            {agencyName || 'VillaHub'}
+            {agencyName ? `${agencyName} Agency` : 'VillaHub'}
           </div>
 
           {/* Tagline */}

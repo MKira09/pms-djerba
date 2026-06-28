@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth.store'
 
 /* ─────── Palette ─────── */
 const C = {
@@ -89,8 +90,11 @@ const PLANS = [
 /* ─────── Component ─────── */
 export default function HomePage() {
   const navigate = useNavigate()
+  const { tenant: authTenant } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)
   const [foundingCount, setFoundingCount] = useState<number | null>(null)
+  const [agencyName, setAgencyName] = useState('')
+  const [agencyLogo, setAgencyLogo] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [msg, setMsg] = useState('')
@@ -106,6 +110,26 @@ export default function HomePage() {
       if (typeof data === 'number') setFoundingCount(data)
     })
   }, [])
+
+  // Load agency name + logo: auth store first, then Supabase anon query as fallback
+  useEffect(() => {
+    if (authTenant) {
+      setAgencyName(authTenant.name)
+      setAgencyLogo(authTenant.logo_url ?? '')
+      return
+    }
+    supabase
+      .from('tenants')
+      .select('name, logo_url')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setAgencyName(data.name ?? '')
+          setAgencyLogo(data.logo_url ?? '')
+        }
+      })
+  }, [authTenant])
 
   const remaining = foundingCount !== null ? Math.max(0, 5 - foundingCount) : null
 
@@ -132,14 +156,30 @@ export default function HomePage() {
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
       }}>
         {/* Logo */}
-        <span style={{
-          fontFamily: "'Cormorant', serif",
-          fontSize: 22, fontWeight: 600, letterSpacing: '0.06em',
-          color: scrolled ? C.navy : C.white,
-          transition: 'color 0.4s', cursor: 'default',
-        }}>
-          VillaHub
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {agencyLogo ? (
+            <img
+              src={agencyLogo}
+              alt="Logo"
+              style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+            />
+          ) : (
+            <span style={{
+              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+              background: scrolled ? C.sandDk : 'rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, transition: 'background 0.4s',
+            }}>🏠</span>
+          )}
+          <span style={{
+            fontFamily: "'Cormorant', serif",
+            fontSize: 22, fontWeight: 600, letterSpacing: '0.06em',
+            color: scrolled ? C.navy : C.white,
+            transition: 'color 0.4s', cursor: 'default',
+          }}>
+            {agencyName || 'VillaHub'}
+          </span>
+        </div>
 
         {/* Links — hidden on mobile via CSS */}
         <div className="lp-nav-links" style={{ display: 'flex', gap: 40 }}>

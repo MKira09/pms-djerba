@@ -17,6 +17,19 @@ import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { fmtCurrency, SOURCE_COLORS, STATUS_COLORS } from '@/lib/utils'
 import type { Reservation, ReservationStatus, ReservationSource } from '@/types'
 
+type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+function getPaymentStatus(r: Reservation): PaymentStatus {
+  const deposit = r.deposit_amount ?? 0
+  if (deposit <= 0 || r.total_amount === 0) return 'unpaid'
+  if (deposit >= r.total_amount) return 'paid'
+  return 'partial'
+}
+const PAYMENT_BADGE: Record<PaymentStatus, { label: string; cls: string }> = {
+  unpaid:  { label: 'Non payé',      cls: 'bg-red-100 text-red-700' },
+  partial: { label: 'Acompte',       cls: 'bg-orange-100 text-orange-700' },
+  paid:    { label: 'Payé',          cls: 'bg-green-100 text-green-700' },
+}
+
 export default function ReservationsPage() {
   const { t } = useTranslation()
   const { singular } = usePropertyTerm()
@@ -95,6 +108,8 @@ export default function ReservationsPage() {
         <div className="md:hidden space-y-3">
           {filtered.map(r => {
             const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
+            const ps = getPaymentStatus(r)
+            const pb = PAYMENT_BADGE[ps]
             return (
               <Card key={r.id} className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -112,6 +127,7 @@ export default function ReservationsPage() {
                   <div className="flex items-center gap-2">
                     <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>
                     <span className="text-sm font-bold text-brand-800">{fmtCurrency(r.total_amount)}</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pb.cls}`}>{pb.label}</span>
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => handleSendWelcomeEmail(r.id)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded-md" title="Email de bienvenue"><Mail className="h-4 w-4" /></button>
@@ -139,6 +155,7 @@ export default function ReservationsPage() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Départ</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">Nuits</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">Montant</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-600">Paiement</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-600">Source</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-600">Statut</th>
                 <th className="px-4 py-3" />
@@ -147,6 +164,8 @@ export default function ReservationsPage() {
             <tbody className="divide-y divide-gray-100">
               {filtered.map(r => {
                 const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
+                const ps = getPaymentStatus(r)
+                const pb = PAYMENT_BADGE[ps]
                 return (
                   <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
@@ -172,6 +191,14 @@ export default function ReservationsPage() {
                           ))}
                         </div>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pb.cls}`}>{pb.label}</span>
+                        {r.deposit_amount != null && r.deposit_amount > 0 && r.deposit_amount < r.total_amount && (
+                          <p className="text-xs text-gray-400 mt-0.5">{r.deposit_amount} TND versé</p>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>

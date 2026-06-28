@@ -20,6 +20,24 @@ import { AlertTriangle } from 'lucide-react'
 const SOURCES: ReservationSource[] = ['airbnb', 'booking', 'direct', 'whatsapp', 'vrbo', 'autre']
 const STATUSES: ReservationStatus[] = ['confirmed', 'pending', 'cancelled', 'checkout']
 const OCCASIONS = ['Vacances en famille', 'Lune de miel', 'Entre amis', 'Voyage d\'affaires', 'Autre']
+const DEPOSIT_METHODS = [
+  { value: 'espèces', label: '💵 Espèces' },
+  { value: 'virement', label: '🏦 Virement' },
+  { value: 'chèque', label: '📄 Chèque' },
+  { value: 'carte', label: '💳 Carte' },
+]
+
+type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+function getPaymentStatus(deposit: number, total: number): PaymentStatus {
+  if (deposit <= 0 || total === 0) return 'unpaid'
+  if (deposit >= total) return 'paid'
+  return 'partial'
+}
+const PAYMENT_STATUS_STYLES: Record<PaymentStatus, { label: string; cls: string }> = {
+  unpaid:  { label: 'Non payé',      cls: 'bg-red-100 text-red-700' },
+  partial: { label: 'Acompte versé', cls: 'bg-orange-100 text-orange-700' },
+  paid:    { label: 'Payé',          cls: 'bg-green-100 text-green-700' },
+}
 
 interface Props {
   open: boolean
@@ -49,6 +67,9 @@ interface FormData {
   client_phone: string
   client_nationality: string
   passport_number: string
+  deposit_amount: number
+  deposit_date: string
+  deposit_method: string
 }
 
 const today = format(new Date(), 'yyyy-MM-dd')
@@ -62,6 +83,7 @@ const EMPTY: FormData = {
   total_amount: 0, source: 'direct', status: 'confirmed',
   internal_note: '', client_name: '', client_email: '', client_phone: '',
   client_nationality: '', passport_number: '',
+  deposit_amount: 0, deposit_date: '', deposit_method: 'espèces',
 }
 
 async function sendConfirmationEmail(params: {
@@ -127,6 +149,9 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         client_phone: reservation.client?.phone ?? '',
         client_nationality: reservation.client?.nationality ?? '',
         passport_number: reservation.client?.passport_number ?? '',
+        deposit_amount: reservation.deposit_amount ?? 0,
+        deposit_date: reservation.deposit_date ?? '',
+        deposit_method: reservation.deposit_method ?? 'espèces',
       })
     } else {
       setForm({
@@ -207,6 +232,9 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
           occasion: form.occasion || null, has_pets: form.has_pets,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
+          deposit_amount: form.deposit_amount,
+          deposit_date: form.deposit_date || null,
+          deposit_method: form.deposit_method || null,
         })
         toast.success('Réservation modifiée.')
         // Send email if status changed to confirmed
@@ -228,6 +256,9 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
           occasion: form.occasion || null, has_pets: form.has_pets,
           guests: form.guests, total_amount: form.total_amount, source: form.source,
           status: form.status, internal_note: form.internal_note || null,
+          deposit_amount: form.deposit_amount,
+          deposit_date: form.deposit_date || null,
+          deposit_method: form.deposit_method || null,
           client_id: null, currency: 'TND', ical_uid: null,
           client: {
             full_name: form.client_name, email: form.client_email || null,
@@ -427,6 +458,59 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
             )}
           </div>
         )}
+
+        {/* Paiement */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Paiement</h3>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Acompte versé (TND)</label>
+              <input
+                type="number" min={0} max={form.total_amount}
+                value={form.deposit_amount}
+                onChange={e => set('deposit_amount', Math.min(+e.target.value, form.total_amount))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+            <Input
+              label="Date du versement"
+              type="date"
+              value={form.deposit_date}
+              onChange={e => set('deposit_date', e.target.value)}
+            />
+          </div>
+          <Select
+            label="Mode de paiement"
+            options={DEPOSIT_METHODS}
+            value={form.deposit_method}
+            onChange={e => set('deposit_method', e.target.value)}
+          />
+          {/* Récap paiement */}
+          <div className="mt-3 bg-gray-50 rounded-lg p-3 space-y-1.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Total séjour</span>
+              <span className="font-medium text-gray-800">{form.total_amount} TND</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Acompte versé</span>
+              <span className="font-medium text-green-600">− {form.deposit_amount} TND</span>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-1.5 font-semibold">
+              <span>Reste à payer</span>
+              <span className={form.total_amount - form.deposit_amount > 0 ? 'text-red-600' : 'text-green-600'}>
+                {Math.max(0, form.total_amount - form.deposit_amount)} TND
+              </span>
+            </div>
+            <div className="flex justify-between items-center pt-1">
+              <span className="text-xs text-gray-400">Statut paiement</span>
+              {(() => {
+                const ps = getPaymentStatus(form.deposit_amount, form.total_amount)
+                const { label, cls } = PAYMENT_STATUS_STYLES[ps]
+                return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cls}`}>{label}</span>
+              })()}
+            </div>
+          </div>
+        </div>
 
         {/* Meta */}
         <div>

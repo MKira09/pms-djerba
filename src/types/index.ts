@@ -141,6 +141,9 @@ export interface Reservation {
   status: ReservationStatus
   internal_note: string | null
   ical_uid: string | null
+  deposit_amount?: number | null
+  deposit_date?: string | null
+  deposit_method?: string | null
   created_at: string
   updated_at: string
   // joined

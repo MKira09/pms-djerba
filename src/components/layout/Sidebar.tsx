@@ -176,7 +176,7 @@ export default function Sidebar() {
 
         {/* User */}
         <div className="flex items-center gap-3 px-3 py-2.5 mt-1">
-          <div className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-pivoine flex items-center justify-center text-xs font-bold flex-shrink-0">
             {(profile?.full_name?.[0] ?? '?').toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">

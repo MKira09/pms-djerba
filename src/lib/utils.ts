@@ -54,7 +54,7 @@ export const VILLA_STATUS_COLORS: Record<VillaStatus, string> = {
 export const SOURCE_HEX: Record<ReservationSource, string> = {
   airbnb:   '#FF5A5F',
   booking:  '#003580',
-  direct:   '#0C447C',
+  direct:   '#6B7C45',
   whatsapp: '#25D366',
   vrbo:     '#4C3D8F',
   autre:    '#9CA3AF',

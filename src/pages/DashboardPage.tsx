@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 <XAxis type="number" tickFormatter={v => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="villa_name" tick={{ fontSize: 10 }} width={90} />
                 <Tooltip formatter={(v: number) => fmtCurrency(v)} />
-                <Bar dataKey="revenue" fill="#0C447C" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="revenue" fill="#6B7C45" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : <p className="text-gray-400 text-sm text-center py-10">{t('dashboard.no_data')}</p>}

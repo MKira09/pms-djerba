@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 const C = {
   teal:   '#07BEB8',
   tealDk: '#059B95',
-  navy:   '#0C447C',
+  navy:   '#3D5A3E',
   sand:   '#F5F0E8',
   sandDk: '#EDE8DF',
   white:  '#FFFFFF',

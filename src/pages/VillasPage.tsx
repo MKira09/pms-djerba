@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Search, Pencil, Trash2, Bed, Bath, Users } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -210,6 +210,16 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
         <div className="flex items-center justify-between pt-1 border-t border-gray-100">
           <span className="font-bold text-brand-800">{fmtCurrency(villa.base_price)}<span className="text-xs font-normal text-gray-400">/nuit</span></span>
           <div className="flex gap-1">
+            <button
+              title="Copier le lien de réservation"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/book/${villa.id}`)
+                toast.success('Lien copié !')
+              }}
+              className="p-1.5 rounded-md text-gray-400 hover:bg-brand-50 hover:text-brand-700 transition-colors"
+            >
+              <Share2 className="h-4 w-4" />
+            </button>
             <button onClick={onEdit} className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-brand-700 transition-colors">
               <Pencil className="h-4 w-4" />
             </button>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, Pencil, Trash2, Mail } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Mail, CheckCircle2, XCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import Button from '@/components/ui/Button'
@@ -65,6 +65,22 @@ export default function ReservationsPage() {
     } catch (e: unknown) {
       toast.error('Erreur : ' + (e instanceof Error ? e.message : 'inconnue'), { id: tid })
     }
+  }
+
+  async function handleConfirm(id: string) {
+    const { error } = await supabase.from('reservations').update({ status: 'confirmed' }).eq('id', id)
+    if (error) { toast.error('Erreur lors de la confirmation.'); return }
+    fetch()
+    toast.success('Réservation confirmée ✅')
+    supabase.functions.invoke('send-booking-confirmed', { body: { reservation_id: id } }).catch(() => {})
+  }
+
+  async function handleRefuse(id: string) {
+    const { error } = await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id)
+    if (error) { toast.error('Erreur lors du refus.'); return }
+    fetch()
+    toast.success('Réservation refusée.')
+    supabase.functions.invoke('send-booking-refused', { body: { reservation_id: id } }).catch(() => {})
   }
 
   async function handleDelete() {
@@ -135,6 +151,22 @@ export default function ReservationsPage() {
                     <button onClick={() => setDeleteId(r.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-md"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
+                {r.status === 'pending' && (
+                  <div className="flex gap-2 pt-1 border-t border-gray-100">
+                    <button
+                      onClick={() => handleConfirm(r.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg py-2 transition-colors"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Confirmer
+                    </button>
+                    <button
+                      onClick={() => handleRefuse(r.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg py-2 transition-colors"
+                    >
+                      <XCircle className="h-3.5 w-3.5" /> Refuser
+                    </button>
+                  </div>
+                )}
               </Card>
             )
           })}
@@ -207,11 +239,29 @@ export default function ReservationsPage() {
                       <Badge className={STATUS_COLORS[r.status]} dot>{t(`reservations.${r.status}`)}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1 justify-end">
+                      <div className="flex gap-1 justify-end flex-wrap">
+                        {r.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleConfirm(r.id)}
+                              title="Confirmer"
+                              className="flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Confirmer
+                            </button>
+                            <button
+                              onClick={() => handleRefuse(r.id)}
+                              title="Refuser"
+                              className="flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                            >
+                              <XCircle className="h-3.5 w-3.5" /> Refuser
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => handleSendWelcomeEmail(r.id)}
                           className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors"
-                          title="Envoyer email de bienvenue"
+                          title="Email de bienvenue"
                         >
                           <Mail className="h-4 w-4" />
                         </button>

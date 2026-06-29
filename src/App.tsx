@@ -20,6 +20,7 @@ import CommunicationsPage from '@/pages/CommunicationsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SubscriptionPage from '@/pages/SubscriptionPage'
 import BookingPage from '@/pages/BookingPage'
+import VillaBookingPage from '@/pages/VillaBookingPage'
 import HomePage from '@/pages/HomePage'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
@@ -111,6 +112,7 @@ export default function App() {
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/book/:villaId" element={<VillaBookingPage />} />
 
         {/* Admin only */}
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />

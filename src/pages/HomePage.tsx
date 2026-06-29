@@ -137,7 +137,7 @@ export default function HomePage() {
     e.preventDefault()
     const s = encodeURIComponent(`${agencyName || 'VillaHub'} — contact de ${name}`)
     const b = encodeURIComponent(`Nom : ${name}\nEmail : ${email}\n\n${msg}`)
-    window.location.href = `mailto:contact@villahub.io?subject=${s}&body=${b}`
+    window.location.href = `mailto:contact.agencykira@gmail.com?subject=${s}&body=${b}`
   }
 
   return (

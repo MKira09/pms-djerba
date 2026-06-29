@@ -5,6 +5,7 @@ import { LayoutDashboard, Home, Calendar, ClipboardList, Users, X } from 'lucide
 import { cn } from '@/lib/utils'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { useVillasStore } from '@/stores/villas.store'
+import { usePendingCount } from '@/hooks/usePendingCount'
 
 export default function BottomNav() {
   const { t } = useTranslation()
@@ -12,6 +13,7 @@ export default function BottomNav() {
   const { villas } = useVillasStore()
   const navigate = useNavigate()
   const location = useLocation()
+  const pendingCount = usePendingCount()
   const [typeMenuOpen, setTypeMenuOpen] = useState(false)
   const onVillas = location.pathname === '/villas'
   const activeType = new URLSearchParams(location.search).get('type')
@@ -122,7 +124,14 @@ export default function BottomNav() {
         >
           {({ isActive }) => (
             <>
-              <ClipboardList className={cn('h-5 w-5', isActive && 'stroke-brand-800')} />
+              <div className="relative">
+                <ClipboardList className={cn('h-5 w-5', isActive && 'stroke-brand-800')} />
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5 leading-none">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </div>
               <span>{t('nav.reservations').split(' ')[0]}</span>
             </>
           )}

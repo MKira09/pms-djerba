@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
 import { useVillasStore } from '@/stores/villas.store'
+import { usePendingCount } from '@/hooks/usePendingCount'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -37,6 +38,7 @@ export default function Sidebar() {
   const { logout, profile, tenant, isDemoMode } = useAuthStore()
   const { isMultiType, types } = usePropertyTerm()
   const { villas } = useVillasStore()
+  const pendingCount = usePendingCount()
   const navigate = useNavigate()
   const location = useLocation()
   const onVillas = location.pathname === '/villas'
@@ -156,7 +158,12 @@ export default function Sidebar() {
         {NAV_LINKS.map(({ to, icon: Icon, key }) => (
           <NavLink key={to} to={to} className={({ isActive }) => LINK_CLASS(isActive)}>
             <Icon className="h-5 w-5 flex-shrink-0" />
-            {t(key)}
+            <span className="flex-1">{t(key)}</span>
+            {to === '/reservations' && pendingCount > 0 && (
+              <span className="min-w-[18px] h-[18px] text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-1 leading-none">
+                {pendingCount > 99 ? '99+' : pendingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -308,7 +308,7 @@ export default function VillaBookingPage() {
                   required
                   value={form.firstName}
                   onChange={e => setField('firstName', e.target.value)}
-                  placeholder="Hamida"
+                  placeholder="Votre prénom"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                 />
               </div>
@@ -318,7 +318,7 @@ export default function VillaBookingPage() {
                   required
                   value={form.lastName}
                   onChange={e => setField('lastName', e.target.value)}
-                  placeholder="Ben Salem"
+                  placeholder="Votre nom"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                 />
               </div>

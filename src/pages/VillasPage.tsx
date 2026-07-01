@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2, Home } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -103,25 +103,10 @@ export default function VillasPage() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400">{t('common.loading')}</div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-          <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-5">
-            <Home className="h-8 w-8 text-brand-700" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            {search ? `Aucune ${singular.toLowerCase()} trouvée` : `Aucune ${singular.toLowerCase()} pour l'instant`}
-          </h2>
-          <p className="text-gray-500 text-sm max-w-xs mb-7">
-            {search
-              ? `Essayez un autre terme de recherche.`
-              : `Ajoutez votre première ${singular.toLowerCase()} pour commencer à gérer vos réservations.`
-            }
-          </p>
-          {!search && (
-            <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-              Ajouter une {singular}
-            </Button>
-          )}
-        </div>
+        <Card className="text-center py-16 text-gray-400">
+          <p className="text-lg font-medium mb-2">🏠</p>
+          <p>Aucune {singular.toLowerCase()} pour l'instant. Ajoutez votre première {singular.toLowerCase()} !</p>
+        </Card>
       ) : (
         <div className="space-y-8">
           {groups.map(({ type, items }) => (
@@ -215,11 +200,11 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
 
         {/* Amenities */}
         <div className="flex flex-wrap gap-1">
-          {(villa.amenities ?? []).slice(0, 4).map(aid => {
+          {villa.amenities.slice(0, 4).map(aid => {
             const a = AMENITY_OPTIONS.find(o => o.id === aid)
             return a ? <span key={aid} className="text-sm" title={a.label}>{a.icon}</span> : null
           })}
-          {(villa.amenities ?? []).length > 4 && <span className="text-xs text-gray-400">+{(villa.amenities ?? []).length - 4}</span>}
+          {villa.amenities.length > 4 && <span className="text-xs text-gray-400">+{villa.amenities.length - 4}</span>}
         </div>
 
         <div className="flex items-center justify-between pt-1 border-t border-gray-100">

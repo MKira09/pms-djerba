@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   TrendingUp, TrendingDown, Home, CalendarCheck,
-  CalendarX, Clock, Moon, Coins, BarChart3, ArrowRight, Plus,
+  CalendarX, Clock, Moon, Coins, BarChart3, ArrowRight,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -46,9 +46,8 @@ function KpiCard({ label, value, sub, icon: Icon, trend }: {
 
 export default function DashboardPage() {
   const { t } = useTranslation()
-  const { villas, loading: villasLoading, fetch: fetchVillas } = useVillasStore()
+  const { villas, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
-  const navigate = useNavigate()
 
   useEffect(() => { fetchVillas(); fetchRes() }, [])
 
@@ -139,27 +138,6 @@ export default function DashboardPage() {
     { label: t('dashboard.avg_price'),       value: fmtCurrency(stats.avgPrice),                                                                             sub: 'sur 30 jours',                                 icon: TrendingUp,    trend: undefined },
     { label: t('dashboard.revpar'),          value: fmtCurrency(stats.revpar),                                                                               sub: 'RevPAR 30j',                                   icon: Home,          trend: undefined },
   ]
-
-  if (!villasLoading && villas.length === 0) {
-    return (
-      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-20 h-20 bg-brand-50 rounded-2xl flex items-center justify-center mb-6">
-          <Home className="h-10 w-10 text-brand-700" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue sur VillaHub !</h1>
-        <p className="text-gray-500 text-base max-w-sm mb-8">
-          Votre espace est prêt. Commencez par ajouter votre première villa pour voir vos statistiques et réservations ici.
-        </p>
-        <button
-          onClick={() => navigate('/villas')}
-          className="inline-flex items-center gap-2 bg-brand-900 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          Ajouter ma première villa
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

@@ -4,6 +4,7 @@ import { Home, Check, Loader2, Star } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+import { FULL_ACCESS_EMAILS } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 const PLANS = [
@@ -55,9 +56,6 @@ const PLANS = [
 ]
 
 const FOUNDING_MAX = 5
-
-// Accounts that always have full access regardless of DB state
-const FULL_ACCESS_EMAILS = ['myDjerbaVillas@gmail.com']
 
 function hasFullAccess(t: { founding_member?: boolean | null; plan: string; trial_ends: string | null }) {
   if (t.founding_member === true) return true

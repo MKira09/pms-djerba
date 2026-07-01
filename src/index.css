@@ -74,8 +74,8 @@
   .lp-hero-card    { padding: 36px 24px !important; width: 92% !important; }
 
   /* Hero texts */
-  .lp-hero-brand   { font-size: 42px !important; }
-  .lp-hero-tagline { font-size: 18px !important; }
+  .lp-hero-brand   { font-size: 30px !important; }
+  .lp-hero-tagline { font-size: 16px !important; }
 
   /* Features — 1 column, centré */
   .lp-feat-grid { grid-template-columns: 1fr !important; }

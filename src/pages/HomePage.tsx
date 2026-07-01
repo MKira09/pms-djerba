@@ -224,7 +224,7 @@ export default function HomePage() {
       ════════════════════════════════ */}
       <section style={{
         position: 'relative',
-        height: '100vh', minHeight: 640,
+        height: '80vh', minHeight: 560,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
       }}>

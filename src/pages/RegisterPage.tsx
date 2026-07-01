@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+import { FULL_ACCESS_EMAILS } from '@/lib/utils'
 
 const PLAN_LABELS: Record<string, { label: string; price: string; color: string }> = {
   starter: { label: 'Starter', price: '29€/mois', color: 'bg-blue-100 text-blue-700' },
@@ -64,7 +65,7 @@ export default function RegisterPage() {
       }
 
       toast.success('Compte créé ! Bienvenue 🎉', { duration: 4000 })
-      navigate('/dashboard')
+      navigate(FULL_ACCESS_EMAILS.includes(form.email) ? '/dashboard' : '/plans')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       toast.error('Erreur réseau : ' + (msg || 'connexion impossible'))

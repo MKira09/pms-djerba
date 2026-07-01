@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2 } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2, Home } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'

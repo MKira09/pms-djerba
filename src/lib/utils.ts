@@ -88,7 +88,7 @@ export const AMENITY_OPTIONS = [
   { id: 'terrace', label: 'Terrasse',     icon: '☀️' },
 ]
 
-export const FULL_ACCESS_EMAILS = ['myDjerbaVillas@gmail.com']
+export const FULL_ACCESS_EMAILS = ['mydjerbavillas@gmail.com']
 
 export const PLAN_LIMITS: Record<string, number> = {
   starter: 5,

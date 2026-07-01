@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
 import '@/i18n'
 
+import ErrorBoundary from '@/components/ErrorBoundary'
 import AppLayout from '@/components/layout/AppLayout'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
@@ -94,6 +95,7 @@ export default function App() {
   }, [])
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Toaster
         position="top-right"
@@ -135,5 +137,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }

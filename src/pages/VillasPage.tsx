@@ -215,11 +215,11 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
 
         {/* Amenities */}
         <div className="flex flex-wrap gap-1">
-          {villa.amenities.slice(0, 4).map(aid => {
+          {(villa.amenities ?? []).slice(0, 4).map(aid => {
             const a = AMENITY_OPTIONS.find(o => o.id === aid)
             return a ? <span key={aid} className="text-sm" title={a.label}>{a.icon}</span> : null
           })}
-          {villa.amenities.length > 4 && <span className="text-xs text-gray-400">+{villa.amenities.length - 4}</span>}
+          {(villa.amenities ?? []).length > 4 && <span className="text-xs text-gray-400">+{(villa.amenities ?? []).length - 4}</span>}
         </div>
 
         <div className="flex items-center justify-between pt-1 border-t border-gray-100">

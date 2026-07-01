@@ -16,8 +16,8 @@ const PLURALS: Record<string, string> = {
 
 export function usePropertyTerm() {
   const { tenant } = useAuthStore()
-  const types = (tenant?.property_types?.length ?? 0) > 0
-    ? (tenant!.property_types as string[])
+  const types = Array.isArray(tenant?.property_types) && tenant!.property_types!.length > 0
+    ? tenant!.property_types as string[]
     : ['Villa']
 
   const isMultiType = types.length > 1

@@ -69,9 +69,13 @@
   .lp-feat-border-r { border-right: none !important; }
   .lp-footer { flex-direction: column !important; align-items: center !important; text-align: center !important; padding: 24px 20px !important; }
 
+  /* Hero section + card */
+  .lp-hero-section { height: 90vh !important; min-height: 520px !important; }
+  .lp-hero-card    { padding: 36px 24px !important; width: 92% !important; }
+
   /* Hero texts */
-  .lp-hero-brand   { font-size: 48px !important; }
-  .lp-hero-tagline { font-size: 20px !important; }
+  .lp-hero-brand   { font-size: 42px !important; }
+  .lp-hero-tagline { font-size: 18px !important; }
 
   /* Features — 1 column, centré */
   .lp-feat-grid { grid-template-columns: 1fr !important; }

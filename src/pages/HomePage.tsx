@@ -222,7 +222,7 @@ export default function HomePage() {
       {/* ════════════════════════════════
           HERO
       ════════════════════════════════ */}
-      <section style={{
+      <section className="lp-hero-section" style={{
         position: 'relative',
         height: '100vh', minHeight: 640,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -241,7 +241,7 @@ export default function HomePage() {
         }} />
 
         {/* Central card */}
-        <div style={{
+        <div className="lp-hero-card" style={{
           position: 'relative', zIndex: 1,
           background: 'rgba(255,255,255,0.10)',
           backdropFilter: 'blur(2px)',

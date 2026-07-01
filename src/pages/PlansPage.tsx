@@ -56,6 +56,9 @@ const PLANS = [
 
 const FOUNDING_MAX = 5
 
+// Accounts that always have full access regardless of DB state
+const FULL_ACCESS_EMAILS = ['myDjerbaVillas@gmail.com']
+
 function hasFullAccess(t: { founding_member?: boolean | null; plan: string; trial_ends: string | null }) {
   if (t.founding_member === true) return true
   if ((t.plan === 'pro' || t.plan === 'agence') && t.trial_ends === null) return true
@@ -79,6 +82,11 @@ export default function PlansPage() {
       // Slow path: user arrived via magic link — session exists but store is empty
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      // Email-based bypass — always redirect regardless of DB state
+      if (FULL_ACCESS_EMAILS.includes(user.email ?? '')) {
+        navigate('/dashboard', { replace: true })
+        return
+      }
       const { data: profile } = await supabase
         .from('profiles').select('tenant_id').eq('id', user.id).single()
       if (!profile) return

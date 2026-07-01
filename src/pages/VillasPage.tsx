@@ -103,10 +103,25 @@ export default function VillasPage() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400">{t('common.loading')}</div>
       ) : filtered.length === 0 ? (
-        <Card className="text-center py-16 text-gray-400">
-          <p className="text-lg font-medium mb-2">🏠</p>
-          <p>Aucune {singular.toLowerCase()} pour l'instant. Ajoutez votre première {singular.toLowerCase()} !</p>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+          <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-5">
+            <Home className="h-8 w-8 text-brand-700" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {search ? `Aucune ${singular.toLowerCase()} trouvée` : `Aucune ${singular.toLowerCase()} pour l'instant`}
+          </h2>
+          <p className="text-gray-500 text-sm max-w-xs mb-7">
+            {search
+              ? `Essayez un autre terme de recherche.`
+              : `Ajoutez votre première ${singular.toLowerCase()} pour commencer à gérer vos réservations.`
+            }
+          </p>
+          {!search && (
+            <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
+              Ajouter une {singular}
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="space-y-8">
           {groups.map(({ type, items }) => (

@@ -15,7 +15,8 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { useVillasStore } from '@/stores/villas.store'
 import { useReservationsStore } from '@/stores/reservations.store'
-import { fmtCurrency, SOURCE_COLORS, SOURCE_HEX } from '@/lib/utils'
+import { SOURCE_COLORS, SOURCE_HEX } from '@/lib/utils'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { ReservationSource } from '@/types'
 
 function KpiCard({ label, value, sub, icon: Icon, trend }: {
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const { t } = useTranslation()
   const { villas, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
+  const { fmt } = useCurrency()
 
   useEffect(() => { fetchVillas(); fetchRes() }, [])
 
@@ -129,14 +131,14 @@ export default function DashboardPage() {
   }, [villas, reservations])
 
   const kpis = [
-    { label: t('dashboard.revenue_month'),  value: fmtCurrency(stats.revCurrent), sub: `${stats.revTrend >= 0 ? '+' : ''}${stats.revTrend.toFixed(1)}% ${t('dashboard.revenue_vs_prev')}`, icon: Coins,        trend: stats.revTrend },
+    { label: t('dashboard.revenue_month'),  value: fmt(stats.revCurrent), sub: `${stats.revTrend >= 0 ? '+' : ''}${stats.revTrend.toFixed(1)}% ${t('dashboard.revenue_vs_prev')}`, icon: Coins,        trend: stats.revTrend },
     { label: t('dashboard.occupancy'),       value: `${stats.occupancy.toFixed(0)}%`,                                                                       sub: `30 derniers jours`,                            icon: BarChart3,     trend: undefined },
     { label: t('dashboard.checkins_today'),  value: String(stats.checkinsToday),                                                                             sub: undefined,                                      icon: CalendarCheck, trend: undefined },
     { label: t('dashboard.checkouts_today'), value: String(stats.checkoutsToday),                                                                            sub: undefined,                                      icon: CalendarX,     trend: undefined },
     { label: t('dashboard.pending'),         value: String(stats.pending),                                                                                   sub: 'à confirmer',                                  icon: Clock,         trend: undefined },
     { label: t('dashboard.nights_sold'),     value: String(stats.nights30),                                                                                  sub: undefined,                                      icon: Moon,          trend: undefined },
-    { label: t('dashboard.avg_price'),       value: fmtCurrency(stats.avgPrice),                                                                             sub: 'sur 30 jours',                                 icon: TrendingUp,    trend: undefined },
-    { label: t('dashboard.revpar'),          value: fmtCurrency(stats.revpar),                                                                               sub: 'RevPAR 30j',                                   icon: Home,          trend: undefined },
+    { label: t('dashboard.avg_price'),       value: fmt(stats.avgPrice),                                                                             sub: 'sur 30 jours',                                 icon: TrendingUp,    trend: undefined },
+    { label: t('dashboard.revpar'),          value: fmt(stats.revpar),                                                                               sub: 'RevPAR 30j',                                   icon: Home,          trend: undefined },
   ]
 
   return (
@@ -166,7 +168,7 @@ export default function DashboardPage() {
                     <Cell key={entry.source} fill={SOURCE_HEX[entry.source] ?? '#9CA3AF'} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => fmtCurrency(v)} />
+                <Tooltip formatter={(v: number) => fmt(v)} />
               </PieChart>
             </ResponsiveContainer>
           ) : <p className="text-gray-400 text-sm text-center py-10">{t('dashboard.no_data')}</p>}
@@ -180,7 +182,7 @@ export default function DashboardPage() {
               <BarChart data={stats.byVilla} layout="vertical" margin={{ left: 0, right: 20 }}>
                 <XAxis type="number" tickFormatter={v => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="villa_name" tick={{ fontSize: 10 }} width={90} />
-                <Tooltip formatter={(v: number) => fmtCurrency(v)} />
+                <Tooltip formatter={(v: number) => fmt(v)} />
                 <Bar dataKey="revenue" fill="#6B7C45" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>

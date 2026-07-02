@@ -13,8 +13,24 @@ export function fmtDate(date: string | Date, lang: Lang = 'fr'): string {
   return format(typeof date === 'string' ? parseISO(date) : date, 'dd MMM yyyy', { locale })
 }
 
-export function fmtCurrency(amount: number, currency = 'TND'): string {
-  return `${amount.toLocaleString('fr-TN', { minimumFractionDigits: 0, maximumFractionDigits: 3 })} ${currency}`
+export const CURRENCIES: { code: string; label: string; symbol: string }[] = [
+  { code: 'EUR', label: 'Euro',            symbol: '€'   },
+  { code: 'TND', label: 'Dinar Tunisien',  symbol: 'TND' },
+  { code: 'USD', label: 'Dollar',          symbol: '$'   },
+  { code: 'GBP', label: 'Livre Sterling',  symbol: '£'   },
+  { code: 'XOF', label: 'Franc CFA',       symbol: 'CFA' },
+  { code: 'ALL', label: 'Lek Albanais',    symbol: 'L'   },
+  { code: 'TRY', label: 'Lire Turque',     symbol: '₺'   },
+  { code: 'DZD', label: 'Dinar Algérien',  symbol: 'DA'  },
+]
+
+const CURRENCY_SYMBOLS: Record<string, string> = Object.fromEntries(
+  CURRENCIES.map(c => [c.code, c.symbol])
+)
+
+export function fmtCurrency(amount: number, currency = 'EUR'): string {
+  const sym = CURRENCY_SYMBOLS[currency] ?? currency
+  return `${amount.toLocaleString('fr-TN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${sym}`
 }
 
 export function nightCount(checkIn: string, checkOut: string): number {

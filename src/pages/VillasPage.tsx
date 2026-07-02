@@ -12,7 +12,8 @@ import VillaForm from '@/components/villas/VillaForm'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
-import { fmtCurrency, VILLA_STATUS_COLORS, PLAN_LIMITS, AMENITY_OPTIONS } from '@/lib/utils'
+import { VILLA_STATUS_COLORS, PLAN_LIMITS, AMENITY_OPTIONS } from '@/lib/utils'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { Villa } from '@/types'
 
 export default function VillasPage() {
@@ -162,6 +163,7 @@ export default function VillasPage() {
 function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => void; onDelete: () => void }) {
   const { t } = useTranslation()
   const { isMultiType } = usePropertyTerm()
+  const { fmt } = useCurrency()
   return (
     <Card padding={false} className="overflow-hidden">
       {/* Photo */}
@@ -208,7 +210,7 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
         </div>
 
         <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-          <span className="font-bold text-brand-800">{fmtCurrency(villa.base_price)}<span className="text-xs font-normal text-gray-400">/nuit</span></span>
+          <span className="font-bold text-brand-800">{fmt(villa.base_price)}<span className="text-xs font-normal text-gray-400">/nuit</span></span>
           <div className="flex gap-1">
             <button
               title="Copier le lien de réservation"

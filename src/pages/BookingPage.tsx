@@ -9,7 +9,8 @@ import { useVillasStore } from '@/stores/villas.store'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { usePricingStore } from '@/stores/pricing.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { fmtCurrency, AMENITY_OPTIONS } from '@/lib/utils'
+import { AMENITY_OPTIONS } from '@/lib/utils'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { Villa } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -32,6 +33,7 @@ export default function BookingPage() {
   const { fetch: fetchRes, add, checkConflict } = useReservationsStore()
   const { fetch: fetchRates, computePrice } = usePricingStore()
   const { enterDemoMode } = useAuthStore()
+  const { fmt } = useCurrency()
 
   const [step, setStep] = useState<Step>('search')
   const [checkIn, setCheckIn] = useState(today)
@@ -141,7 +143,7 @@ export default function BookingPage() {
             </div>
             <div className="flex justify-between border-t pt-3">
               <span className="text-gray-500 text-sm">Montant estimé</span>
-              <span className="font-bold text-gray-900">{fmtCurrency(computedPrice(selectedVilla!))}</span>
+              <span className="font-bold text-gray-900">{fmt(computedPrice(selectedVilla!))}</span>
             </div>
           </Card>
           <div className="flex flex-col gap-3">
@@ -180,8 +182,8 @@ export default function BookingPage() {
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-gray-900">{selectedVilla.name}</h2>
               <p className="text-sm text-gray-500">{format(parseISO(checkIn), 'dd MMM', { locale: fr })} → {format(parseISO(checkOut), 'dd MMM yyyy', { locale: fr })} · {nights} nuits · {form.guests} pers.</p>
-              <p className="mt-1.5 font-bold text-brand-800 text-lg">{fmtCurrency(total)}</p>
-              <p className="text-xs text-gray-400">{fmtCurrency(pricePerNight)}/nuit × {nights} nuits</p>
+              <p className="mt-1.5 font-bold text-brand-800 text-lg">{fmt(total)}</p>
+              <p className="text-xs text-gray-400">{fmt(pricePerNight)}/nuit × {nights} nuits</p>
             </div>
           </Card>
 
@@ -313,8 +315,8 @@ export default function BookingPage() {
 
                         <div className="border-t pt-3 flex items-center justify-between">
                           <div>
-                            <p className="text-xl font-bold text-gray-900">{fmtCurrency(pricePerNight)}<span className="text-xs font-normal text-gray-400">/nuit</span></p>
-                            <p className="text-xs text-gray-500">Total : {fmtCurrency(total)} ({nights} nuits)</p>
+                            <p className="text-xl font-bold text-gray-900">{fmt(pricePerNight)}<span className="text-xs font-normal text-gray-400">/nuit</span></p>
+                            <p className="text-xs text-gray-500">Total : {fmt(total)} ({nights} nuits)</p>
                           </div>
                           <Button onClick={() => selectVilla(villa)} size="sm">
                             Réserver

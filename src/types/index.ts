@@ -42,6 +42,7 @@ export interface Tenant {
   founding_member?: boolean | null
   welcome_email_enabled?: boolean | null
   logo_url?: string | null
+  currency?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

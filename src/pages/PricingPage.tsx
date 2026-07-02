@@ -9,7 +9,7 @@ import Modal from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
 import { usePricingStore } from '@/stores/pricing.store'
 import { useVillasStore } from '@/stores/villas.store'
-import { fmtCurrency } from '@/lib/utils'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { SeasonalRate } from '@/types'
 import Select from '@/components/ui/Select'
 
@@ -25,6 +25,7 @@ function RateForm({ open, rate, onClose }: { open: boolean; rate: SeasonalRate |
   const { t } = useTranslation()
   const { add, update } = usePricingStore()
   const { villas } = useVillasStore()
+  const { fmt } = useCurrency()
   const [form, setForm] = useState({ name: '', start_date: '', end_date: '', multiplier: 1.0 })
   const [loading, setLoading] = useState(false)
 
@@ -67,7 +68,7 @@ function RateForm({ open, rate, onClose }: { open: boolean; rate: SeasonalRate |
         </div>
         <div className="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-gray-600">{t('pricing.preview')} (prix moyen)</span>
-          <span className="font-bold text-gray-900">{fmtCurrency(previewPrice)}<span className="text-xs font-normal text-gray-400">/nuit</span></span>
+          <span className="font-bold text-gray-900">{fmt(previewPrice)}<span className="text-xs font-normal text-gray-400">/nuit</span></span>
         </div>
       </form>
     </Modal>
@@ -78,6 +79,7 @@ export default function PricingPage() {
   const { t } = useTranslation()
   const { rates, fetch, remove } = usePricingStore()
   const { villas, fetch: fetchVillas } = useVillasStore()
+  const { fmt } = useCurrency()
   const [formOpen, setFormOpen] = useState(false)
   const [editRate, setEditRate] = useState<SeasonalRate | null>(null)
   const [refVilla, setRefVilla] = useState('')
@@ -108,7 +110,7 @@ export default function PricingPage() {
             {t('pricing.base_price')} :
           </div>
           <Select options={villaOpts} value={refVilla} onChange={e => setRefVilla(e.target.value)} className="w-48" />
-          <span className="font-bold text-brand-800 text-lg">{fmtCurrency(refPrice)}/nuit</span>
+          <span className="font-bold text-brand-800 text-lg">{fmt(refPrice)}/nuit</span>
         </div>
       </Card>
 
@@ -120,7 +122,7 @@ export default function PricingPage() {
             <div key={p.name} className="border border-gray-200 rounded-xl p-3">
               <div className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2 ${p.color}`}>×{p.multiplier}</div>
               <p className="text-xs text-gray-600">{p.name}</p>
-              <p className="font-bold text-gray-900 mt-1">{fmtCurrency(Math.round(refPrice * p.multiplier))}/nuit</p>
+              <p className="font-bold text-gray-900 mt-1">{fmt(Math.round(refPrice * p.multiplier))}/nuit</p>
             </div>
           ))}
         </div>
@@ -143,7 +145,7 @@ export default function PricingPage() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="font-bold text-brand-800">×{r.multiplier}</p>
-                  <p className="text-xs text-gray-500">{fmtCurrency(Math.round(refPrice * r.multiplier))}/nuit</p>
+                  <p className="text-xs text-gray-500">{fmt(Math.round(refPrice * r.multiplier))}/nuit</p>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => { setEditRate(r); setFormOpen(true) }} className="p-1.5 text-gray-400 hover:text-brand-700 rounded-md hover:bg-brand-50"><Pencil className="h-4 w-4" /></button>

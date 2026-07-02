@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
 import { supabase } from '@/lib/supabase'
 import { PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
+import { CURRENCIES } from '@/lib/utils'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -33,6 +34,8 @@ export default function SettingsPage() {
   const [savingPropertyTypes, setSavingPropertyTypes] = useState(false)
   const [emailEnabled, setEmailEnabled] = useState(tenant?.welcome_email_enabled !== false)
   const [savingEmail, setSavingEmail] = useState(false)
+  const [currency, setCurrency] = useState(tenant?.currency ?? 'EUR')
+  const [savingCurrency, setSavingCurrency] = useState(false)
 
   // Extra form state
   const [extraFormOpen, setExtraFormOpen] = useState(false)
@@ -126,6 +129,23 @@ export default function SettingsPage() {
       toast.error('Erreur lors de l\'enregistrement.')
     } finally {
       setSavingEmail(false)
+    }
+  }
+
+  async function handleSaveCurrency() {
+    if (!tenant) return
+    setSavingCurrency(true)
+    try {
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update({ currency }).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant({ currency })
+      toast.success('Devise enregistrée.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingCurrency(false)
     }
   }
 
@@ -338,6 +358,24 @@ export default function SettingsPage() {
         </p>
       </Card>
 
+      {/* Currency */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Coins className="h-4 w-4 text-brand-700" /> Devise
+        </h2>
+        <Select
+          label="Devise utilisée dans l'application"
+          options={CURRENCIES.map(c => ({ value: c.code, label: `${c.code} — ${c.label} (${c.symbol})` }))}
+          value={currency}
+          onChange={e => setCurrency(e.target.value)}
+          className="max-w-xs"
+        />
+        <p className="text-xs text-gray-400 mt-2 mb-4">
+          S'applique à tous les montants : dashboard, réservations, villas.
+        </p>
+        <Button onClick={handleSaveCurrency} loading={savingCurrency}>Enregistrer</Button>
+      </Card>
+
       {/* Notifications */}
       <Card>
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -389,7 +427,7 @@ export default function SettingsPage() {
                   {extra.description && (
                     <p className="text-xs text-gray-400 truncate">{extra.description}</p>
                   )}
-                  <p className="text-sm font-semibold text-brand-800 mt-0.5">{extra.price} TND</p>
+                  <p className="text-sm font-semibold text-brand-800 mt-0.5">{extra.price} {currency}</p>
                 </div>
 
                 {/* Toggle */}
@@ -523,7 +561,7 @@ export default function SettingsPage() {
             <div className="w-24">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Devise</label>
               <div className="flex items-center h-10 px-3 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-500 font-medium">
-                TND
+                {currency}
               </div>
             </div>
           </div>

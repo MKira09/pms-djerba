@@ -14,7 +14,8 @@ import { supabase } from '@/lib/supabase'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
-import { fmtCurrency, SOURCE_COLORS, STATUS_COLORS } from '@/lib/utils'
+import { SOURCE_COLORS, STATUS_COLORS } from '@/lib/utils'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { Reservation, ReservationStatus, ReservationSource } from '@/types'
 
 type PaymentStatus = 'unpaid' | 'partial' | 'paid'
@@ -35,6 +36,7 @@ export default function ReservationsPage() {
   const { singular } = usePropertyTerm()
   const { reservations, fetch, remove } = useReservationsStore()
   const { villas, fetch: fetchVillas } = useVillasStore()
+  const { fmt } = useCurrency()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [villaFilter, setVillaFilter] = useState('all')
@@ -142,7 +144,7 @@ export default function ReservationsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>
-                    <span className="text-sm font-bold text-brand-800">{fmtCurrency(r.total_amount)}</span>
+                    <span className="text-sm font-bold text-brand-800">{fmt(r.total_amount)}</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pb.cls}`}>{pb.label}</span>
                   </div>
                   <div className="flex gap-1">
@@ -215,7 +217,7 @@ export default function ReservationsPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">{nights}</td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                      {fmtCurrency(r.total_amount)}
+                      {fmt(r.total_amount)}
                       {r.extras && r.extras.length > 0 && (
                         <div className="flex flex-wrap gap-1 justify-end mt-1">
                           {r.extras.map(e => (

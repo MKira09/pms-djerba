@@ -283,10 +283,11 @@ export default function HomePage() {
 
           {/* Subtitle for clarity */}
           <p style={{
-            fontSize: 13, fontWeight: 300,
-            color: 'rgba(255,255,255,0.65)',
+            fontSize: 16, fontWeight: 600,
+            color: C.white,
             lineHeight: 1.6, marginBottom: 36,
-            letterSpacing: '0.03em',
+            letterSpacing: '0.02em',
+            textShadow: '0 2px 8px rgba(0,0,0,0.45)',
           }}>
             Le logiciel pensé pour les agences et propriétaires<br />de locations saisonnières.
           </p>

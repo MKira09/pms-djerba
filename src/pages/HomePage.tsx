@@ -275,10 +275,20 @@ export default function HomePage() {
             fontFamily: "'Cormorant', serif",
             fontSize: 22, fontWeight: 400, fontStyle: 'italic',
             color: 'rgba(255,255,255,0.88)',
-            lineHeight: 1.4, marginBottom: 36,
+            lineHeight: 1.4, marginBottom: 16,
             letterSpacing: '0.01em',
           }}>
             L'élégance de gérer sans effort
+          </p>
+
+          {/* Subtitle for clarity */}
+          <p style={{
+            fontSize: 13, fontWeight: 300,
+            color: 'rgba(255,255,255,0.65)',
+            lineHeight: 1.6, marginBottom: 36,
+            letterSpacing: '0.03em',
+          }}>
+            Le logiciel pensé pour les agences et propriétaires<br />de locations saisonnières.
           </p>
 
           {/* Divider */}
@@ -299,7 +309,7 @@ export default function HomePage() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              Démarrer gratuitement
+              Commencer
             </button>
             <a
               href="#galerie"
@@ -357,14 +367,14 @@ export default function HomePage() {
               color: C.teal, fontSize: 11, fontWeight: 400,
               letterSpacing: '0.18em', textTransform: 'uppercase',
             }}>
-              L'art de vivre méditerranéen
+              Votre portefeuille, en un coup d'œil
             </span>
             <h2 className="lp-gallery-h2" style={{
               fontFamily: "'Cormorant', serif",
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
             }}>
-              De la Méditerranée à l'Atlantique, où que vous soyez.
+              Villas, appartements, riads — gérés depuis une seule interface.
             </h2>
           </div>
 

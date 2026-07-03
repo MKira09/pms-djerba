@@ -210,6 +210,7 @@ export default function CalendarPage() {
   function getReservationsForDay(day: Date): Reservation[] {
     return reservations.filter(r =>
       r.status === 'confirmed' &&
+      !r.archived_at &&
       (villaFilter === 'all' || r.villa_id === villaFilter) &&
       areIntervalsOverlapping(
         { start: day, end: day },

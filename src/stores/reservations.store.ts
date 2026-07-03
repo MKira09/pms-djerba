@@ -10,17 +10,21 @@ import { parseISO, areIntervalsOverlapping } from 'date-fns'
 
 interface ReservationsState {
   reservations: Reservation[]
+  archived: Reservation[]
   clients: Client[]
   loading: boolean
   fetch: () => Promise<void>
+  fetchArchived: () => Promise<void>
   add: (res: AddReservationPayload) => Promise<Reservation>
   update: (id: string, patch: Partial<Reservation>) => Promise<void>
   remove: (id: string) => Promise<void>
+  restore: (id: string) => Promise<void>
   checkConflict: (villaId: string, checkIn: string, checkOut: string, excludeId?: string) => boolean
 }
 
 export const useReservationsStore = create<ReservationsState>()((set, get) => ({
   reservations: [],
+  archived: [],
   clients: [],
   loading: false,
 
@@ -36,10 +40,25 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
       return
     }
     const [{ data: res }, { data: cli }] = await Promise.all([
-      supabase.from('reservations').select('*, villa:villas(*), client:clients(*)').order('check_in'),
+      supabase
+        .from('reservations')
+        .select('*, villa:villas(*), client:clients(*)')
+        .is('archived_at', null)
+        .order('check_in'),
       supabase.from('clients').select('*').order('full_name'),
     ])
     set({ reservations: res ?? [], clients: cli ?? [], loading: false })
+  },
+
+  fetchArchived: async () => {
+    const { isDemoMode } = useAuthStore.getState()
+    if (isDemoMode) { set({ archived: [] }); return }
+    const { data } = await supabase
+      .from('reservations')
+      .select('*, villa:villas(*), client:clients(*)')
+      .not('archived_at', 'is', null)
+      .order('archived_at', { ascending: false })
+    set({ archived: data ?? [] })
   },
 
   checkConflict: (villaId, checkIn, checkOut, excludeId) => {
@@ -73,7 +92,6 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
       set(s => ({ reservations: [...s.reservations, enriched] }))
       return enriched
     }
-    // Real mode: upsert client first
     let clientId = resData.client_id
     if (clientPayload?.full_name && !clientId) {
       const { data: cli } = await supabase.from('clients').insert({
@@ -95,9 +113,29 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
     set(s => ({ reservations: s.reservations.map(r => r.id === id ? { ...r, ...updated } : r) }))
   },
 
+  // Archive instead of hard-delete
   remove: async (id) => {
     const { isDemoMode } = useAuthStore.getState()
-    if (!isDemoMode) await supabase.from('reservations').delete().eq('id', id)
+    const archived_at = new Date().toISOString()
+    if (!isDemoMode) {
+      await supabase.from('reservations').update({ archived_at }).eq('id', id)
+    }
     set(s => ({ reservations: s.reservations.filter(r => r.id !== id) }))
+  },
+
+  restore: async (id) => {
+    const { isDemoMode } = useAuthStore.getState()
+    if (!isDemoMode) {
+      await supabase.from('reservations').update({ archived_at: null }).eq('id', id)
+    }
+    const { archived, reservations } = get()
+    const res = archived.find(r => r.id === id)
+    if (res) {
+      const restored = { ...res, archived_at: null }
+      set({
+        archived: archived.filter(r => r.id !== id),
+        reservations: [...reservations, restored].sort((a, b) => a.check_in.localeCompare(b.check_in)),
+      })
+    }
   },
 }))

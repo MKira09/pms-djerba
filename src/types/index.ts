@@ -164,6 +164,7 @@ export interface Reservation {
   deposit_method?: string | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
   // joined
   villa?: Villa
   client?: Client

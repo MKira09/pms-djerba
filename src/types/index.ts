@@ -86,6 +86,20 @@ export interface Villa {
   updated_at: string
 }
 
+// ─── Blocked period ────────────────────────────────────────────────────────
+export type BlockedReason = 'entretien' | 'usage_personnel' | 'autre'
+
+export interface BlockedPeriod {
+  id: string
+  tenant_id: string
+  villa_id: string | null
+  start_date: string
+  end_date: string
+  reason: BlockedReason
+  note: string | null
+  created_at: string
+}
+
 // ─── Seasonal rate ─────────────────────────────────────────────────────────
 export interface SeasonalRate {
   id: string

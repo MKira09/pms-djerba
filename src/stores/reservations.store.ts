@@ -39,7 +39,7 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
       })
       return
     }
-    const [{ data: res }, { data: cli }] = await Promise.all([
+    const [{ data: res, error: resErr }, { data: cli }] = await Promise.all([
       supabase
         .from('reservations')
         .select('*, villa:villas(*), client:clients(*)')
@@ -47,17 +47,23 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
         .order('check_in'),
       supabase.from('clients').select('*').order('full_name'),
     ])
+    if (resErr) {
+      console.error('[reservations.fetch]', resErr.message)
+      set({ loading: false })
+      throw resErr
+    }
     set({ reservations: res ?? [], clients: cli ?? [], loading: false })
   },
 
   fetchArchived: async () => {
     const { isDemoMode } = useAuthStore.getState()
     if (isDemoMode) { set({ archived: [] }); return }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('reservations')
       .select('*, villa:villas(*), client:clients(*)')
       .not('archived_at', 'is', null)
       .order('archived_at', { ascending: false })
+    if (error) throw error
     set({ archived: data ?? [] })
   },
 
@@ -118,7 +124,11 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
     const { isDemoMode } = useAuthStore.getState()
     const archived_at = new Date().toISOString()
     if (!isDemoMode) {
-      await supabase.from('reservations').update({ archived_at }).eq('id', id)
+      const { error } = await supabase
+        .from('reservations')
+        .update({ archived_at })
+        .eq('id', id)
+      if (error) throw error  // Do NOT update local state if DB update failed
     }
     set(s => ({ reservations: s.reservations.filter(r => r.id !== id) }))
   },
@@ -126,7 +136,11 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
   restore: async (id) => {
     const { isDemoMode } = useAuthStore.getState()
     if (!isDemoMode) {
-      await supabase.from('reservations').update({ archived_at: null }).eq('id', id)
+      const { error } = await supabase
+        .from('reservations')
+        .update({ archived_at: null })
+        .eq('id', id)
+      if (error) throw error
     }
     const { archived, reservations } = get()
     const res = archived.find(r => r.id === id)

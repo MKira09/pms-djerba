@@ -48,7 +48,15 @@ export default function ReservationsPage() {
   const [archiveId, setArchiveId] = useState<string | null>(null)
 
   useEffect(() => { fetch(); fetchVillas() }, [])
-  useEffect(() => { if (tab === 'archived') fetchArchived() }, [tab])
+  useEffect(() => {
+    if (tab === 'archived') {
+      fetchArchived().catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : String(e)
+        toast.error(`Impossible de charger les archives : ${msg}`, { duration: 8000 })
+        console.error('[fetchArchived]', e)
+      })
+    }
+  }, [tab])
 
   const filtered = reservations.filter(r => {
     const q = search.toLowerCase()
@@ -88,14 +96,26 @@ export default function ReservationsPage() {
 
   async function handleArchive() {
     if (!archiveId) return
-    try { await remove(archiveId); toast.success('Réservation archivée.') }
-    catch { toast.error('Erreur lors de l\'archivage.') }
-    finally { setArchiveId(null) }
+    try {
+      await remove(archiveId)
+      toast.success('Réservation archivée.')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'inconnue'
+      toast.error(`Erreur lors de l'archivage : ${msg}`, { duration: 8000 })
+      console.error('[archive]', e)
+    } finally {
+      setArchiveId(null)
+    }
   }
 
   async function handleRestore(id: string) {
-    try { await restore(id); toast.success('Réservation restaurée.') }
-    catch { toast.error('Erreur lors de la restauration.') }
+    try {
+      await restore(id)
+      toast.success('Réservation restaurée.')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'inconnue'
+      toast.error(`Erreur lors de la restauration : ${msg}`, { duration: 8000 })
+    }
   }
 
   const statusOpts = [

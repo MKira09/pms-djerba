@@ -19,7 +19,6 @@ const BOTTOM_NAV = [
 ]
 
 const NAV_LINKS = [
-  { to: '/dashboard',      icon: LayoutDashboard, key: 'nav.dashboard' },
   { to: '/calendar',       icon: Calendar,        key: 'nav.calendar' },
   { to: '/reservations',   icon: ClipboardList,   key: 'nav.reservations' },
   { to: '/team',           icon: Users,           key: 'nav.team' },

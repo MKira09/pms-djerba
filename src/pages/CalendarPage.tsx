@@ -51,6 +51,8 @@ function BlockModal({
     villa_id: '' as string,
     start_date: defaultDate ?? '',
     end_date: defaultDate ?? '',
+    start_time: '',
+    end_time: '',
     reason: 'entretien' as BlockedReason,
     note: '',
   })
@@ -73,6 +75,8 @@ function BlockModal({
         villa_id: form.villa_id || null,
         start_date: form.start_date,
         end_date: form.end_date,
+        start_time: form.start_time || null,
+        end_time: form.end_time || null,
         reason: form.reason,
         note: form.note.trim() || undefined,
       })
@@ -109,21 +113,16 @@ function BlockModal({
           onChange={e => set('villa_id', e.target.value)}
         />
         <div className="grid grid-cols-2 gap-3">
-          <Input
-            label="Du"
-            type="date"
-            value={form.start_date}
-            onChange={e => set('start_date', e.target.value)}
-            required
-          />
-          <Input
-            label="Au"
-            type="date"
-            value={form.end_date}
-            min={form.start_date}
-            onChange={e => set('end_date', e.target.value)}
-            required
-          />
+          <Input label="Du" type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} required />
+          <Input label="Au" type="date" value={form.end_date} min={form.start_date} onChange={e => set('end_date', e.target.value)} required />
+        </div>
+        {/* Heures optionnelles */}
+        <div>
+          <p className="text-xs text-gray-500 mb-2">Heures <span className="text-gray-400">(optionnel — vide = journée entière)</span></p>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Heure de début" type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} />
+            <Input label="Heure de fin" type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} />
+          </div>
         </div>
         <Select
           label="Motif"
@@ -176,7 +175,14 @@ function BlockDetailModal({
           <span className="font-medium">{info.label}</span>
         </div>
         <p><span className="text-gray-500">Villa :</span> {villa?.name ?? 'Toutes les villas'}</p>
-        <p><span className="text-gray-500">Période :</span> {format(parseISO(period.start_date), 'dd MMM yyyy', { locale: fr })} → {format(parseISO(period.end_date), 'dd MMM yyyy', { locale: fr })}</p>
+        <p>
+          <span className="text-gray-500">Période :</span>{' '}
+          {format(parseISO(period.start_date), 'dd MMM yyyy', { locale: fr })}
+          {period.start_time && ` à ${period.start_time}`}
+          {' → '}
+          {format(parseISO(period.end_date), 'dd MMM yyyy', { locale: fr })}
+          {period.end_time && ` à ${period.end_time}`}
+        </p>
         {period.note && <p><span className="text-gray-500">Note :</span> {period.note}</p>}
       </div>
     </Modal>
@@ -203,7 +209,7 @@ export default function CalendarPage() {
 
   function getReservationsForDay(day: Date): Reservation[] {
     return reservations.filter(r =>
-      r.status !== 'cancelled' &&
+      r.status === 'confirmed' &&
       (villaFilter === 'all' || r.villa_id === villaFilter) &&
       areIntervalsOverlapping(
         { start: day, end: day },
@@ -330,15 +336,18 @@ export default function CalendarPage() {
                   {/* Blocked badges */}
                   {dayBlocked.slice(0, 1).map(p => {
                     const info = REASON_LABELS[p.reason]
+                    const timeLabel = p.start_time && p.end_time
+                      ? ` ${p.start_time.slice(0, 5)}–${p.end_time.slice(0, 5)}`
+                      : p.start_time ? ` dès ${p.start_time.slice(0, 5)}` : ''
                     return (
                       <div
                         key={p.id}
                         className="text-[10px] px-1.5 py-0.5 rounded truncate text-white font-medium flex items-center gap-1"
                         style={{ backgroundColor: info.color }}
-                        title={info.label + (p.note ? ` — ${p.note}` : '')}
+                        title={info.label + timeLabel + (p.note ? ` — ${p.note}` : '')}
                       >
                         {info.icon}
-                        <span className="truncate">{info.label}</span>
+                        <span className="truncate">{info.label}{timeLabel}</span>
                       </div>
                     )
                   })}

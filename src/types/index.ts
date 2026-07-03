@@ -95,6 +95,8 @@ export interface BlockedPeriod {
   villa_id: string | null
   start_date: string
   end_date: string
+  start_time: string | null  // HH:MM, null = journée entière
+  end_time: string | null    // HH:MM, null = journée entière
   reason: BlockedReason
   note: string | null
   created_at: string

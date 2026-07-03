@@ -8,6 +8,8 @@ type AddPayload = {
   villa_id: string | null
   start_date: string
   end_date: string
+  start_time?: string | null
+  end_time?: string | null
   reason: BlockedReason
   note?: string
 }
@@ -42,7 +44,7 @@ export const useBlockedPeriodsStore = create<BlockedPeriodsState>()((set, get) =
     if (isDemoMode) {
       const fake: BlockedPeriod = {
         id: crypto.randomUUID(), tenant_id: tenant.id, created_at: new Date().toISOString(),
-        note: data.note ?? null, ...data,
+        note: data.note ?? null, start_time: data.start_time ?? null, end_time: data.end_time ?? null, ...data,
       }
       set(s => ({ periods: [...s.periods, fake] }))
       return

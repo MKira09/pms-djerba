@@ -43,16 +43,17 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
       supabase
         .from('reservations')
         .select('*, villa:villas(*), client:clients(*)')
-        .is('archived_at', null)
         .order('check_in'),
       supabase.from('clients').select('*').order('full_name'),
     ])
     if (resErr) {
       console.error('[reservations.fetch]', resErr.message)
       set({ loading: false })
-      throw resErr
+      return
     }
-    set({ reservations: res ?? [], clients: cli ?? [], loading: false })
+    // Filter out archived client-side — works whether or not archived_at column exists yet
+    const active = (res ?? []).filter(r => !r.archived_at)
+    set({ reservations: active, clients: cli ?? [], loading: false })
   },
 
   fetchArchived: async () => {

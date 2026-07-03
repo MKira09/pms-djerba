@@ -165,6 +165,8 @@ export interface Reservation {
   created_at: string
   updated_at: string
   archived_at?: string | null
+  reminder_j3_sent?: boolean
+  reminder_j1_sent?: boolean
   // joined
   villa?: Villa
   client?: Client

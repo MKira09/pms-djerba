@@ -97,7 +97,11 @@ export default function HomePage() {
   const [agencyLogo, setAgencyLogo] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [msg, setMsg] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [contactError, setContactError] = useState('')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -133,11 +137,22 @@ export default function HomePage() {
 
   const remaining = foundingCount !== null ? Math.max(0, 5 - foundingCount) : null
 
-  function handleContact(e: React.FormEvent) {
+  async function handleContact(e: React.FormEvent) {
     e.preventDefault()
-    const s = encodeURIComponent(`${agencyName || 'VillaHub'} — contact de ${name}`)
-    const b = encodeURIComponent(`Nom : ${name}\nEmail : ${email}\n\n${msg}`)
-    window.location.href = `mailto:contact.agencykira@gmail.com?subject=${s}&body=${b}`
+    setSending(true)
+    setContactError('')
+    try {
+      const { error } = await supabase.functions.invoke('send-contact-form', {
+        body: { name, email, phone: phone || undefined, message: msg },
+      })
+      if (error) throw error
+      setSent(true)
+      setName(''); setEmail(''); setPhone(''); setMsg('')
+    } catch {
+      setContactError("Une erreur est survenue. Veuillez réessayer ou nous écrire directement.")
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -782,43 +797,65 @@ export default function HomePage() {
             Parlez-nous de votre activité. Notre équipe vous répond sous 24 heures.
           </p>
 
-          <form onSubmit={handleContact} style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
-            <input
-              required
-              placeholder="Votre nom"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              style={inputStyle()}
-            />
-            <input
-              required type="email"
-              placeholder="Votre adresse email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={inputStyle()}
-            />
-            <textarea
-              required rows={5}
-              placeholder="Votre message"
-              value={msg}
-              onChange={e => setMsg(e.target.value)}
-              style={{ ...inputStyle(), resize: 'vertical' }}
-            />
-            <button
-              type="submit"
-              style={{
-                background: C.navy, color: C.white, border: 'none',
-                padding: '16px', borderRadius: 2,
-                fontSize: 11, fontWeight: 500, letterSpacing: '0.14em',
-                textTransform: 'uppercase', cursor: 'pointer',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.teal)}
-              onMouseLeave={e => (e.currentTarget.style.background = C.navy)}
-            >
-              Envoyer →
-            </button>
-          </form>
+          {sent ? (
+            <div style={{
+              background: '#F0FAF0', border: '1px solid #B7DFB9', borderRadius: 8,
+              padding: '32px 24px', textAlign: 'center',
+            }}>
+              <p style={{ color: '#2D6A2F', fontSize: 16, fontWeight: 500, margin: 0 }}>
+                ✓ Votre message a bien été envoyé, nous vous répondrons dans les plus brefs délais.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleContact} style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
+              <input
+                required
+                placeholder="Votre nom *"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                style={inputStyle()}
+              />
+              <input
+                required type="email"
+                placeholder="Votre adresse email *"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                style={inputStyle()}
+              />
+              <input
+                type="tel"
+                placeholder="Téléphone (optionnel)"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                style={inputStyle()}
+              />
+              <textarea
+                required rows={5}
+                placeholder="Votre message *"
+                value={msg}
+                onChange={e => setMsg(e.target.value)}
+                style={{ ...inputStyle(), resize: 'vertical' }}
+              />
+              {contactError && (
+                <p style={{ color: '#C0392B', fontSize: 13, margin: 0 }}>{contactError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={sending}
+                style={{
+                  background: sending ? C.grey : C.navy, color: C.white, border: 'none',
+                  padding: '16px', borderRadius: 2,
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.14em',
+                  textTransform: 'uppercase', cursor: sending ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => { if (!sending) e.currentTarget.style.background = C.teal }}
+                onMouseLeave={e => { if (!sending) e.currentTarget.style.background = C.navy }}
+              >
+                {sending ? 'Envoi en cours…' : 'Envoyer →'}
+              </button>
+            </form>
+          )}
         </div>
       </section>
 

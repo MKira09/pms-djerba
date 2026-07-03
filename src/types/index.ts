@@ -167,6 +167,8 @@ export interface Reservation {
   archived_at?: string | null
   reminder_j3_sent?: boolean
   reminder_j1_sent?: boolean
+  receipt_number?: string | null
+  invoice_number?: string | null
   // joined
   villa?: Villa
   client?: Client

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw, Download } from 'lucide-react'
+import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw, Download, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, isWithinInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -12,6 +12,7 @@ import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Modal from '@/components/ui/Modal'
 import ReservationForm from '@/components/reservations/ReservationForm'
+import DocumentsModal from '@/components/reservations/DocumentsModal'
 import { supabase } from '@/lib/supabase'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
@@ -47,6 +48,7 @@ export default function ReservationsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editRes, setEditRes] = useState<Reservation | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
+  const [docsRes, setDocsRes] = useState<Reservation | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
   const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx')
   const [exportPeriod, setExportPeriod] = useState<'all' | 'month' | 'last_month' | 'quarter' | 'year'>('all')
@@ -328,6 +330,7 @@ export default function ReservationsPage() {
                         <button onClick={() => handleSendWelcomeEmail(r.id)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded-md" title="Email de bienvenue"><Mail className="h-4 w-4" /></button>
                         <button onClick={() => { setEditRes(r); setFormOpen(true) }} className="p-1.5 text-gray-400 hover:text-brand-700 rounded-md"><Pencil className="h-4 w-4" /></button>
                         <button onClick={() => setArchiveId(r.id)} className="p-1.5 text-gray-400 hover:text-amber-600 rounded-md" title="Archiver"><Archive className="h-4 w-4" /></button>
+                        <button onClick={() => setDocsRes(r)} className="p-1.5 text-gray-400 hover:text-brand-700 rounded-md" title="Documents"><FileText className="h-4 w-4" /></button>
                       </div>
                     </div>
                     {r.status === 'pending' && (
@@ -432,6 +435,9 @@ export default function ReservationsPage() {
                             <button onClick={() => setArchiveId(r.id)} className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" title="Archiver">
                               <Archive className="h-4 w-4" />
                             </button>
+                            <button onClick={() => setDocsRes(r)} className="p-1.5 text-gray-400 hover:text-brand-700 hover:bg-brand-50 rounded-md transition-colors" title="Documents">
+                              <FileText className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -445,6 +451,19 @@ export default function ReservationsPage() {
       )}
 
       <ReservationForm open={formOpen} reservation={editRes} onClose={() => { setFormOpen(false); setEditRes(null) }} />
+
+      <DocumentsModal
+        open={!!docsRes}
+        reservation={docsRes}
+        onClose={() => setDocsRes(null)}
+        onNumberSaved={(id, type, number) => {
+          // Update local state so the number appears immediately if modal is re-opened
+          setDocsRes(prev => prev?.id === id
+            ? { ...prev, [type === 'receipt' ? 'receipt_number' : 'invoice_number']: number }
+            : prev,
+          )
+        }}
+      />
 
       <Modal open={!!archiveId} onClose={() => setArchiveId(null)} title="Archiver la réservation" size="sm"
         footer={<><Button variant="outline" onClick={() => setArchiveId(null)}>{t('common.cancel')}</Button><Button variant="danger" onClick={handleArchive}>Archiver</Button></>}>

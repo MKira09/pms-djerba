@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
@@ -115,7 +115,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { t } = useTranslation()
   const { add, update, checkConflict } = useReservationsStore()
   const { villas } = useVillasStore()
-  const { computePrice } = usePricingStore()
+  const { computePrice, fetch: fetchPricing } = usePricingStore()
   const { tenant } = useAuthStore()
   const { extras: allExtras, fetch: fetchExtras } = useExtrasStore()
   const availableExtras = allExtras.filter(e => e.enabled !== false)
@@ -123,11 +123,14 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
+  // true = auto-calc is active (new reservation or after user changes villa/dates)
+  const autoCalc = useRef(true)
 
-  useEffect(() => { fetchExtras(); fetchBlacklist() }, [])
+  useEffect(() => { fetchExtras(); fetchBlacklist(); fetchPricing() }, [])
 
   useEffect(() => {
     if (reservation) {
+      autoCalc.current = false // editing: don't override existing total
       setForm({
         villa_id: reservation.villa_id,
         check_in: reservation.check_in,
@@ -154,6 +157,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         deposit_method: reservation.deposit_method ?? 'espèces',
       })
     } else {
+      autoCalc.current = true // new reservation: auto-calc enabled
       setForm({
         ...EMPTY,
         check_in: defaultDate ?? today,
@@ -163,11 +167,28 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     setConflict(false)
   }, [reservation, defaultDate, open])
 
-  function set<K extends keyof FormData>(k: K, v: FormData[K]) {
+  // Belt-and-suspenders: recalculate whenever villa or dates change
+  useEffect(() => {
+    if (!autoCalc.current || !form.villa_id || !form.check_in || !form.check_out) return
+    const villa = villas.find(villa_ => villa_.id === form.villa_id)
+    if (!villa) return
+    const nights = nightCount(form.check_in, form.check_out)
+    if (nights <= 0) return
+    const pricePerNight = computePrice(villa.base_price, parseISO(form.check_in))
+    const extrasTotal = form.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
+    setForm(f => ({ ...f, total_amount: Math.max(0, nights * pricePerNight) + extrasTotal }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.villa_id, form.check_in, form.check_out, villas])
+
+  function set<K extends keyof FormData>(k: K, val: FormData[K]) {
+    if (k === 'villa_id' || k === 'check_in' || k === 'check_out') {
+      autoCalc.current = true
+    }
     setForm(f => {
-      const next = { ...f, [k]: v }
+      const next = { ...f, [k]: val }
+      // Immediate inline calculation (useEffect also recalculates after render)
       if ((k === 'villa_id' || k === 'check_in' || k === 'check_out') && next.villa_id && next.check_in && next.check_out) {
-        const villa = villas.find(v => v.id === next.villa_id)
+        const villa = villas.find(villa_ => villa_.id === next.villa_id)
         if (villa) {
           const nights = nightCount(next.check_in, next.check_out)
           const pricePerNight = computePrice(villa.base_price, parseISO(next.check_in))
@@ -300,6 +321,11 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const nights = form.check_in && form.check_out ? Math.max(0, nightCount(form.check_in, form.check_out)) : 0
   const extrasTotal = form.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
   const blacklistMatch = !reservation ? checkBlacklist(form.client_name, form.client_phone, form.client_email) : null
+  const currency = tenant?.currency ?? 'TND'
+  const selectedVilla = form.villa_id ? villas.find(v => v.id === form.villa_id) : null
+  const pricePerNight = selectedVilla && form.check_in
+    ? computePrice(selectedVilla.base_price, parseISO(form.check_in))
+    : 0
 
   return (
     <Modal
@@ -349,9 +375,25 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               </label>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('reservations.amount')} ({nights} nuits)</label>
-              <input type="number" min={0} value={form.total_amount} onChange={e => set('total_amount', +e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('reservations.amount')}
+                {nights > 0 && <span className="text-gray-400 font-normal ml-1">({nights} nuit{nights > 1 ? 's' : ''})</span>}
+              </label>
+              <input
+                type="number" min={0} value={form.total_amount}
+                onChange={e => { autoCalc.current = false; set('total_amount', +e.target.value) }}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {selectedVilla && nights > 0 && pricePerNight > 0 && (
+                <p className="text-xs text-teal-600 mt-1.5">
+                  ✨ {pricePerNight} {currency}/nuit × {nights} nuit{nights > 1 ? 's' : ''}
+                  {extrasTotal > 0 && ` + ${extrasTotal} ${currency} extras`}
+                  {' = '}
+                  <strong>{pricePerNight * nights + extrasTotal} {currency}</strong>
+                  {' '}
+                  <span className="text-gray-400">(modifiable pour remise)</span>
+                </p>
+              )}
             </div>
           </div>
         </div>

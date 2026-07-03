@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw } from 'lucide-react'
+import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format, parseISO, differenceInDays } from 'date-fns'
+import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, isWithinInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import * as XLSX from 'xlsx'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -46,6 +47,9 @@ export default function ReservationsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editRes, setEditRes] = useState<Reservation | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx')
+  const [exportPeriod, setExportPeriod] = useState<'all' | 'month' | 'last_month' | 'quarter' | 'year'>('all')
 
   useEffect(() => { fetch(); fetchVillas() }, [])
   useEffect(() => {
@@ -118,6 +122,66 @@ export default function ReservationsPage() {
     }
   }
 
+  function handleExport() {
+    const now = new Date()
+    const intervals: Record<typeof exportPeriod, { start: Date; end: Date } | null> = {
+      all: null,
+      month: { start: startOfMonth(now), end: endOfMonth(now) },
+      last_month: { start: startOfMonth(subMonths(now, 1)), end: endOfMonth(subMonths(now, 1)) },
+      quarter: { start: startOfQuarter(now), end: endOfQuarter(now) },
+      year: { start: startOfYear(now), end: endOfYear(now) },
+    }
+    const interval = intervals[exportPeriod]
+    const source = interval
+      ? reservations.filter(r => isWithinInterval(parseISO(r.check_in), interval))
+      : reservations
+
+    const STATUS_LABELS: Record<string, string> = {
+      confirmed: 'Confirmée', pending: 'En attente', cancelled: 'Annulée', checkout: 'Check-out',
+    }
+    const rows = source.map(r => {
+      const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
+      return {
+        'Nom client': r.client?.full_name ?? '',
+        'Email': r.client?.email ?? '',
+        'Téléphone': r.client?.phone ?? '',
+        'Villa': r.villa?.name ?? '',
+        'Arrivée': format(parseISO(r.check_in), 'dd/MM/yyyy'),
+        'Départ': format(parseISO(r.check_out), 'dd/MM/yyyy'),
+        'Nuits': nights,
+        'Montant total': r.total_amount,
+        'Statut': STATUS_LABELS[r.status] ?? r.status,
+        'Date de création': format(parseISO(r.created_at), 'dd/MM/yyyy'),
+      }
+    })
+
+    const periodLabel: Record<typeof exportPeriod, string> = {
+      all: 'toutes', month: 'mois', last_month: 'mois-precedent', quarter: 'trimestre', year: 'annee',
+    }
+    const filename = `reservations_${periodLabel[exportPeriod]}_${format(now, 'yyyy-MM-dd')}`
+
+    if (exportFormat === 'csv') {
+      const headers = Object.keys(rows[0] ?? {})
+      const csv = [
+        headers.join(';'),
+        ...rows.map(r => headers.map(h => String((r as Record<string, string | number>)[h] ?? '')).join(';')),
+      ].join('\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `${filename}.csv`
+      a.click()
+    } else {
+      const ws = XLSX.utils.json_to_sheet(rows)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Réservations')
+      ws['!cols'] = [20, 28, 18, 20, 14, 14, 8, 16, 14, 16].map(w => ({ wch: w }))
+      XLSX.writeFile(wb, `${filename}.xlsx`)
+    }
+    setExportOpen(false)
+    toast.success(`Export ${exportFormat.toUpperCase()} téléchargé (${rows.length} réservation${rows.length > 1 ? 's' : ''})`)
+  }
+
   const statusOpts = [
     { value: 'all', label: 'Tous les statuts' },
     ...(['confirmed', 'pending', 'cancelled', 'checkout'] as ReservationStatus[]).map(s => ({ value: s, label: t(`reservations.${s}`) })),
@@ -135,11 +199,16 @@ export default function ReservationsPage() {
             {tab === 'active' ? `${filtered.length} réservation(s)` : `${archived.length} archivée(s)`}
           </p>
         </div>
-        {tab === 'active' && (
-          <Button icon={<Plus className="h-4 w-4" />} onClick={() => { setEditRes(null); setFormOpen(true) }}>
-            {t('reservations.add')}
+        <div className="flex gap-2">
+          <Button variant="outline" icon={<Download className="h-4 w-4" />} onClick={() => setExportOpen(true)}>
+            Exporter
           </Button>
-        )}
+          {tab === 'active' && (
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => { setEditRes(null); setFormOpen(true) }}>
+              {t('reservations.add')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -380,6 +449,73 @@ export default function ReservationsPage() {
       <Modal open={!!archiveId} onClose={() => setArchiveId(null)} title="Archiver la réservation" size="sm"
         footer={<><Button variant="outline" onClick={() => setArchiveId(null)}>{t('common.cancel')}</Button><Button variant="danger" onClick={handleArchive}>Archiver</Button></>}>
         <p className="text-gray-600">Cette réservation sera archivée et n'apparaîtra plus dans la liste principale. Vous pourrez la restaurer depuis l'onglet "Archivées".</p>
+      </Modal>
+
+      {/* Export modal */}
+      <Modal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        title="Exporter les réservations"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setExportOpen(false)}>{t('common.cancel')}</Button>
+            <Button icon={<Download className="h-4 w-4" />} onClick={handleExport}>Télécharger</Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          {/* Format */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Format</p>
+            <div className="grid grid-cols-2 gap-3">
+              {(['xlsx', 'csv'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setExportFormat(f)}
+                  className={`flex flex-col items-center gap-1.5 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    exportFormat === f
+                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-lg">{f === 'xlsx' ? '📊' : '📄'}</span>
+                  <span>{f === 'xlsx' ? 'Excel (.xlsx)' : 'CSV (.csv)'}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Période */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Période</p>
+            <div className="space-y-2">
+              {([
+                { value: 'all',        label: 'Toutes les réservations' },
+                { value: 'month',      label: 'Mois en cours' },
+                { value: 'last_month', label: 'Mois précédent' },
+                { value: 'quarter',    label: 'Trimestre en cours' },
+                { value: 'year',       label: 'Année en cours' },
+              ] as const).map(opt => (
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="exportPeriod"
+                    value={opt.value}
+                    checked={exportPeriod === opt.value}
+                    onChange={() => setExportPeriod(opt.value)}
+                    className="accent-brand-600"
+                  />
+                  <span className="text-sm text-gray-700">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            Les réservations archivées ne sont pas incluses dans l'export.
+          </p>
+        </div>
       </Modal>
     </div>
   )

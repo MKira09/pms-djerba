@@ -27,11 +27,19 @@ const EMPTY_FORM: Form = {
 
 const DOW = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
 
-function CalendarMonth({ month, blocked }: { month: Date; blocked: BlockedRange[] }) {
+function CalendarMonth({
+  month, blocked, checkIn, checkOut, onDayClick,
+}: {
+  month: Date
+  blocked: BlockedRange[]
+  checkIn?: string
+  checkOut?: string
+  onDayClick?: (dateStr: string) => void
+}) {
   const today = startOfDay(new Date())
   const first = startOfMonth(month)
   const days = getDaysInMonth(month)
-  const offset = (getDay(first) + 6) % 7 // Mon=0
+  const offset = (getDay(first) + 6) % 7
 
   return (
     <div>
@@ -45,6 +53,7 @@ function CalendarMonth({ month, blocked }: { month: Date; blocked: BlockedRange[
         {Array(offset).fill(null).map((_, i) => <div key={`e${i}`} />)}
         {Array.from({ length: days }, (_, i) => {
           const date = new Date(month.getFullYear(), month.getMonth(), i + 1)
+          const dateStr = format(date, 'yyyy-MM-dd')
           const past = isBefore(date, today)
           const booked = blocked.some(r =>
             isWithinInterval(date, {
@@ -52,16 +61,28 @@ function CalendarMonth({ month, blocked }: { month: Date; blocked: BlockedRange[
               end: addDays(parseISO(r.check_out), -1),
             })
           )
+          const isStart = dateStr === checkIn
+          const isEnd = dateStr === checkOut
+          const inRange = !!(checkIn && checkOut && dateStr > checkIn && dateStr < checkOut)
+          const clickable = !past && !booked
+
           return (
             <div
               key={i}
-              className={`text-center py-1.5 rounded select-none ${
-                past
-                  ? 'text-gray-300'
-                  : booked
-                    ? 'bg-orange-100 text-orange-600 font-semibold'
-                    : 'text-gray-700'
-              }`}
+              onClick={() => clickable && onDayClick?.(dateStr)}
+              className={[
+                'text-center py-1.5 rounded select-none transition-colors',
+                clickable ? 'cursor-pointer' : 'cursor-default',
+                isStart || isEnd
+                  ? 'bg-brand-800 text-white font-semibold'
+                  : inRange
+                    ? 'bg-teal-100 text-teal-800'
+                    : past
+                      ? 'text-gray-300'
+                      : booked
+                        ? 'bg-orange-100 text-orange-600 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100',
+              ].join(' ')}
             >
               {i + 1}
             </div>
@@ -101,34 +122,22 @@ export default function VillaBookingPage() {
         .in('status', ['confirmed', 'pending']),
     ]).then(([{ data: v }, { data: r }]) => {
       if (!v) setNotFound(true)
-      else {
-        console.log('[VillaBooking] villa chargée:', {
-          base_price: v.base_price,
-          base_price_type: typeof v.base_price,
-          base_price_parsed: Number(v.base_price),
-        })
-        setVilla(v)
-      }
+      else setVilla(v)
       setBlocked(r ?? [])
       setLoading(false)
     })
   }, [villaId])
 
-  useEffect(() => {
-    const n = form.checkIn && form.checkOut
-      ? Math.max(0, differenceInDays(parseISO(form.checkOut), parseISO(form.checkIn)))
-      : 0
-    const bp = villa ? Number(villa.base_price) : 0
-    console.log('[VillaBooking] récap debug:', {
-      checkIn: form.checkIn,
-      checkOut: form.checkOut,
-      nights: n,
-      base_price_raw: villa?.base_price,
-      base_price_type: typeof villa?.base_price,
-      basePrice: bp,
-      showSummary: n > 0 && bp > 0,
-    })
-  }, [form.checkIn, form.checkOut, villa])
+  function handleDayClick(dateStr: string) {
+    setError('')
+    if (!form.checkIn || form.checkOut) {
+      setForm(f => ({ ...f, checkIn: dateStr, checkOut: '' }))
+    } else if (dateStr > form.checkIn) {
+      setForm(f => ({ ...f, checkOut: dateStr }))
+    } else {
+      setForm(f => ({ ...f, checkIn: dateStr, checkOut: '' }))
+    }
+  }
 
   function setField(k: keyof Form, v: string | number) {
     setForm(f => ({ ...f, [k]: v }))
@@ -293,7 +302,10 @@ export default function VillaBookingPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold text-gray-800">Disponibilités</h2>
-              <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+              <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-brand-800 inline-block" /> Sélectionné
+                </span>
                 <span className="flex items-center gap-1">
                   <span className="w-3 h-3 rounded bg-orange-100 border border-orange-200 inline-block" /> Indisponible
                 </span>
@@ -319,9 +331,27 @@ export default function VillaBookingPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <CalendarMonth month={calMonth} blocked={blocked} />
-            <CalendarMonth month={addMonths(calMonth, 1)} blocked={blocked} />
+            <CalendarMonth
+              month={calMonth} blocked={blocked}
+              checkIn={form.checkIn} checkOut={form.checkOut}
+              onDayClick={handleDayClick}
+            />
+            <div className="hidden sm:block">
+              <CalendarMonth
+                month={addMonths(calMonth, 1)} blocked={blocked}
+                checkIn={form.checkIn} checkOut={form.checkOut}
+                onDayClick={handleDayClick}
+              />
+            </div>
           </div>
+          <p className="mt-3 text-xs text-center text-gray-400">
+            {!form.checkIn
+              ? "Cliquez sur une date d'arrivée"
+              : !form.checkOut
+                ? 'Cliquez maintenant sur la date de départ'
+                : `Arrivée ${format(parseISO(form.checkIn), 'dd MMM', { locale: fr })} → Départ ${format(parseISO(form.checkOut), 'dd MMM', { locale: fr })}`
+            }
+          </p>
         </div>
 
         {/* Booking form */}

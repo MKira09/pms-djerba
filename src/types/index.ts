@@ -162,6 +162,10 @@ export interface Reservation {
   deposit_amount?: number | null
   deposit_date?: string | null
   deposit_method?: string | null
+  payment_status?: 'unpaid' | 'link_sent' | 'paid' | null
+  stripe_payment_link?: string | null
+  paid_at?: string | null
+  paid_method?: string | null
   created_at: string
   updated_at: string
   archived_at?: string | null

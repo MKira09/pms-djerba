@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw, Download, FileText } from 'lucide-react'
+import { Plus, Search, Pencil, Archive, Mail, CheckCircle2, XCircle, RotateCcw, Download, FileText, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, isWithinInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -13,6 +13,7 @@ import Select from '@/components/ui/Select'
 import Modal from '@/components/ui/Modal'
 import ReservationForm from '@/components/reservations/ReservationForm'
 import DocumentsModal from '@/components/reservations/DocumentsModal'
+import PaymentModal from '@/components/reservations/PaymentModal'
 import { supabase } from '@/lib/supabase'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
@@ -21,17 +22,20 @@ import { SOURCE_COLORS, STATUS_COLORS } from '@/lib/utils'
 import { useCurrency } from '@/hooks/useCurrency'
 import type { Reservation, ReservationStatus, ReservationSource } from '@/types'
 
-type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+type PaymentStatus = 'unpaid' | 'partial' | 'link_sent' | 'paid'
 function getPaymentStatus(r: Reservation): PaymentStatus {
+  if (r.payment_status === 'paid') return 'paid'
+  if (r.payment_status === 'link_sent') return 'link_sent'
   const deposit = r.deposit_amount ?? 0
-  if (deposit <= 0 || r.total_amount === 0) return 'unpaid'
-  if (deposit >= r.total_amount) return 'paid'
-  return 'partial'
+  if (deposit > 0 && deposit >= r.total_amount) return 'paid'
+  if (deposit > 0) return 'partial'
+  return 'unpaid'
 }
 const PAYMENT_BADGE: Record<PaymentStatus, { label: string; cls: string }> = {
-  unpaid:  { label: 'Non payé',  cls: 'bg-red-100 text-red-700' },
-  partial: { label: 'Acompte',   cls: 'bg-orange-100 text-orange-700' },
-  paid:    { label: 'Payé',      cls: 'bg-green-100 text-green-700' },
+  unpaid:    { label: 'Non payé',    cls: 'bg-red-100 text-red-700' },
+  partial:   { label: 'Acompte',     cls: 'bg-orange-100 text-orange-700' },
+  link_sent: { label: 'Lien envoyé', cls: 'bg-orange-100 text-orange-700' },
+  paid:      { label: 'Payé',        cls: 'bg-green-100 text-green-700' },
 }
 
 export default function ReservationsPage() {
@@ -49,6 +53,7 @@ export default function ReservationsPage() {
   const [editRes, setEditRes] = useState<Reservation | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [docsRes, setDocsRes] = useState<Reservation | null>(null)
+  const [paymentRes, setPaymentRes] = useState<Reservation | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
   const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx')
   const [exportPeriod, setExportPeriod] = useState<'all' | 'month' | 'last_month' | 'quarter' | 'year'>('all')
@@ -327,6 +332,7 @@ export default function ReservationsPage() {
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pb.cls}`}>{pb.label}</span>
                       </div>
                       <div className="flex gap-1">
+                        <button onClick={() => setPaymentRes(r)} className="p-1.5 text-gray-400 hover:text-emerald-600 rounded-md" title="Paiement"><CreditCard className="h-4 w-4" /></button>
                         <button onClick={() => handleSendWelcomeEmail(r.id)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded-md" title="Email de bienvenue"><Mail className="h-4 w-4" /></button>
                         <button onClick={() => { setEditRes(r); setFormOpen(true) }} className="p-1.5 text-gray-400 hover:text-brand-700 rounded-md"><Pencil className="h-4 w-4" /></button>
                         <button onClick={() => setArchiveId(r.id)} className="p-1.5 text-gray-400 hover:text-amber-600 rounded-md" title="Archiver"><Archive className="h-4 w-4" /></button>
@@ -426,6 +432,9 @@ export default function ReservationsPage() {
                                 </button>
                               </>
                             )}
+                            <button onClick={() => setPaymentRes(r)} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="Paiement">
+                              <CreditCard className="h-4 w-4" />
+                            </button>
                             <button onClick={() => handleSendWelcomeEmail(r.id)} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors" title="Email de bienvenue">
                               <Mail className="h-4 w-4" />
                             </button>
@@ -457,11 +466,20 @@ export default function ReservationsPage() {
         reservation={docsRes}
         onClose={() => setDocsRes(null)}
         onNumberSaved={(id, type, number) => {
-          // Update local state so the number appears immediately if modal is re-opened
           setDocsRes(prev => prev?.id === id
             ? { ...prev, [type === 'receipt' ? 'receipt_number' : 'invoice_number']: number }
             : prev,
           )
+        }}
+      />
+
+      <PaymentModal
+        open={!!paymentRes}
+        reservation={paymentRes}
+        onClose={() => setPaymentRes(null)}
+        onUpdated={(updated) => {
+          setPaymentRes(updated)
+          fetch()
         }}
       />
 

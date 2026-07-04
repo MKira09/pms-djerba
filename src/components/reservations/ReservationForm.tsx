@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
@@ -8,7 +8,6 @@ import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useVillasStore } from '@/stores/villas.store'
-import { usePricingStore } from '@/stores/pricing.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
 import { useBlacklistStore } from '@/stores/blacklist.store'
@@ -115,7 +114,6 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const { t } = useTranslation()
   const { add, update, checkConflict } = useReservationsStore()
   const { villas } = useVillasStore()
-  const { computePrice, fetch: fetchPricing } = usePricingStore()
   const { tenant } = useAuthStore()
   const { extras: allExtras, fetch: fetchExtras } = useExtrasStore()
   const availableExtras = allExtras.filter(e => e.enabled !== false)
@@ -123,14 +121,11 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const [form, setForm] = useState<FormData>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
-  // true = auto-calc is active (new reservation or after user changes villa/dates)
-  const autoCalc = useRef(true)
 
-  useEffect(() => { fetchExtras(); fetchBlacklist(); fetchPricing() }, [])
+  useEffect(() => { fetchExtras(); fetchBlacklist() }, [])
 
   useEffect(() => {
     if (reservation) {
-      autoCalc.current = false // editing: don't override existing total
       setForm({
         villa_id: reservation.villa_id,
         check_in: reservation.check_in,
@@ -157,7 +152,6 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
         deposit_method: reservation.deposit_method ?? 'espèces',
       })
     } else {
-      autoCalc.current = true // new reservation: auto-calc enabled
       setForm({
         ...EMPTY,
         check_in: defaultDate ?? today,
@@ -167,45 +161,16 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     setConflict(false)
   }, [reservation, defaultDate, open])
 
-  // Recalculate whenever villa or dates change
-  useEffect(() => {
-    console.log('[ReservationForm] useEffect triggered:', {
-      autoCalc: autoCalc.current,
-      villa_id: form.villa_id,
-      check_in: form.check_in,
-      check_out: form.check_out,
-      villasCount: villas.length,
-    })
-    if (!autoCalc.current || !form.villa_id || !form.check_in || !form.check_out) return
-    const villa = villas.find(villa_ => villa_.id === form.villa_id)
-    console.log('[ReservationForm] villa trouvée:', villa ? { name: villa.name, base_price: villa.base_price, type: typeof villa.base_price } : 'NON TROUVÉE')
-    if (!villa) return
-    const nights = nightCount(form.check_in, form.check_out)
-    const pricePerNight = computePrice(Number(villa.base_price), parseISO(form.check_in))
-    const extrasTotal = form.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
-    const total = Math.max(0, nights * pricePerNight) + extrasTotal
-    console.log('[ReservationForm] calcul:', { nights, base_price: villa.base_price, pricePerNight, extrasTotal, total })
-    if (nights <= 0) { console.warn('[ReservationForm] nights <= 0, calcul annulé'); return }
-    setForm(f => ({ ...f, total_amount: total }))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.villa_id, form.check_in, form.check_out, villas])
-
   function set<K extends keyof FormData>(k: K, val: FormData[K]) {
-    if (k === 'villa_id' || k === 'check_in' || k === 'check_out') {
-      autoCalc.current = true
-    }
     setForm(f => {
       const next = { ...f, [k]: val }
       if ((k === 'villa_id' || k === 'check_in' || k === 'check_out') && next.villa_id && next.check_in && next.check_out) {
         const villa = villas.find(villa_ => villa_.id === next.villa_id)
-        console.log('[ReservationForm] inline calc — villa:', villa ? { name: villa.name, base_price: villa.base_price } : 'non trouvée', 'check_in:', next.check_in, 'check_out:', next.check_out)
         if (villa) {
           const nights = nightCount(next.check_in, next.check_out)
-          const pricePerNight = computePrice(Number(villa.base_price), parseISO(next.check_in))
+          const basePrice = Number(villa.base_price)
           const extrasTotal = next.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
-          const total = Math.max(0, nights * pricePerNight) + extrasTotal
-          console.log('[ReservationForm] inline résultat:', { nights, pricePerNight, total })
-          next.total_amount = total
+          if (nights > 0) next.total_amount = basePrice * nights + extrasTotal
         }
       }
       return next
@@ -335,9 +300,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
   const blacklistMatch = !reservation ? checkBlacklist(form.client_name, form.client_phone, form.client_email) : null
   const currency = tenant?.currency ?? 'TND'
   const selectedVilla = form.villa_id ? villas.find(v => v.id === form.villa_id) : null
-  const pricePerNight = selectedVilla && form.check_in
-    ? computePrice(selectedVilla.base_price, parseISO(form.check_in))
-    : 0
+  const pricePerNight = selectedVilla ? Number(selectedVilla.base_price) : 0
 
   return (
     <Modal
@@ -393,7 +356,7 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
               </label>
               <input
                 type="number" min={0} value={form.total_amount}
-                onChange={e => { autoCalc.current = false; set('total_amount', +e.target.value) }}
+                onChange={e => set('total_amount', +e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
               {selectedVilla && nights > 0 && pricePerNight > 0 && (

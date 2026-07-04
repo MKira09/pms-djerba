@@ -167,16 +167,26 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     setConflict(false)
   }, [reservation, defaultDate, open])
 
-  // Belt-and-suspenders: recalculate whenever villa or dates change
+  // Recalculate whenever villa or dates change
   useEffect(() => {
+    console.log('[ReservationForm] useEffect triggered:', {
+      autoCalc: autoCalc.current,
+      villa_id: form.villa_id,
+      check_in: form.check_in,
+      check_out: form.check_out,
+      villasCount: villas.length,
+    })
     if (!autoCalc.current || !form.villa_id || !form.check_in || !form.check_out) return
     const villa = villas.find(villa_ => villa_.id === form.villa_id)
+    console.log('[ReservationForm] villa trouvée:', villa ? { name: villa.name, base_price: villa.base_price, type: typeof villa.base_price } : 'NON TROUVÉE')
     if (!villa) return
     const nights = nightCount(form.check_in, form.check_out)
-    if (nights <= 0) return
-    const pricePerNight = computePrice(villa.base_price, parseISO(form.check_in))
+    const pricePerNight = computePrice(Number(villa.base_price), parseISO(form.check_in))
     const extrasTotal = form.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
-    setForm(f => ({ ...f, total_amount: Math.max(0, nights * pricePerNight) + extrasTotal }))
+    const total = Math.max(0, nights * pricePerNight) + extrasTotal
+    console.log('[ReservationForm] calcul:', { nights, base_price: villa.base_price, pricePerNight, extrasTotal, total })
+    if (nights <= 0) { console.warn('[ReservationForm] nights <= 0, calcul annulé'); return }
+    setForm(f => ({ ...f, total_amount: total }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.villa_id, form.check_in, form.check_out, villas])
 
@@ -186,14 +196,16 @@ export default function ReservationForm({ open, reservation, defaultDate, onClos
     }
     setForm(f => {
       const next = { ...f, [k]: val }
-      // Immediate inline calculation (useEffect also recalculates after render)
       if ((k === 'villa_id' || k === 'check_in' || k === 'check_out') && next.villa_id && next.check_in && next.check_out) {
         const villa = villas.find(villa_ => villa_.id === next.villa_id)
+        console.log('[ReservationForm] inline calc — villa:', villa ? { name: villa.name, base_price: villa.base_price } : 'non trouvée', 'check_in:', next.check_in, 'check_out:', next.check_out)
         if (villa) {
           const nights = nightCount(next.check_in, next.check_out)
-          const pricePerNight = computePrice(villa.base_price, parseISO(next.check_in))
+          const pricePerNight = computePrice(Number(villa.base_price), parseISO(next.check_in))
           const extrasTotal = next.extras.reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
-          next.total_amount = Math.max(0, nights * pricePerNight) + extrasTotal
+          const total = Math.max(0, nights * pricePerNight) + extrasTotal
+          console.log('[ReservationForm] inline résultat:', { nights, pricePerNight, total })
+          next.total_amount = total
         }
       }
       return next

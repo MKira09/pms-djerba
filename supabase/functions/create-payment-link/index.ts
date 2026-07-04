@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     if (!STRIPE_KEY)   return json({ error: 'STRIPE_SECRET_KEY non configurée dans les secrets Supabase' }, 500)
     if (!SUPABASE_URL || !SUPABASE_SVC) return json({ error: 'Variables Supabase manquantes' }, 500)
 
-    const { reservation_id } = await req.json() as { reservation_id: string }
+    const { reservation_id, amount: reqAmount } = await req.json() as { reservation_id: string; amount?: number }
     if (!reservation_id) return json({ error: 'reservation_id requis' }, 400)
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SVC)
@@ -48,10 +48,9 @@ Deno.serve(async (req) => {
     if (resErr || !res) return json({ error: 'Réservation introuvable' }, 404)
     if (!res.client?.email) return json({ error: 'Client sans email — impossible d\'envoyer le lien' }, 400)
 
-    const deposit    = res.deposit_amount ?? 0
-    const total      = Number(res.total_amount)
-    const remaining  = Math.max(0, total - deposit)
-    const amountDue  = remaining > 0 ? remaining : total
+    const total = Number(res.total_amount)
+    // Use caller-specified amount if valid; otherwise fall back to full total
+    const amountDue = reqAmount && reqAmount > 0 && reqAmount <= total ? reqAmount : total
 
     // Devise Stripe — TND non supporté, utilise EUR par défaut
     const tenantCurrency = (res.tenant?.currency ?? 'eur').toLowerCase()
@@ -88,6 +87,7 @@ Deno.serve(async (req) => {
     await sb.from('reservations').update({
       payment_status:       'link_sent',
       stripe_payment_link:  session.url,
+      stripe_amount:        amountDue,
     }).eq('id', reservation_id)
 
     // Email avec le lien

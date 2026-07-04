@@ -326,10 +326,20 @@ export default function ReservationsPage() {
                       <span className="text-gray-400">· {nights} nuit{nights > 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge className={SOURCE_COLORS[r.source]}>{r.source}</Badge>
                         <span className="text-sm font-bold text-brand-800">{fmt(r.total_amount)}</span>
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pb.cls}`}>{pb.label}</span>
+                        {(() => {
+                          const cashPaid  = r.deposit_amount ?? 0
+                          const stripeAmt = r.stripe_amount != null ? Number(r.stripe_amount) : 0
+                          const stripePaid = r.payment_status === 'paid' ? stripeAmt : 0
+                          const totalPaid  = cashPaid + stripePaid
+                          const remaining  = Math.max(0, Number(r.total_amount) - totalPaid)
+                          if (totalPaid > 0) return <span className="text-xs text-gray-400">Reste: {fmt(remaining)}</span>
+                          if (stripeAmt > 0 && r.payment_status === 'link_sent') return <span className="text-xs text-orange-500">{fmt(stripeAmt)} demandé</span>
+                          return null
+                        })()}
                       </div>
                       <div className="flex gap-1">
                         <button onClick={() => setPaymentRes(r)} className="p-1.5 text-gray-400 hover:text-emerald-600 rounded-md" title="Paiement"><CreditCard className="h-4 w-4" /></button>
@@ -407,11 +417,29 @@ export default function ReservationsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <div>
+                          <div className="space-y-1">
                             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pb.cls}`}>{pb.label}</span>
-                            {r.deposit_amount != null && r.deposit_amount > 0 && r.deposit_amount < r.total_amount && (
-                              <p className="text-xs text-gray-400 mt-0.5">{r.deposit_amount} versé</p>
-                            )}
+                            {(() => {
+                              const cashPaid   = r.deposit_amount ?? 0
+                              const stripeAmt  = r.stripe_amount != null ? Number(r.stripe_amount) : 0
+                              const stripePaid = r.payment_status === 'paid' ? stripeAmt : 0
+                              const totalPaid  = cashPaid + stripePaid
+                              const remaining  = Math.max(0, Number(r.total_amount) - totalPaid)
+                              if (totalPaid <= 0 && stripeAmt <= 0) return null
+                              return (
+                                <div className="text-xs space-y-0.5 mt-1">
+                                  {totalPaid > 0 && (
+                                    <p className="text-green-600 font-medium">Payé : {fmt(totalPaid)}</p>
+                                  )}
+                                  {stripeAmt > 0 && r.payment_status === 'link_sent' && (
+                                    <p className="text-orange-500">Demandé : {fmt(stripeAmt)}</p>
+                                  )}
+                                  {remaining > 0 && totalPaid > 0 && (
+                                    <p className="text-gray-400">Reste : {fmt(remaining)}</p>
+                                  )}
+                                </div>
+                              )
+                            })()}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center">

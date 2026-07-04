@@ -164,6 +164,7 @@ export interface Reservation {
   deposit_method?: string | null
   payment_status?: 'unpaid' | 'link_sent' | 'paid' | null
   stripe_payment_link?: string | null
+  stripe_amount?: number | null
   paid_at?: string | null
   paid_method?: string | null
   created_at: string

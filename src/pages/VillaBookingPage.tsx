@@ -101,11 +101,34 @@ export default function VillaBookingPage() {
         .in('status', ['confirmed', 'pending']),
     ]).then(([{ data: v }, { data: r }]) => {
       if (!v) setNotFound(true)
-      else setVilla(v)
+      else {
+        console.log('[VillaBooking] villa chargée:', {
+          base_price: v.base_price,
+          base_price_type: typeof v.base_price,
+          base_price_parsed: Number(v.base_price),
+        })
+        setVilla(v)
+      }
       setBlocked(r ?? [])
       setLoading(false)
     })
   }, [villaId])
+
+  useEffect(() => {
+    const n = form.checkIn && form.checkOut
+      ? Math.max(0, differenceInDays(parseISO(form.checkOut), parseISO(form.checkIn)))
+      : 0
+    const bp = villa ? Number(villa.base_price) : 0
+    console.log('[VillaBooking] récap debug:', {
+      checkIn: form.checkIn,
+      checkOut: form.checkOut,
+      nights: n,
+      base_price_raw: villa?.base_price,
+      base_price_type: typeof villa?.base_price,
+      basePrice: bp,
+      showSummary: n > 0 && bp > 0,
+    })
+  }, [form.checkIn, form.checkOut, villa])
 
   function setField(k: keyof Form, v: string | number) {
     setForm(f => ({ ...f, [k]: v }))

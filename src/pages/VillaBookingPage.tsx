@@ -188,8 +188,11 @@ export default function VillaBookingPage() {
     setSubmitting(false)
 
     if (rpcErr) {
-      console.error('[booking]', rpcErr)
-      setError('Erreur lors de l\'envoi. Veuillez réessayer.')
+      console.error('[booking] Erreur RPC:', rpcErr)
+      const detail = (rpcErr as { message?: string; details?: string }).message
+        || (rpcErr as { details?: string }).details
+        || JSON.stringify(rpcErr)
+      setError(`Erreur : ${detail}`)
     } else {
       setSubmitted(true)
     }

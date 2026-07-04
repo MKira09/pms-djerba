@@ -15,7 +15,7 @@ import { useVillasStore } from '@/stores/villas.store'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { useBlockedPeriodsStore } from '@/stores/blocked_periods.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
-import { SOURCE_HEX } from '@/lib/utils'
+import { getVillaColor } from '@/lib/villaColors'
 import type { Reservation, BlockedPeriod, BlockedReason } from '@/types'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -357,7 +357,7 @@ export default function CalendarPage() {
                     <div
                       key={r.id}
                       className="text-[10px] px-1.5 py-0.5 rounded truncate text-white font-medium"
-                      style={{ backgroundColor: SOURCE_HEX[r.source] ?? '#9CA3AF' }}
+                      style={{ backgroundColor: getVillaColor(r.villa_id, villas) }}
                       title={`${r.client?.full_name ?? '?'} · ${r.villa?.name ?? '?'}`}
                     >
                       {r.villa?.name?.replace('Villa ', '') ?? '?'}
@@ -374,7 +374,7 @@ export default function CalendarPage() {
                     <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: REASON_LABELS[dayBlocked[0].reason].color }} />
                   )}
                   {dayRes.slice(0, 2).map(r => (
-                    <span key={r.id} className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: SOURCE_HEX[r.source] ?? '#9CA3AF' }} />
+                    <span key={r.id} className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: getVillaColor(r.villa_id, villas) }} />
                   ))}
                   {dayRes.length > 2 && <span className="text-[8px] text-gray-400">+{dayRes.length - 2}</span>}
                 </div>
@@ -385,19 +385,36 @@ export default function CalendarPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-        {Object.entries(SOURCE_HEX).map(([source, color]) => (
-          <span key={source} className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: color }} />
-            {source}
-          </span>
-        ))}
-        {Object.entries(REASON_LABELS).map(([key, { label, color }]) => (
-          <span key={key} className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block opacity-80" style={{ backgroundColor: color }} />
-            {label}
-          </span>
-        ))}
+      <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 space-y-2.5">
+        {/* Villas */}
+        {villas.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Villas</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {villas.map(v => (
+                <span key={v.id} className="flex items-center gap-1.5 text-xs text-gray-700">
+                  <span
+                    className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
+                    style={{ backgroundColor: getVillaColor(v.id, villas) }}
+                  />
+                  {v.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* Blocked periods */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Périodes bloquées</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {Object.entries(REASON_LABELS).map(([key, { label, color }]) => (
+              <span key={key} className="flex items-center gap-1.5 text-xs text-gray-600">
+                <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0 opacity-80" style={{ backgroundColor: color }} />
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Modals */}

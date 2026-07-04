@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm, PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import { supabase } from '@/lib/supabase'
 import { AMENITY_OPTIONS, cn } from '@/lib/utils'
+import { VILLA_PALETTE } from '@/lib/villaColors'
 import type { Villa, VillaStatus, ContactNumber } from '@/types'
 
 interface Props { open: boolean; villa: Villa | null; onClose: () => void }
@@ -23,7 +24,7 @@ const EMPTY: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
   capacity: 4, bedrooms: 2, bathrooms: 1, base_price: 300,
   status: 'active', amenities: [], access_code: '', arrival_info: '', photos: [],
   wifi_network: '', wifi_password: '', contact_numbers: [],
-  property_type: null,
+  property_type: null, color: null,
 }
 
 export default function VillaForm({ open, villa, onClose }: Props) {
@@ -147,6 +148,47 @@ export default function VillaForm({ open, villa, onClose }: Props) {
               options={typeOpts}
             />
           </div>
+        </div>
+
+        {/* Color picker */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Couleur sur le calendrier</label>
+          <div className="flex flex-wrap gap-2 items-center">
+            {VILLA_PALETTE.map(hex => {
+              const active = (form.color ?? null) === hex
+              return (
+                <button
+                  key={hex}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, color: hex }))}
+                  className={cn(
+                    'w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center',
+                    active ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent hover:scale-105',
+                  )}
+                  style={{ backgroundColor: hex }}
+                  title={hex}
+                >
+                  {active && (
+                    <svg viewBox="0 0 12 12" className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                      <polyline points="2,6 5,9 10,3" />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+            {form.color && (
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, color: null }))}
+                className="text-xs text-gray-400 hover:text-gray-600 underline ml-1"
+              >
+                Auto
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Couleur affichée dans le calendrier. Si non choisie, une couleur est assignée automatiquement.
+          </p>
         </div>
 
         <Textarea label={t('villas.description')} value={form.description ?? ''} onChange={e => set('description', e.target.value)} rows={2} />

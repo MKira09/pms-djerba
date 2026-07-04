@@ -82,6 +82,7 @@ export interface Villa {
   wifi_password: string | null
   contact_numbers?: ContactNumber[] | null
   property_type?: string | null
+  color?: string | null
   created_at: string
   updated_at: string
 }

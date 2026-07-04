@@ -20,9 +20,11 @@ const EMPTY_FORM = { name: '', price: 0, description: '', icon: '' }
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
-  const { profile, tenant, isDemoMode, updateTenant } = useAuthStore()
+  const { profile, tenant, isDemoMode, updateTenant, updateProfile } = useAuthStore()
   const { extras, fetch: fetchExtras, addExtra, updateExtra, removeExtra, toggleExtra } = useExtrasStore()
   const [name, setName] = useState(profile?.full_name ?? '')
+  const [email, setEmail] = useState('')
+  const [savingProfile, setSavingProfile] = useState(false)
   const [company, setCompany] = useState(tenant?.name ?? '')
   const [slogan, setSlogan] = useState(tenant?.slogan ?? '')
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -65,7 +67,40 @@ export default function SettingsPage() {
     )
   }
 
+  // Load real email from auth session (not stored in profiles table)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setEmail(data.user.email)
+    })
+  }, [])
+
   useEffect(() => { fetchExtras() }, [])
+
+  async function handleSaveProfile() {
+    if (!profile) return
+    setSavingProfile(true)
+    try {
+      const trimmed = name.trim()
+      if (!isDemoMode) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ full_name: trimmed })
+          .eq('id', profile.id)
+        if (error) {
+          console.error('[handleSaveProfile]', error)
+          toast.error(`Erreur : ${error.message}`)
+          return
+        }
+      }
+      updateProfile({ full_name: trimmed })
+      toast.success('Profil enregistré.')
+    } catch (e: unknown) {
+      console.error('[handleSaveProfile unexpected]', e)
+      toast.error('Erreur inattendue — voir la console.')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   function openExtraForm(extra: Extra | null) {
     setEditingExtra(extra)
@@ -250,8 +285,8 @@ export default function SettingsPage() {
         </h2>
         <div className="space-y-3">
           <Input label="Nom complet" value={name} onChange={e => setName(e.target.value)} />
-          <Input label="Email" value={profile?.id ? 'demo@villahub.tn' : ''} disabled />
-          <Button onClick={() => toast.success('Profil enregistré.')}>{t('common.save')}</Button>
+          <Input label="Email" value={email} disabled />
+          <Button onClick={handleSaveProfile} loading={savingProfile}>{t('common.save')}</Button>
         </div>
       </Card>
 

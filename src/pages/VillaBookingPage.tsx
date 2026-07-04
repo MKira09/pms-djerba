@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import {
   format, parseISO, addDays, isBefore, isWithinInterval,
   startOfDay, getDaysInMonth, getDay, addMonths, startOfMonth,
+  differenceInDays,
 } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
@@ -164,6 +165,10 @@ export default function VillaBookingPage() {
 
   const todayStr = format(startOfDay(new Date()), 'yyyy-MM-dd')
   const photos = villa?.photos ?? []
+  const nights = form.checkIn && form.checkOut
+    ? Math.max(0, differenceInDays(parseISO(form.checkOut), parseISO(form.checkIn)))
+    : 0
+  const basePrice = villa ? Number(villa.base_price) : 0
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-sable">
@@ -331,7 +336,7 @@ export default function VillaBookingPage() {
                   type="tel"
                   value={form.phone}
                   onChange={e => setField('phone', e.target.value)}
-                  placeholder="+216 XX XXX XXX"
+                  placeholder="+XX XXX XXX XXX"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                 />
               </div>
@@ -372,6 +377,21 @@ export default function VillaBookingPage() {
                 />
               </div>
             </div>
+
+            {/* Price summary */}
+            {nights > 0 && basePrice > 0 && (
+              <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3.5 space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {basePrice} TND / nuit × {nights} nuit{nights > 1 ? 's' : ''}
+                  </span>
+                  <span className="font-bold text-gray-900">{basePrice * nights} TND</span>
+                </div>
+                <p className="text-xs text-teal-600">
+                  Estimation basée sur le tarif de base — le propriétaire vous confirmera le montant définitif.
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre de personnes *</label>

@@ -119,7 +119,7 @@ export default function VillaBookingPage() {
         .from('reservations')
         .select('check_in,check_out')
         .eq('villa_id', villaId)
-        .in('status', ['confirmed', 'pending']),
+        .eq('status', 'confirmed'),
     ]).then(([{ data: v }, { data: r }]) => {
       if (!v) setNotFound(true)
       else setVilla(v)

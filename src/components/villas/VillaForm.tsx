@@ -40,8 +40,9 @@ export default function VillaForm({ open, villa, onClose }: Props) {
 
   useEffect(() => {
     if (villa) {
-      setForm({ ...villa, slug: villa.slug ?? null })
-      setSlugEdited(!!villa.slug) // keep existing slug, don't auto-overwrite
+      // Pre-fill slug from existing value or auto-generate from name
+      setForm({ ...villa, slug: villa.slug || toSlug(villa.name) })
+      setSlugEdited(true) // existing villa: treat slug as already "set" so name changes don't clobber it
     } else {
       setForm(EMPTY)
       setSlugEdited(false)
@@ -169,6 +170,43 @@ export default function VillaForm({ open, villa, onClose }: Props) {
           </div>
         </div>
 
+        {/* Slug / URL personnalisée */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            URL de réservation personnalisée
+          </label>
+          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-brand-400 focus-within:border-brand-400">
+            <span className="px-3 py-2 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 whitespace-nowrap select-none shrink-0">
+              {window.location.origin}/book/
+            </span>
+            <input
+              value={form.slug ?? ''}
+              onChange={e => {
+                const val = e.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9-]/g, '')
+                  .replace(/-+/g, '-')
+                setForm(f => ({ ...f, slug: val }))
+                setSlugEdited(true)
+              }}
+              className="flex-1 min-w-0 px-3 py-2 text-sm font-mono focus:outline-none bg-white"
+              placeholder="villa-jasmine"
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              onClick={() => { setSlugEdited(false); setForm(f => ({ ...f, slug: toSlug(f.name) })) }}
+              className="px-2.5 text-xs text-gray-400 hover:text-gray-600 border-l border-gray-200 h-full py-2 bg-gray-50 whitespace-nowrap shrink-0"
+              title="Régénérer depuis le nom"
+            >
+              ↺ Auto
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Lien lisible à partager avec vos clients · Seuls lettres, chiffres et tirets autorisés
+          </p>
+        </div>
+
         {/* Color picker */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Couleur sur le calendrier</label>
@@ -207,50 +245,6 @@ export default function VillaForm({ open, villa, onClose }: Props) {
           </div>
           <p className="text-xs text-gray-400 mt-1">
             Couleur affichée dans le calendrier. Si non choisie, une couleur est assignée automatiquement.
-          </p>
-        </div>
-
-        {/* Slug */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Lien de réservation personnalisé
-          </label>
-          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-1 focus-within:ring-brand-400">
-            <span className="px-3 py-2 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 whitespace-nowrap select-none">
-              /book/
-            </span>
-            <input
-              value={form.slug ?? ''}
-              onChange={e => {
-                const val = e.target.value
-                  .toLowerCase()
-                  .replace(/[^a-z0-9-]/g, '')
-                  .replace(/-+/g, '-')
-                setForm(f => ({ ...f, slug: val }))
-                setSlugEdited(true)
-              }}
-              className="flex-1 px-3 py-2 text-sm font-mono focus:outline-none bg-white"
-              placeholder="villa-jasmine"
-              spellCheck={false}
-            />
-            {slugEdited && form.slug && (
-              <button
-                type="button"
-                onClick={() => { setSlugEdited(false); setForm(f => ({ ...f, slug: toSlug(f.name) })) }}
-                className="px-2.5 text-xs text-gray-400 hover:text-gray-600 border-l border-gray-200 h-full bg-gray-50 whitespace-nowrap"
-                title="Régénérer depuis le nom"
-              >
-                ↺ Auto
-              </button>
-            )}
-          </div>
-          {form.slug && (
-            <p className="text-xs text-teal-600 mt-1 font-mono truncate">
-              {window.location.origin}/book/{form.slug}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 mt-0.5">
-            Seuls les lettres, chiffres et tirets sont autorisés.
           </p>
         </div>
 

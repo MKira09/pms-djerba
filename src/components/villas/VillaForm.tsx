@@ -111,17 +111,24 @@ export default function VillaForm({ open, villa, onClose }: Props) {
     e.preventDefault()
     if (!form.name.trim()) { toast.error('Le nom est requis.'); return }
     setLoading(true)
+    // Store null instead of empty string to avoid UNIQUE constraint conflicts
+    const payload = { ...form, slug: form.slug?.trim() || null }
     try {
       if (villa) {
-        await update(villa.id, form)
+        await update(villa.id, payload)
         toast.success('Villa modifiée.')
       } else {
-        await add(form)
+        await add(payload)
         toast.success('Villa créée !')
       }
       onClose()
-    } catch {
-      toast.error('Erreur lors de la sauvegarde.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('slug')) {
+        toast.error('Ce slug est déjà utilisé par une autre villa. Choisissez-en un différent.')
+      } else {
+        toast.error('Erreur lors de la sauvegarde.')
+      }
     } finally {
       setLoading(false)
     }

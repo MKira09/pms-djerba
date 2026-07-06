@@ -556,9 +556,9 @@ export default function HomePage() {
       {/* ════════════════════════════════
           NOTRE HISTOIRE
       ════════════════════════════════ */}
-      <section style={{ background: C.white, padding: '96px 48px' }}>
+      <section className="lp-story-section" style={{ background: C.white, padding: '96px 48px' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
-          <div style={{
+          <div className="lp-story-card" style={{
             display: 'flex', gap: 48, alignItems: 'flex-start',
             background: C.white,
             border: '1px solid #E0D8CC',
@@ -602,7 +602,7 @@ export default function HomePage() {
               </p>
 
               {/* Title */}
-              <h2 style={{
+              <h2 className="lp-story-h2" style={{
                 fontFamily: "'Cormorant', serif",
                 fontSize: 30, fontWeight: 600, lineHeight: 1.25,
                 color: C.dark, marginBottom: 20,
@@ -612,7 +612,7 @@ export default function HomePage() {
               </h2>
 
               {/* Body */}
-              <p style={{
+              <p className="lp-story-body" style={{
                 fontFamily: "'Cormorant', serif",
                 fontSize: 17, fontWeight: 400, lineHeight: 1.75,
                 color: C.grey,
@@ -642,7 +642,7 @@ export default function HomePage() {
       {/* ════════════════════════════════
           COMMENT ÇA MARCHE
       ════════════════════════════════ */}
-      <section id="comment-ca-marche" style={{ background: C.sand, padding: '112px 48px' }}>
+      <section id="comment-ca-marche" className="lp-steps-section" style={{ background: C.sand, padding: '112px 48px' }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
           {/* Header */}
@@ -650,7 +650,7 @@ export default function HomePage() {
             <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
               Comment ça marche
             </span>
-            <h2 style={{
+            <h2 className="lp-steps-h2" style={{
               fontFamily: "'Cormorant', serif",
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
@@ -663,7 +663,7 @@ export default function HomePage() {
           <div style={{ position: 'relative' }}>
 
             {/* Vertical connecting line */}
-            <div style={{
+            <div className="lp-steps-line" style={{
               position: 'absolute', left: 35, top: 36, bottom: 36,
               width: 1,
               background: `linear-gradient(to bottom, transparent, ${C.sandDk} 8%, ${C.sandDk} 92%, transparent)`,
@@ -671,10 +671,10 @@ export default function HomePage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
               {STEPS.map((step, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 36 }}>
+                <div key={i} className="lp-steps-item" style={{ display: 'flex', alignItems: 'flex-start', gap: 36 }}>
 
                   {/* Number bubble */}
-                  <div style={{
+                  <div className="lp-steps-bubble" style={{
                     flexShrink: 0, width: 70, height: 70,
                     borderRadius: '50%',
                     background: C.navy,
@@ -697,7 +697,7 @@ export default function HomePage() {
 
                   {/* Content */}
                   <div style={{ flex: 1, paddingTop: 12 }}>
-                    <h3 style={{
+                    <h3 className="lp-steps-step-h3" style={{
                       fontFamily: "'Cormorant', serif",
                       fontSize: 26, fontWeight: 600,
                       color: C.navy, lineHeight: 1.25,

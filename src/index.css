@@ -104,6 +104,24 @@
   .lp-gi-2 { grid-column: 2; grid-row: 2; }
   .lp-gi-3 { grid-column: 1; grid-row: 3; }
   .lp-gi-4 { grid-column: 2; grid-row: 3; }
+
+  /* Notre Histoire — responsive */
+  .lp-story-section { padding: 56px 20px !important; }
+  .lp-story-card {
+    flex-direction: column !important;
+    padding: 28px 20px !important;
+    gap: 20px !important;
+  }
+  .lp-story-h2 { font-size: 22px !important; }
+  .lp-story-body { font-size: 15px !important; }
+
+  /* Comment ça marche — responsive */
+  .lp-steps-section { padding: 64px 20px !important; }
+  .lp-steps-h2 { font-size: 26px !important; }
+  .lp-steps-line { left: 26px !important; }
+  .lp-steps-item { gap: 16px !important; }
+  .lp-steps-bubble { width: 52px !important; height: 52px !important; min-width: 52px !important; }
+  .lp-steps-step-h3 { font-size: 20px !important; }
 }
 
 /* Tablet : 2 colonnes pour les 4 plans (entre 769px et 1100px) */

@@ -183,7 +183,7 @@ export default function VillaBookingPage() {
     }
 
     setSubmitting(true)
-    const { error: rpcErr } = await supabase.rpc('create_booking_request', {
+    const { data: reservationId, error: rpcErr } = await supabase.rpc('create_booking_request', {
       p_villa_id:  villa.id,
       p_full_name: `${form.firstName.trim()} ${form.lastName.trim()}`,
       p_email:     form.email.trim() || '',
@@ -203,6 +203,11 @@ export default function VillaBookingPage() {
       setError(`Erreur : ${detail}`)
     } else {
       setSubmitted(true)
+      if (reservationId) {
+        supabase.functions.invoke('notify-owner-booking', {
+          body: { reservation_id: reservationId },
+        }).catch((e) => console.warn('[booking] owner notification failed:', e))
+      }
     }
   }
 

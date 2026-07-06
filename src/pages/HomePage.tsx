@@ -66,7 +66,7 @@ const FEATURES = [
 ]
 
 const PLANS = [
-  { name: 'Starter',      price: 29,  detail: '3 biens · 1 utilisateur',          cta: false },
+  { name: 'Starter',      price: 29,  detail: '5 biens · 2 utilisateurs',         cta: false },
   { name: 'Pro',          price: 59,  detail: '10 biens · 5 utilisateurs',         cta: true  },
   { name: 'Agence',       price: 99,  detail: 'Biens illimités · Équipe illimitée', cta: false },
   {

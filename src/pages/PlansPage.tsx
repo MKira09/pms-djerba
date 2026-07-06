@@ -14,11 +14,11 @@ const PLANS = [
     description: 'Pour démarrer et gérer vos premières villas.',
     highlight: false,
     features: [
-      'Jusqu\'à 3 villas',
+      'Jusqu\'à 5 villas',
       'Réservations illimitées',
       'Calendrier & planning',
       'Emails automatiques (confirmation, rappel, avis)',
-      '1 utilisateur',
+      '2 utilisateurs',
       'Support par email',
     ],
   },

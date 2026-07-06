@@ -83,6 +83,7 @@ export interface Villa {
   contact_numbers?: ContactNumber[] | null
   property_type?: string | null
   color?: string | null
+  slug?: string | null
   created_at: string
   updated_at: string
 }

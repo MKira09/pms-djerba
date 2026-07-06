@@ -11,7 +11,7 @@ import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm, PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import { supabase } from '@/lib/supabase'
-import { AMENITY_OPTIONS, cn } from '@/lib/utils'
+import { AMENITY_OPTIONS, cn, toSlug } from '@/lib/utils'
 import { VILLA_PALETTE } from '@/lib/villaColors'
 import type { Villa, VillaStatus, ContactNumber } from '@/types'
 
@@ -24,7 +24,7 @@ const EMPTY: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
   capacity: 4, bedrooms: 2, bathrooms: 1, base_price: 300,
   status: 'active', amenities: [], access_code: '', arrival_info: '', photos: [],
   wifi_network: '', wifi_password: '', contact_numbers: [],
-  property_type: null, color: null,
+  property_type: null, color: null, slug: null as string | null,
 }
 
 export default function VillaForm({ open, villa, onClose }: Props) {
@@ -35,10 +35,17 @@ export default function VillaForm({ open, villa, onClose }: Props) {
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [slugEdited, setSlugEdited] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setForm(villa ? { ...villa } : EMPTY)
+    if (villa) {
+      setForm({ ...villa, slug: villa.slug ?? null })
+      setSlugEdited(!!villa.slug) // keep existing slug, don't auto-overwrite
+    } else {
+      setForm(EMPTY)
+      setSlugEdited(false)
+    }
   }, [villa, open])
 
   function set<K extends keyof typeof EMPTY>(k: K, v: typeof EMPTY[K]) {
@@ -138,7 +145,19 @@ export default function VillaForm({ open, villa, onClose }: Props) {
     >
       <form id="villa-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label={`Nom de la ${singular.toLowerCase()}`} value={form.name} onChange={e => set('name', e.target.value)} required />
+          <Input
+            label={`Nom de la ${singular.toLowerCase()}`}
+            value={form.name}
+            onChange={e => {
+              const newName = e.target.value
+              setForm(f => ({
+                ...f,
+                name: newName,
+                slug: slugEdited ? f.slug : toSlug(newName),
+              }))
+            }}
+            required
+          />
           <div className="grid grid-cols-2 xs:grid-cols-2 gap-3">
             <Select label={t('villas.status')} value={form.status} onChange={e => set('status', e.target.value as VillaStatus)} options={statusOpts} />
             <Select
@@ -188,6 +207,50 @@ export default function VillaForm({ open, villa, onClose }: Props) {
           </div>
           <p className="text-xs text-gray-400 mt-1">
             Couleur affichée dans le calendrier. Si non choisie, une couleur est assignée automatiquement.
+          </p>
+        </div>
+
+        {/* Slug */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Lien de réservation personnalisé
+          </label>
+          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-1 focus-within:ring-brand-400">
+            <span className="px-3 py-2 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 whitespace-nowrap select-none">
+              /book/
+            </span>
+            <input
+              value={form.slug ?? ''}
+              onChange={e => {
+                const val = e.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9-]/g, '')
+                  .replace(/-+/g, '-')
+                setForm(f => ({ ...f, slug: val }))
+                setSlugEdited(true)
+              }}
+              className="flex-1 px-3 py-2 text-sm font-mono focus:outline-none bg-white"
+              placeholder="villa-jasmine"
+              spellCheck={false}
+            />
+            {slugEdited && form.slug && (
+              <button
+                type="button"
+                onClick={() => { setSlugEdited(false); setForm(f => ({ ...f, slug: toSlug(f.name) })) }}
+                className="px-2.5 text-xs text-gray-400 hover:text-gray-600 border-l border-gray-200 h-full bg-gray-50 whitespace-nowrap"
+                title="Régénérer depuis le nom"
+              >
+                ↺ Auto
+              </button>
+            )}
+          </div>
+          {form.slug && (
+            <p className="text-xs text-teal-600 mt-1 font-mono truncate">
+              {window.location.origin}/book/{form.slug}
+            </p>
+          )}
+          <p className="text-xs text-gray-400 mt-0.5">
+            Seuls les lettres, chiffres et tirets sont autorisés.
           </p>
         </div>
 

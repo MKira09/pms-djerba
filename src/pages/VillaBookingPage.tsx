@@ -108,21 +108,29 @@ export default function VillaBookingPage() {
 
   useEffect(() => {
     if (!villaId) return
-    Promise.all([
-      supabase
-        .from('villas')
-        .select('id,name,description,city,capacity,bedrooms,bathrooms,base_price,photos,tenant_id')
-        .eq('id', villaId)
-        .eq('status', 'active')
-        .maybeSingle(),
-      supabase
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(villaId)
+
+    const villaQuery = supabase
+      .from('villas')
+      .select('id,name,description,city,capacity,bedrooms,bathrooms,base_price,photos,tenant_id')
+      .eq(isUuid ? 'id' : 'slug', villaId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    villaQuery.then(async ({ data: v }) => {
+      if (!v) {
+        setNotFound(true)
+        setLoading(false)
+        return
+      }
+      setVilla(v)
+      // Always query reservations by the real UUID, regardless of how we looked up the villa
+      const { data: r } = await supabase
         .from('reservations')
         .select('check_in,check_out')
-        .eq('villa_id', villaId)
-        .eq('status', 'confirmed'),
-    ]).then(([{ data: v }, { data: r }]) => {
-      if (!v) setNotFound(true)
-      else setVilla(v)
+        .eq('villa_id', v.id)
+        .eq('status', 'confirmed')
       setBlocked(r ?? [])
       setLoading(false)
     })

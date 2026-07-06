@@ -8,6 +8,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Mn}/gu, '') // strip diacritics (é→e, à→a…)
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
 export function fmtDate(date: string | Date, lang: Lang = 'fr'): string {
   const locale = lang === 'ar' ? ar : lang === 'en' ? enUS : fr
   return format(typeof date === 'string' ? parseISO(date) : date, 'dd MMM yyyy', { locale })

@@ -215,7 +215,7 @@ function VillaCard({ villa, onEdit, onDelete }: { villa: Villa; onEdit: () => vo
             <button
               title="Copier le lien de réservation"
               onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/book/${villa.id}`)
+                navigator.clipboard.writeText(`${window.location.origin}/book/${villa.slug || villa.id}`)
                 toast.success('Lien copié !')
               }}
               className="p-1.5 rounded-md text-gray-400 hover:bg-brand-50 hover:text-brand-700 transition-colors"

@@ -765,12 +765,16 @@ export default function HomePage() {
                 key={i}
                 className={plan.cta ? 'lp-plan-featured' : undefined}
                 style={{
-                  background: plan.cta ? C.navy : C.white,
+                  background: 'isQuote' in plan
+                    ? 'linear-gradient(160deg, #0D1F2D 0%, #1B3E3E 100%)'
+                    : plan.cta ? C.navy : C.white,
                   padding: '52px 36px',
-                  border: plan.cta ? 'none' : `1px solid ${C.sandDk}`,
+                  border: 'isQuote' in plan || plan.cta ? 'none' : `1px solid ${C.sandDk}`,
                   position: 'relative',
                   transform: plan.cta ? 'translateY(-10px)' : 'none',
-                  boxShadow: plan.cta ? '0 24px 60px rgba(12,68,124,0.22)' : 'none',
+                  boxShadow: 'isQuote' in plan
+                    ? '0 28px 64px rgba(7,190,184,0.14)'
+                    : plan.cta ? '0 24px 60px rgba(12,68,124,0.22)' : 'none',
                   transition: 'transform 0.3s',
                 }}
               >
@@ -786,71 +790,88 @@ export default function HomePage() {
                   </div>
                 )}
 
-                <p style={{
-                  color: plan.cta ? 'rgba(255,255,255,0.5)' : C.teal,
-                  fontSize: 11, fontWeight: 400, letterSpacing: '0.16em',
-                  textTransform: 'uppercase', marginBottom: 20,
-                }}>
-                  {plan.detail}
-                </p>
+                {'isQuote' in plan ? null : (
+                  <p style={{
+                    color: plan.cta ? 'rgba(255,255,255,0.5)' : C.teal,
+                    fontSize: 11, fontWeight: 400, letterSpacing: '0.16em',
+                    textTransform: 'uppercase', marginBottom: 20,
+                  }}>
+                    {plan.detail}
+                  </p>
+                )}
 
                 {'isQuote' in plan ? (
-                  /* ── CLÉS EN MAIN : Sur devis ── */
+                  /* ── CLÉS EN MAIN : Premium ── */
                   <>
+                    {/* Badge premium */}
                     <div style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 38, fontWeight: 600,
-                      color: C.navy, lineHeight: 1, marginBottom: 4,
+                      display: 'inline-flex', alignItems: 'center',
+                      background: 'rgba(7,190,184,0.12)',
+                      border: '1px solid rgba(7,190,184,0.25)',
+                      borderRadius: 2,
+                      padding: '4px 12px', marginBottom: 24,
                     }}>
-                      Sur devis
+                      <span style={{
+                        color: C.teal, fontSize: 10,
+                        fontWeight: 500, letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
+                      }}>
+                        ✦ Service clé en main
+                      </span>
                     </div>
-                    <p style={{ color: C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32 }}>
-                      {(plan as { description: string }).description}
+
+                    {/* Headline */}
+                    <h3 style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 26, fontWeight: 600, lineHeight: 1.3,
+                      color: C.white, marginBottom: 10,
+                    }}>
+                      Vous n'avez rien à faire.<br />On s'occupe de tout.
+                    </h3>
+
+                    {/* Sous-titre */}
+                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 300, marginBottom: 28, lineHeight: 1.7 }}>
+                      Votre espace VillaHub livré 100 % opérationnel.
                     </p>
 
-                    <div style={{ width: '100%', height: 1, background: C.sandDk, marginBottom: 24 }} />
+                    <div style={{ width: '100%', height: 1, background: 'rgba(7,190,184,0.2)', marginBottom: 24 }} />
 
-                    <div style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 22, fontWeight: 600,
-                      color: C.navy, marginBottom: 20,
-                    }}>
-                      {plan.name}
-                    </div>
-
-                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {(plan as { features: string[] }).features.map((f, j) => (
-                        <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: C.grey, fontWeight: 300, lineHeight: 1.5 }}>
+                        <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300, lineHeight: 1.5 }}>
                           <span style={{ color: C.teal, flexShrink: 0, marginTop: 1 }}>✓</span>
                           {f}
                         </li>
                       ))}
                     </ul>
 
+                    {/* Prix */}
+                    <div style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 32, fontWeight: 600,
+                      color: C.teal, marginBottom: 24, lineHeight: 1,
+                    }}>
+                      Sur devis
+                    </div>
+
                     <a
                       href="#contact"
                       style={{
                         display: 'block', width: '100%', padding: '14px',
-                        background: 'transparent',
-                        color: C.navy,
-                        border: `1px solid ${C.sandDk}`,
+                        background: C.teal,
+                        color: C.white,
+                        border: 'none',
                         borderRadius: 2,
                         fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
                         textTransform: 'uppercase', cursor: 'pointer',
                         textDecoration: 'none', textAlign: 'center',
-                        transition: 'border-color 0.2s, color 0.2s',
+                        transition: 'opacity 0.2s',
                         boxSizing: 'border-box',
                       }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = C.teal
-                        e.currentTarget.style.color = C.teal
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = C.sandDk
-                        e.currentTarget.style.color = C.navy
-                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                     >
-                      Nous contacter
+                      Nous contacter →
                     </a>
                   </>
                 ) : (

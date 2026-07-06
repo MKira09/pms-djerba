@@ -65,6 +65,34 @@ const FEATURES = [
   },
 ]
 
+const STEPS = [
+  {
+    num: '01', icon: '🚀',
+    title: 'Créez votre espace en 2 minutes',
+    body: 'Inscrivez-vous, configurez votre agence, ajoutez votre logo.',
+  },
+  {
+    num: '02', icon: '🏡',
+    title: 'Ajoutez vos biens',
+    body: 'Villas, appartements, riads — ajoutez vos photos, tarifs et équipements.',
+  },
+  {
+    num: '03', icon: '🔗',
+    title: 'Partagez votre lien de réservation',
+    body: 'Chaque bien a son propre lien à partager sur WhatsApp ou vos réseaux sociaux.',
+  },
+  {
+    num: '04', icon: '📬',
+    title: 'Recevez les demandes',
+    body: 'Vous êtes notifié par email à chaque nouvelle demande. Confirmez ou refusez en un clic.',
+  },
+  {
+    num: '05', icon: '📊',
+    title: 'Gérez tout depuis votre tableau de bord',
+    body: 'Calendrier, paiements, factures, équipe — tout au même endroit.',
+  },
+]
+
 const PLANS = [
   { name: 'Starter',      price: 29,  detail: '5 biens · 2 utilisateurs',         cta: false },
   { name: 'Pro',          price: 59,  detail: '10 biens · 5 utilisateurs',         cta: true  },
@@ -608,6 +636,108 @@ export default function HomePage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════
+          COMMENT ÇA MARCHE
+      ════════════════════════════════ */}
+      <section id="comment-ca-marche" style={{ background: C.sand, padding: '112px 48px' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto' }}>
+
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 80 }}>
+            <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+              Comment ça marche
+            </span>
+            <h2 style={{
+              fontFamily: "'Cormorant', serif",
+              fontSize: 42, fontWeight: 600, fontStyle: 'italic',
+              color: C.navy, lineHeight: 1.2, marginTop: 12,
+            }}>
+              De l'inscription à la première réservation.
+            </h2>
+          </div>
+
+          {/* Timeline */}
+          <div style={{ position: 'relative' }}>
+
+            {/* Vertical connecting line */}
+            <div style={{
+              position: 'absolute', left: 35, top: 36, bottom: 36,
+              width: 1,
+              background: `linear-gradient(to bottom, transparent, ${C.sandDk} 8%, ${C.sandDk} 92%, transparent)`,
+            }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+              {STEPS.map((step, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 36 }}>
+
+                  {/* Number bubble */}
+                  <div style={{
+                    flexShrink: 0, width: 70, height: 70,
+                    borderRadius: '50%',
+                    background: C.navy,
+                    border: `3px solid ${C.sandDk}`,
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    position: 'relative', zIndex: 1,
+                    gap: 2,
+                  }}>
+                    <span style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 10, fontWeight: 400,
+                      letterSpacing: '0.18em', textTransform: 'uppercase',
+                      color: C.teal,
+                    }}>
+                      {step.num}
+                    </span>
+                    <span style={{ fontSize: 22, lineHeight: 1 }}>{step.icon}</span>
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, paddingTop: 12 }}>
+                    <h3 style={{
+                      fontFamily: "'Cormorant', serif",
+                      fontSize: 26, fontWeight: 600,
+                      color: C.navy, lineHeight: 1.25,
+                      marginBottom: 10,
+                    }}>
+                      {step.title}
+                    </h3>
+                    <p style={{
+                      color: C.grey, fontSize: 15, fontWeight: 300,
+                      lineHeight: 1.8, margin: 0,
+                    }}>
+                      {step.body}
+                    </p>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+          {/* CTA */}
+          <div style={{ textAlign: 'center', marginTop: 72 }}>
+            <div style={{ width: 40, height: 1, background: C.teal, margin: '0 auto 32px' }} />
+            <button
+              onClick={() => navigate('/plans')}
+              style={{
+                background: C.navy, color: C.white, border: 'none',
+                padding: '14px 40px', borderRadius: 2,
+                fontSize: 12, fontWeight: 500, letterSpacing: '0.12em',
+                textTransform: 'uppercase', cursor: 'pointer',
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            >
+              Commencer maintenant →
+            </button>
+          </div>
+
         </div>
       </section>
 

@@ -4,6 +4,7 @@ import { Home, Check, Loader2, Star } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+import { FULL_ACCESS_EMAILS } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 const PLANS = [
@@ -79,6 +80,10 @@ export default function PlansPage() {
       // Slow path: user arrived via magic link — session exists but store is empty
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      if (user.email && FULL_ACCESS_EMAILS.includes(user.email.toLowerCase())) {
+        navigate('/dashboard', { replace: true })
+        return
+      }
       const { data: profile } = await supabase
         .from('profiles').select('tenant_id').eq('id', user.id).single()
       if (!profile) return

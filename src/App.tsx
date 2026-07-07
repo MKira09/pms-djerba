@@ -45,8 +45,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!sessionChecked) return null
   // No session at all → redirect to login
   if (!hasSession) return <Navigate to="/login" replace />
-  // Session exists but profile not yet in store → wait for onAuthStateChange
-  return null
+  // Session exists but profile not yet in store → spinner pendant l'init
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-sable">
+      <div className="w-8 h-8 rounded-full border-2 border-brand-800 border-t-transparent animate-spin" />
+    </div>
+  )
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -63,7 +67,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
   if (!profile) return <Navigate to="/login" replace />
   if (!checked) return null
-  if (email !== ADMIN_EMAIL) return <Navigate to="/dashboard" replace />
+  if (email?.toLowerCase() !== ADMIN_EMAIL) return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
 
@@ -83,7 +87,7 @@ export default function App() {
         if (currentProfile) return
         const { data: p } = await supabase
           .from('profiles').select('*').eq('id', session.user.id).single()
-        if (!p) return
+        if (!p) { logout(); return }
         setProfile(p)
         const { data: t } = await supabase
           .from('tenants').select('*').eq('id', p.tenant_id).single()

@@ -200,19 +200,13 @@ export default function HomePage() {
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {agencyLogo ? (
+          {agencyLogo && (
             <img
               src={agencyLogo}
               alt="Logo"
               style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
             />
-          ) : (
-            <span style={{
-              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-              background: scrolled ? C.sandDk : 'rgba(255,255,255,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, transition: 'background 0.4s',
-            }}>🏠</span>
           )}
           <span style={{
             fontFamily: "'Cormorant', serif",
@@ -642,7 +636,7 @@ export default function HomePage() {
       {/* ════════════════════════════════
           COMMENT ÇA MARCHE
       ════════════════════════════════ */}
-      <section id="comment-ca-marche" className="lp-steps-section" style={{ background: C.sand, padding: '112px 48px' }}>
+      <section id="comment-ca-marche" className="lp-steps-section" style={{ background: C.white, padding: '112px 48px' }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
           {/* Header */}

@@ -87,7 +87,7 @@ export default function App() {
         if (currentProfile) return
         const { data: p } = await supabase
           .from('profiles').select('*').eq('id', session.user.id).single()
-        if (!p) { logout(); return }
+        if (!p) { await supabase.auth.signOut(); return }
         setProfile(p)
         const { data: t } = await supabase
           .from('tenants').select('*').eq('id', p.tenant_id).single()

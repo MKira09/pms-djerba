@@ -39,10 +39,14 @@ export default function LoginPage() {
             .eq('id', profile.tenant_id)
             .single()
           setTenant(tenant ?? null)
+          navigate('/dashboard')
+        } else {
+          await supabase.auth.signOut()
+          toast.error('Compte non configuré. Contactez le support.')
         }
+      } else {
+        navigate('/dashboard')
       }
-
-      navigate('/dashboard')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur de connexion'
       toast.error(msg)

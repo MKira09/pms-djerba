@@ -214,7 +214,7 @@ export default function HomePage() {
             color: scrolled ? C.navy : C.white,
             transition: 'color 0.4s', cursor: 'default',
           }}>
-            {agencyName || 'VillaHub'}
+            {agencyName ? `Agency ${agencyName}` : 'VillaHub'}
           </span>
         </div>
 

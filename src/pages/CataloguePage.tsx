@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Users, BedDouble, ArrowRight, Home } from 'lucide-react'
+import { Users, BedDouble, ArrowRight, Home, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Villa } from '@/types'
 import { fmtCurrency } from '@/lib/utils'
@@ -18,6 +18,110 @@ type TenantPublic = {
   slogan: string | null
   currency: string | null
   slug: string | null
+}
+
+function PhotoCarousel({ photos, villaName }: { photos: string[]; villaName: string }) {
+  const [idx, setIdx] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const count = photos.length
+
+  function prev(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIdx(i => (i - 1 + count) % count)
+  }
+
+  function next(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIdx(i => (i + 1) % count)
+  }
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) setIdx(i => (i + 1) % count)
+      else setIdx(i => (i - 1 + count) % count)
+    }
+    touchStartX.current = null
+  }
+
+  if (!count) {
+    return (
+      <div className="w-full h-full flex items-center justify-center" style={{ background: C.sand }}>
+        <Home className="h-10 w-10 opacity-20" style={{ color: C.dark }} />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="relative w-full h-full select-none"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <img
+        src={photos[idx]}
+        alt={`${villaName} — photo ${idx + 1}`}
+        className="w-full h-full object-cover"
+        onLoad={() => console.log('[Catalogue] photo OK:', villaName, photos[idx])}
+        onError={e => {
+          console.error('[Catalogue] photo ERREUR:', villaName, photos[idx])
+          const wrap = (e.currentTarget as HTMLImageElement).parentElement
+          if (wrap) {
+            e.currentTarget.style.display = 'none'
+            const dbg = document.createElement('div')
+            dbg.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;background:#fef3c7'
+            dbg.innerHTML = `<span style="font-size:10px;color:#92400e;word-break:break-all;text-align:center">⚠️ Photo inaccessible<br/><code style="font-size:8px">${photos[idx]}</code></span>`
+            wrap.appendChild(dbg)
+          }
+        }}
+      />
+
+      {count > 1 && (
+        <>
+          {/* Flèche gauche — toujours visible mobile, hover sur desktop */}
+          <button
+            onClick={prev}
+            aria-label="Photo précédente"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center transition-opacity
+              opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* Flèche droite */}
+          <button
+            onClick={next}
+            aria-label="Photo suivante"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center transition-opacity
+              opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+          {/* Dots de pagination */}
+          <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1.5">
+            {photos.map((_, i) => (
+              <button
+                key={i}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setIdx(i) }}
+                aria-label={`Photo ${i + 1}`}
+                className={`rounded-full transition-all shadow-sm ${
+                  i === idx ? 'bg-white w-4 h-1.5' : 'bg-white/60 w-1.5 h-1.5 hover:bg-white/90'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export default function CataloguePage() {
@@ -188,36 +292,12 @@ export default function CataloguePage() {
                   key={villa.id}
                   className={`bg-white rounded-2xl shadow-md overflow-hidden flex flex-col transition-shadow ${isUnavailable ? 'opacity-60' : 'hover:shadow-lg'}`}
                 >
-                  {/* Photo */}
-                  <div className="relative h-48 bg-gray-100 overflow-hidden">
-                    {villa.photos?.[0] ? (
-                      <>
-                        <img
-                          src={villa.photos[0]}
-                          alt={villa.name}
-                          className="w-full h-full object-cover"
-                          onLoad={() => console.log('[Catalogue] photo OK:', villa.name, villa.photos[0])}
-                          onError={e => {
-                            console.error('[Catalogue] photo ERREUR:', villa.name, villa.photos[0])
-                            const wrap = (e.currentTarget as HTMLImageElement).parentElement
-                            if (wrap) {
-                              e.currentTarget.style.display = 'none'
-                              const dbg = document.createElement('div')
-                              dbg.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:4px;background:#fef3c7'
-                              dbg.innerHTML = `<span style="font-size:11px;color:#92400e;word-break:break-all;text-align:center">⚠️ Photo inaccessible<br/><code style="font-size:9px">${villa.photos[0]}</code></span>`
-                              wrap.appendChild(dbg)
-                            }
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ background: C.sand }}>
-                        <Home className="h-10 w-10 opacity-20" style={{ color: C.dark }} />
-                      </div>
-                    )}
+                  {/* Photo — group active pour révéler les flèches au survol sur desktop */}
+                  <div className="relative h-48 bg-gray-100 overflow-hidden group">
+                    <PhotoCarousel photos={villa.photos ?? []} villaName={villa.name} />
                     {datesSelected && (
                       <span
-                        className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full shadow"
+                        className="absolute top-3 right-3 z-20 text-xs font-bold px-3 py-1 rounded-full shadow pointer-events-none"
                         style={{
                           background: isUnavailable ? '#e5e7eb' : C.teal,
                           color: isUnavailable ? '#6b7280' : 'white',

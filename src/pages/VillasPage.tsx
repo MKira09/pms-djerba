@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2 } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Bed, Bath, Users, Share2, Link2, Copy, CheckCheck, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -9,6 +9,7 @@ import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import VillaForm from '@/components/villas/VillaForm'
+import { Link } from 'react-router-dom'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
@@ -28,6 +29,7 @@ export default function VillasPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editVilla, setEditVilla] = useState<Villa | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   useEffect(() => { fetch() }, [])
 
@@ -64,6 +66,14 @@ export default function VillasPage() {
     }
   }
 
+  function handleCopyLink() {
+    if (!tenant?.slug) return
+    navigator.clipboard.writeText(`${window.location.origin}/catalogue/${tenant.slug}`).then(() => {
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+    })
+  }
+
   function openCreate() {
     if (villas.length >= limit) { toast.error(t('villas.plan_limit')); return }
     setEditVilla(null)
@@ -90,6 +100,37 @@ export default function VillasPage() {
           Ajouter une {singular}
         </Button>
       </div>
+
+      {/* Catalogue public */}
+      {tenant?.slug && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-brand-50 border border-brand-200 rounded-2xl px-5 py-4">
+          <Link2 className="h-5 w-5 text-brand-700 shrink-0 hidden sm:block" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-brand-800">Votre catalogue public</p>
+            <p className="text-xs text-brand-600 font-mono truncate mt-0.5">
+              {window.location.origin}/catalogue/{tenant.slug}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl bg-white border border-brand-200 hover:border-brand-500 text-brand-700 transition-colors"
+            >
+              {copiedLink ? <CheckCheck className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              {copiedLink ? 'Copié !' : 'Copier'}
+            </button>
+            <Link
+              to={`/catalogue/${tenant.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl bg-brand-800 text-white hover:bg-brand-900 transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Voir le catalogue
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <Input

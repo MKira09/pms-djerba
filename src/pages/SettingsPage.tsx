@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, Link2, Copy, CheckCheck } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useExtrasStore } from '@/stores/extras.store'
 import { supabase } from '@/lib/supabase'
 import { PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
-import { CURRENCIES, toSlug } from '@/lib/utils'
+import { CURRENCIES } from '@/lib/utils'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -38,11 +38,6 @@ export default function SettingsPage() {
   const [savingEmail, setSavingEmail] = useState(false)
   const [currency, setCurrency] = useState(tenant?.currency ?? 'EUR')
   const [savingCurrency, setSavingCurrency] = useState(false)
-  const [catalogueSlug, setCatalogueSlug] = useState(
-    tenant?.slug ?? (tenant?.name ? toSlug(tenant.name) : '')
-  )
-  const [savingSlug, setSavingSlug] = useState(false)
-  const [copiedLink, setCopiedLink] = useState(false)
 
   // Extra form state
   const [extraFormOpen, setExtraFormOpen] = useState(false)
@@ -187,38 +182,6 @@ export default function SettingsPage() {
     } finally {
       setSavingCurrency(false)
     }
-  }
-
-  async function handleSaveSlug() {
-    if (!tenant) return
-    const slug = catalogueSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-    if (!slug || slug.length < 2) { toast.error('Identifiant trop court (min 2 caractères).'); return }
-    setCatalogueSlug(slug)
-    setSavingSlug(true)
-    try {
-      if (!isDemoMode) {
-        const { error } = await supabase.from('tenants').update({ slug }).eq('id', tenant.id)
-        if (error) {
-          if (error.code === '23505') toast.error('Cet identifiant est déjà utilisé. Essayez-en un autre.')
-          else toast.error(`Erreur : ${error.message}`)
-          return
-        }
-      }
-      updateTenant({ slug })
-      toast.success('Identifiant catalogue enregistré.')
-    } finally {
-      setSavingSlug(false)
-    }
-  }
-
-  function handleCopyLink() {
-    const slug = tenant?.slug ?? catalogueSlug
-    if (!slug) return
-    const url = `${window.location.origin}/catalogue/${slug}`
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedLink(true)
-      setTimeout(() => setCopiedLink(false), 2000)
-    })
   }
 
   async function handleSaveAgency() {
@@ -375,51 +338,6 @@ export default function SettingsPage() {
           <Button onClick={handleSaveAgency} loading={savingAgency}>
             Enregistrer les modifications
           </Button>
-        </div>
-      </Card>
-
-      {/* Catalogue public */}
-      <Card>
-        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-brand-700" /> Catalogue public
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Partagez ce lien avec vos clients pour qu'ils puissent consulter et réserver vos villas en ligne.
-        </p>
-
-        {/* Shareable link */}
-        {(tenant?.slug || catalogueSlug) && (
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 truncate font-mono">
-              {window.location.origin}/catalogue/{tenant?.slug ?? catalogueSlug}
-            </div>
-            <button
-              onClick={handleCopyLink}
-              className="shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-2.5 rounded-xl border border-gray-200 hover:border-brand-400 hover:text-brand-700 transition-colors"
-            >
-              {copiedLink ? <CheckCheck className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-              {copiedLink ? 'Copié !' : 'Copier'}
-            </button>
-          </div>
-        )}
-
-        {/* Slug input */}
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Identifiant URL</label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400 shrink-0">…/catalogue/</span>
-              <input
-                type="text"
-                value={catalogueSlug}
-                onChange={e => setCatalogueSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                placeholder="mon-agence"
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-              />
-            </div>
-            <p className="text-xs text-gray-400 mt-1">Lettres minuscules, chiffres et tirets uniquement.</p>
-          </div>
-          <Button onClick={handleSaveSlug} loading={savingSlug} size="sm">Enregistrer l'identifiant</Button>
         </div>
       </Card>
 

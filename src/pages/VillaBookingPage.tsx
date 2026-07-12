@@ -8,6 +8,7 @@ import {
 import { fr } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Users, Bed, Bath, MapPin, Home, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import PhotoCarousel from '@/components/ui/PhotoCarousel'
 
 type VillaInfo = {
   id: string; name: string; description: string | null; city: string
@@ -104,7 +105,6 @@ export default function VillaBookingPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const [photoIdx, setPhotoIdx] = useState(0)
 
   useEffect(() => {
     if (!villaId) return
@@ -268,19 +268,8 @@ export default function VillaBookingPage() {
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           {/* Photos */}
           {photos.length > 0 ? (
-            <div className="relative h-60 sm:h-72">
-              <img src={photos[photoIdx]} alt={villa?.name} className="w-full h-full object-cover" />
-              {photos.length > 1 && (
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {photos.slice(0, 6).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPhotoIdx(i)}
-                      className={`w-1.5 h-1.5 rounded-full transition-all ${i === photoIdx ? 'bg-white scale-125' : 'bg-white/50'}`}
-                    />
-                  ))}
-                </div>
-              )}
+            <div className="relative h-60 sm:h-72 group">
+              <PhotoCarousel photos={photos} villaName={villa?.name ?? ''} />
             </div>
           ) : (
             <div className="h-52 bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center">

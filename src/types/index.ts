@@ -43,6 +43,7 @@ export interface Tenant {
   welcome_email_enabled?: boolean | null
   logo_url?: string | null
   currency?: string | null
+  slug?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

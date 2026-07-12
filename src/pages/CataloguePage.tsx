@@ -51,6 +51,12 @@ export default function CataloguePage() {
         .eq('tenant_id', t.id)
         .eq('status', 'active')
         .order('name')
+      console.log('[Catalogue] villas chargées:', v?.length ?? 0)
+      if (v?.[0]) {
+        console.log('[Catalogue] villa[0] brut:', JSON.stringify(v[0], null, 2))
+        console.log('[Catalogue] photos tableau:', v[0].photos)
+        console.log('[Catalogue] photos[0] URL:', v[0].photos?.[0])
+      }
       setVillas(v ?? [])
       setLoading(false)
     }
@@ -185,11 +191,25 @@ export default function CataloguePage() {
                   {/* Photo */}
                   <div className="relative h-48 bg-gray-100 overflow-hidden">
                     {villa.photos?.[0] ? (
-                      <img
-                        src={villa.photos[0]}
-                        alt={villa.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <img
+                          src={villa.photos[0]}
+                          alt={villa.name}
+                          className="w-full h-full object-cover"
+                          onLoad={() => console.log('[Catalogue] photo OK:', villa.name, villa.photos[0])}
+                          onError={e => {
+                            console.error('[Catalogue] photo ERREUR:', villa.name, villa.photos[0])
+                            const wrap = (e.currentTarget as HTMLImageElement).parentElement
+                            if (wrap) {
+                              e.currentTarget.style.display = 'none'
+                              const dbg = document.createElement('div')
+                              dbg.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:4px;background:#fef3c7'
+                              dbg.innerHTML = `<span style="font-size:11px;color:#92400e;word-break:break-all;text-align:center">⚠️ Photo inaccessible<br/><code style="font-size:9px">${villa.photos[0]}</code></span>`
+                              wrap.appendChild(dbg)
+                            }
+                          }}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ background: C.sand }}>
                         <Home className="h-10 w-10 opacity-20" style={{ color: C.dark }} />

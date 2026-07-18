@@ -23,7 +23,7 @@ export default function BlogListPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundImage: 'url(https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1920&q=90)',
+      backgroundImage: 'url(https://images.unsplash.com/photo-1762952267913-1c65f25331b3?fm=jpg&q=80&w=2000&auto=format&fit=crop)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       display: 'flex',

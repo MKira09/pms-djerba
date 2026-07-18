@@ -126,7 +126,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-center w-10 h-10 bg-amber-100 rounded-xl mx-auto mb-2">
               <Star className="h-5 w-5 text-amber-600 fill-amber-400" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{foundingCount} / 5</p>
+            <p className="text-2xl font-bold text-gray-900">{foundingCount} / 3</p>
             <p className="text-xs text-gray-500">Membres fondateurs</p>
           </Card>
         </div>

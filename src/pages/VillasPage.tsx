@@ -34,7 +34,11 @@ export default function VillasPage() {
   useEffect(() => { fetch() }, [])
 
   const isFoundingMember = !!tenant?.founding_member
-  const limit = isFoundingMember ? Infinity : PLAN_LIMITS[tenant?.plan ?? 'starter']
+  // Founding member = double de la limite du plan (Starter: 10, Pro: 20, Agence: illimité)
+  const FOUNDING_LIMITS: Record<string, number> = { starter: 10, pro: 20 }
+  const limit = isFoundingMember
+    ? (FOUNDING_LIMITS[tenant?.plan ?? 'starter'] ?? Infinity)
+    : PLAN_LIMITS[tenant?.plan ?? 'starter']
   const filtered = villas.filter(v => {
     const matchSearch = v.name.toLowerCase().includes(search.toLowerCase())
     const matchType = !typeFilter || (v.property_type || singular) === typeFilter
@@ -91,7 +95,7 @@ export default function VillasPage() {
           <p className="text-sm text-gray-500">
             {villas.filter(v => v.status === 'active').length} actifs
             {isFoundingMember
-              ? <span className="ml-2 text-amber-600 font-medium">★ Membre fondateur — biens illimités</span>
+              ? <span className="ml-2 text-amber-600 font-medium">★ Membre fondateur — {tenant?.plan === 'agence' ? 'illimité' : `${limit} villas max`}</span>
               : <> · limite plan : {limit}</>
             }
           </p>

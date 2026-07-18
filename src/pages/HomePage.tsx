@@ -166,7 +166,7 @@ export default function HomePage() {
       })
   }, [authTenant])
 
-  const remaining = foundingCount !== null ? Math.max(0, 5 - foundingCount) : null
+  const remaining = foundingCount !== null ? Math.max(0, 3 - foundingCount) : null
 
   async function handleContact(e: React.FormEvent) {
     e.preventDefault()
@@ -527,12 +527,12 @@ export default function HomePage() {
               Devenez membre fondateur
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 300, lineHeight: 1.7, marginBottom: 32 }}>
-              Les 5 premiers clients bénéficient de <span style={{ color: C.teal, fontWeight: 500 }}>biens illimités à vie</span>,
-              quel que soit le plan choisi.
+              Les 3 premiers clients bénéficient du <span style={{ color: C.teal, fontWeight: 500 }}>double de villas à vie</span> :
+              Starter 10, Pro 20, Agence illimité.
             </p>
             {/* Dots */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 28 }}>
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} style={{
                   width: 48, height: 6, borderRadius: 3,
                   background: foundingCount !== null && i < foundingCount

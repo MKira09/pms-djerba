@@ -37,10 +37,9 @@ export default function BlogListPage() {
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '16px 24px',
         flexShrink: 0,
       }}>
-        <div style={{ maxWidth: 896, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: '#07BEB8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Home size={16} color="white" />

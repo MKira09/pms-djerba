@@ -22,6 +22,8 @@ import SubscriptionPage from '@/pages/SubscriptionPage'
 import BookingPage from '@/pages/BookingPage'
 import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
+import BlogListPage from '@/pages/BlogListPage'
+import BlogLouerSansAirbnbPage from '@/pages/BlogLouerSansAirbnbPage'
 import HomePage from '@/pages/HomePage'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
@@ -119,6 +121,8 @@ export default function App() {
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/book/:villaId" element={<VillaBookingPage />} />
         <Route path="/catalogue/:tenantSlug" element={<CataloguePage />} />
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/louer-sa-villa-sans-airbnb" element={<BlogLouerSansAirbnbPage />} />
 
         {/* Admin only */}
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />

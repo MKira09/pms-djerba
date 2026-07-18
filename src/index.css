@@ -143,3 +143,47 @@
     overflow: hidden;
   }
 }
+
+/* ─── Blog article typography ─────────────────────────────────────────────── */
+.prose-article {
+  color: #374151;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.prose-article p {
+  margin-bottom: 1.25rem;
+}
+.prose-article h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #0D1F2D;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+.prose-article ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.prose-article ul li {
+  padding-left: 1.25rem;
+  position: relative;
+}
+.prose-article ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: #07BEB8;
+  font-weight: 600;
+}
+.prose-article strong {
+  color: #0D1F2D;
+  font-weight: 600;
+}
+.prose-article em {
+  font-style: italic;
+}

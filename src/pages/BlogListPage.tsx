@@ -4,7 +4,7 @@ import { usePageMeta } from '@/hooks/usePageMeta'
 
 const ARTICLES = [
   {
-    slug: 'louer-sa-villa-sans-airbnb',
+    slug: 'louer-sa-villa-sans-commission',
     title: "Louer votre villa sans Airbnb : comment garder le contrôle (et jusqu'à 15-17% de plus dans votre poche)",
     excerpt:
       'Vous générez déjà des réservations par vous-même — WhatsApp, Instagram, clients fidèles. Alors pourquoi continuer à donner 15 à 17% de commission sur des réservations que vous auriez obtenues de toute façon ?',

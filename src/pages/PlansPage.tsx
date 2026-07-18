@@ -56,7 +56,7 @@ const PLANS = [
   },
 ]
 
-const FOUNDING_MAX = 5
+const FOUNDING_MAX = 3
 
 function hasFullAccess(t: { founding_member?: boolean | null; plan: string; trial_ends: string | null }) {
   if (t.founding_member === true) return true

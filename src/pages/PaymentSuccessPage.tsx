@@ -65,6 +65,8 @@ export default function PaymentSuccessPage() {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single()
       if (profile) {
         setProfile(profile)
+        // Attribution automatique fondateur si une place est disponible (max 3, atomique en DB)
+        await supabase.rpc('apply_founding_member_if_eligible', { p_tenant_id: profile.tenant_id })
         const { data: tenant } = await supabase.from('tenants').select('*').eq('id', profile.tenant_id).single()
         setTenant(tenant ?? null)
       }

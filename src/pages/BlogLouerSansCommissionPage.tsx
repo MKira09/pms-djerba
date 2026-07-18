@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Home } from 'lucide-react'
 import { usePageMeta } from '@/hooks/usePageMeta'
 
-export default function BlogLouerSansAirbnbPage() {
+export default function BlogLouerSansCommissionPage() {
   usePageMeta({
-    title: 'Louer sa villa sans Airbnb : gardez le contrôle et vos revenus | VillaHub',
+    title: 'Louer sa villa sans intermédiaire : gardez le contrôle et vos revenus | VillaHub',
     description:
       'Découvrez comment gérer vos locations de villa sans payer 15 à 17% de commission aux plateformes de réservation, tout en gardant le contrôle sur vos clients et vos prix.',
   })
@@ -47,7 +47,7 @@ export default function BlogLouerSansAirbnbPage() {
 
           {/* H1 */}
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-8">
-            Louer votre villa sans Airbnb : comment garder le contrôle (et jusqu'à 15-17% de plus dans votre poche)
+            Louer votre villa sans intermédiaire : comment garder le contrôle (et jusqu'à 15-17% de plus dans votre poche)
           </h1>
 
           {/* Contenu */}

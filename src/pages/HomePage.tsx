@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 /* ─────── Palette ─────── */
 const C = {
@@ -117,6 +118,8 @@ const PLANS = [
 
 /* ─────── Component ─────── */
 export default function HomePage() {
+  usePageMeta()
+
   const navigate = useNavigate()
   const { tenant: authTenant } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)

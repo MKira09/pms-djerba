@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Home, Check, Loader2, Star } from 'lucide-react'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import Button from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
@@ -64,6 +65,12 @@ function hasFullAccess(t: { founding_member?: boolean | null; plan: string; tria
 }
 
 export default function PlansPage() {
+  usePageMeta({
+    title: 'Tarifs VillaHub – Logiciel de gestion locative',
+    description:
+      'Découvrez les formules VillaHub pour gérer vos locations de villa. Sans engagement, tarifs adaptés aux propriétaires indépendants comme aux agences.',
+  })
+
   const navigate = useNavigate()
   const { tenant } = useAuthStore()
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)

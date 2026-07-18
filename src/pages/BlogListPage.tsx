@@ -21,17 +21,24 @@ export default function BlogListPage() {
   })
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundImage: 'url(https://images.unsplash.com/photo-1650396693060-23a84d5c3c1c?fm=jpg&q=80&w=2000&auto=format&fit=crop)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div style={{ minHeight: '100vh', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Couche image — filtrée, isolée du contenu */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        backgroundImage: 'url(https://images.unsplash.com/photo-1650396693060-23a84d5c3c1c?fm=jpg&q=80&w=2000&auto=format&fit=crop)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        filter: 'saturate(0.45) brightness(1.08)',
+      }} />
+      {/* Voile sable — adoucit le contraste */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 1,
+        background: 'rgba(245,240,232,0.34)',
+      }} />
 
       {/* Nav — verre givré sur la texture */}
       <header style={{
+        position: 'relative', zIndex: 2,
         background: 'rgba(13,31,45,0.35)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
@@ -55,7 +62,7 @@ export default function BlogListPage() {
       </header>
 
       {/* Titre — carte blanche centrée */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '56px 24px 40px' }}>
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'center', padding: '56px 24px 40px' }}>
         <div style={{
           background: 'white',
           borderRadius: 16,
@@ -84,7 +91,7 @@ export default function BlogListPage() {
       </div>
 
       {/* Articles — cards blanches sur la texture */}
-      <main style={{ maxWidth: 896, margin: '0 auto', padding: '0 24px 72px', width: '100%' }}>
+      <main style={{ position: 'relative', zIndex: 2, maxWidth: 896, margin: '0 auto', padding: '0 24px 72px', width: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {ARTICLES.map(article => (
             <div key={article.slug} style={{
@@ -121,6 +128,7 @@ export default function BlogListPage() {
 
       {/* Footer */}
       <footer style={{
+        position: 'relative', zIndex: 2,
         marginTop: 'auto',
         background: 'rgba(13,31,45,0.35)',
         backdropFilter: 'blur(14px)',

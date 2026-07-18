@@ -34,7 +34,7 @@ export default function BlogListPage() {
         {/* Photo de fond */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1920&q=90)',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=90)',
           backgroundSize: 'cover', backgroundPosition: 'center 30%',
         }} />
         {/* Voile sombre */}

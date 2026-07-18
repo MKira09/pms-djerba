@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Home, Check, Loader2, Star } from 'lucide-react'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import Button from '@/components/ui/Button'
@@ -140,7 +140,8 @@ export default function PlansPage() {
           </div>
           <span className="font-bold text-gray-900 text-lg">VillaHub</span>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-4">
+          <Link to="/blog" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Blog</Link>
           <Button variant="outline" size="sm" onClick={() => navigate('/login')}>Se connecter</Button>
         </div>
       </header>

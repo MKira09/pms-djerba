@@ -21,6 +21,7 @@ export default function BlogLouerSansAirbnbPage() {
             <span className="font-bold text-base">VillaHub</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-gray-500">
+            <Link to="/blog" className="hover:text-gray-900 transition-colors">Blog</Link>
             <Link to="/plans" className="hover:text-gray-900 transition-colors">Tarifs</Link>
             <Link to="/login" className="hover:text-gray-900 transition-colors">Connexion</Link>
           </nav>

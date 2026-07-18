@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePageMeta } from '@/hooks/usePageMeta'
@@ -239,6 +239,19 @@ export default function HomePage() {
               {label}
             </a>
           ))}
+          <Link
+            to="/blog"
+            style={{
+              color: scrolled ? C.grey : 'rgba(255,255,255,0.75)',
+              fontSize: 12, fontWeight: 400,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              textDecoration: 'none', transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = scrolled ? C.navy : C.white)}
+            onMouseLeave={e => (e.currentTarget.style.color = scrolled ? C.grey : 'rgba(255,255,255,0.75)')}
+          >
+            Blog
+          </Link>
         </div>
 
         {/* CTA */}

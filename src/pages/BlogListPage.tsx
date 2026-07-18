@@ -22,29 +22,81 @@ export default function BlogListPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <header className="border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-gray-900 hover:text-gray-700 transition-colors">
-            <div className="w-7 h-7 rounded-lg bg-[#07BEB8] flex items-center justify-center">
-              <Home className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-base">VillaHub</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-gray-500">
-            <Link to="/blog" className="hover:text-gray-900 transition-colors font-medium text-[#07BEB8]">Blog</Link>
-            <Link to="/plans" className="hover:text-gray-900 transition-colors">Tarifs</Link>
-            <Link to="/login" className="hover:text-gray-900 transition-colors">Connexion</Link>
-          </nav>
-        </div>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-14">
-        <div className="mb-10">
-          <span className="text-xs font-semibold uppercase tracking-widest text-[#07BEB8]">Blog</span>
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">Conseils & ressources</h1>
-          <p className="text-gray-500 mt-2">Pour gérer vos locations de villa avec moins d'efforts et plus de revenus.</p>
+      {/* ── Hero : photo pleine largeur + carte blanche ── */}
+      <section style={{
+        position: 'relative',
+        height: 380,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        {/* Photo de fond */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1920&q=90)',
+          backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        }} />
+        {/* Voile sombre */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(13,31,45,0.52)',
+        }} />
+
+        {/* Nav superposée */}
+        <header style={{ position: 'relative', zIndex: 10, padding: '20px 24px' }}>
+          <div style={{ maxWidth: 896, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: '#07BEB8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Home size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 700, fontSize: 16, color: 'white' }}>VillaHub</span>
+            </Link>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <Link to="/blog" style={{ fontSize: 14, color: 'white', textDecoration: 'none', fontWeight: 600 }}>Blog</Link>
+              <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>Tarifs</Link>
+              <Link to="/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>Connexion</Link>
+            </nav>
+          </div>
+        </header>
+
+        {/* Carte blanche centrée */}
+        <div style={{
+          position: 'relative', zIndex: 10,
+          flex: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 24px 28px',
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 16,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
+            padding: '36px 56px',
+            textAlign: 'center',
+            maxWidth: 460,
+            width: '100%',
+          }}>
+            <span style={{
+              display: 'block',
+              color: '#07BEB8',
+              fontSize: 11, fontWeight: 600,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}>Blog</span>
+            <h1 style={{
+              fontFamily: "'Cormorant', serif",
+              fontSize: 36, fontWeight: 600, fontStyle: 'italic',
+              color: '#0D1F2D', lineHeight: 1.2,
+              margin: '10px 0 12px',
+            }}>Conseils & ressources</h1>
+            <p style={{ color: '#6B7A85', fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+              Pour gérer vos locations de villa avec moins d'efforts et plus de revenus.
+            </p>
+          </div>
         </div>
+      </section>
+
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="mb-8" />
 
         <div className="space-y-6">
           {ARTICLES.map(article => (

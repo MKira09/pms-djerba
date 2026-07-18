@@ -21,112 +21,118 @@ export default function BlogListPage() {
   })
 
   return (
-    <div className="min-h-screen bg-white">
+    <div style={{
+      minHeight: '100vh',
+      backgroundImage: 'url(https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1920&q=90)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
 
-      {/* ── Hero : photo pleine largeur + carte blanche ── */}
-      <section style={{
-        position: 'relative',
-        height: 380,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
+      {/* Nav — verre givré sur la texture */}
+      <header style={{
+        background: 'rgba(13,31,45,0.35)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        padding: '16px 24px',
+        flexShrink: 0,
       }}>
-        {/* Photo de fond */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=90)',
-          backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        }} />
-        {/* Voile sombre */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(13,31,45,0.52)',
-        }} />
-
-        {/* Nav superposée */}
-        <header style={{ position: 'relative', zIndex: 10, padding: '20px 24px' }}>
-          <div style={{ maxWidth: 896, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: '#07BEB8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Home size={16} color="white" />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: 16, color: 'white' }}>VillaHub</span>
-            </Link>
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              <Link to="/blog" style={{ fontSize: 14, color: 'white', textDecoration: 'none', fontWeight: 600 }}>Blog</Link>
-              <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>Tarifs</Link>
-              <Link to="/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>Connexion</Link>
-            </nav>
-          </div>
-        </header>
-
-        {/* Carte blanche centrée */}
-        <div style={{
-          position: 'relative', zIndex: 10,
-          flex: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '0 24px 28px',
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: 16,
-            boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
-            padding: '36px 56px',
-            textAlign: 'center',
-            maxWidth: 460,
-            width: '100%',
-          }}>
-            <span style={{
-              display: 'block',
-              color: '#07BEB8',
-              fontSize: 11, fontWeight: 600,
-              letterSpacing: '0.18em', textTransform: 'uppercase',
-            }}>Blog</span>
-            <h1 style={{
-              fontFamily: "'Cormorant', serif",
-              fontSize: 36, fontWeight: 600, fontStyle: 'italic',
-              color: '#0D1F2D', lineHeight: 1.2,
-              margin: '10px 0 12px',
-            }}>Conseils & ressources</h1>
-            <p style={{ color: '#6B7A85', fontSize: 15, lineHeight: 1.6, margin: 0 }}>
-              Pour gérer vos locations de villa avec moins d'efforts et plus de revenus.
-            </p>
-          </div>
+        <div style={{ maxWidth: 896, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: '#07BEB8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Home size={16} color="white" />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 16, color: 'white' }}>VillaHub</span>
+          </Link>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <Link to="/blog" style={{ fontSize: 14, color: 'white', textDecoration: 'none', fontWeight: 600 }}>Blog</Link>
+            <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', textDecoration: 'none' }}>Tarifs</Link>
+            <Link to="/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', textDecoration: 'none' }}>Connexion</Link>
+          </nav>
         </div>
-      </section>
+      </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        <div className="mb-8" />
+      {/* Titre — carte blanche centrée */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '56px 24px 40px' }}>
+        <div style={{
+          background: 'white',
+          borderRadius: 16,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
+          padding: '36px 52px',
+          textAlign: 'center',
+          maxWidth: 460,
+          width: '100%',
+        }}>
+          <span style={{
+            display: 'block',
+            color: '#07BEB8',
+            fontSize: 11, fontWeight: 600,
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+          }}>Blog</span>
+          <h1 style={{
+            fontFamily: "'Cormorant', serif",
+            fontSize: 36, fontWeight: 600, fontStyle: 'italic',
+            color: '#0D1F2D', lineHeight: 1.2,
+            margin: '10px 0 12px',
+          }}>Conseils & ressources</h1>
+          <p style={{ color: '#6B7A85', fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+            Pour gérer vos locations de villa avec moins d'efforts et plus de revenus.
+          </p>
+        </div>
+      </div>
 
-        <div className="space-y-6">
+      {/* Articles — cards blanches sur la texture */}
+      <main style={{ maxWidth: 896, margin: '0 auto', padding: '0 24px 72px', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {ARTICLES.map(article => (
-            <article key={article.slug} className="group border border-gray-100 rounded-2xl p-6 hover:border-[#07BEB8]/40 hover:shadow-md transition-all">
-              <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
+            <div key={article.slug} style={{
+              background: 'white',
+              borderRadius: 16,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
+              padding: '28px 32px',
+              transition: 'box-shadow 0.2s',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 36px rgba(0,0,0,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.14)')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#9CA3AF', marginBottom: 10 }}>
                 <time dateTime="2026-07-18">{article.date}</time>
                 <span>·</span>
                 <span>{article.readTime} de lecture</span>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#07BEB8] transition-colors leading-snug">
-                <Link to={`/blog/${article.slug}`}>{article.title}</Link>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', lineHeight: 1.4, marginBottom: 10 }}>
+                <Link to={`/blog/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  {article.title}
+                </Link>
               </h2>
-              <p className="text-gray-500 text-sm leading-relaxed mb-4">{article.excerpt}</p>
+              <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.65, marginBottom: 16 }}>{article.excerpt}</p>
               <Link
                 to={`/blog/${article.slug}`}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#07BEB8] hover:gap-2.5 transition-all"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600, color: '#07BEB8', textDecoration: 'none' }}
               >
-                Lire l'article <ArrowRight className="h-4 w-4" />
+                Lire l'article <ArrowRight size={16} />
               </Link>
-            </article>
+            </div>
           ))}
         </div>
       </main>
 
-      <footer className="border-t border-gray-100 mt-16">
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
-          <span>© 2026 VillaHub</span>
-          <div className="flex gap-4">
-            <Link to="/" className="hover:text-gray-600 transition-colors">Accueil</Link>
-            <Link to="/plans" className="hover:text-gray-600 transition-colors">Tarifs</Link>
+      {/* Footer */}
+      <footer style={{
+        marginTop: 'auto',
+        background: 'rgba(13,31,45,0.35)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '24px',
+      }}>
+        <div style={{ maxWidth: 896, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>© 2026 VillaHub</span>
+          <div style={{ display: 'flex', gap: 20 }}>
+            <Link to="/" style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Accueil</Link>
+            <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Tarifs</Link>
           </div>
         </div>
       </footer>

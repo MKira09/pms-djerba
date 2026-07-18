@@ -28,12 +28,12 @@ export default function BlogListPage() {
         position: 'fixed', inset: 0, zIndex: 0,
         backgroundImage: 'url(https://images.unsplash.com/photo-1650396693060-23a84d5c3c1c?fm=jpg&q=80&w=2000&auto=format&fit=crop)',
         backgroundSize: 'cover', backgroundPosition: 'center',
-        filter: 'saturate(0.45) brightness(1.08)',
+        filter: 'saturate(0.78) brightness(1.04)',
       }} />
       {/* Voile sable — adoucit le contraste */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 1,
-        background: 'rgba(245,240,232,0.34)',
+        background: 'rgba(7,190,184,0.10)',
       }} />
 
       {/* Nav — verre givré sur la texture */}

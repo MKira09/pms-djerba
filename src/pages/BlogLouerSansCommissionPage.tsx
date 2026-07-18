@@ -116,7 +116,7 @@ export default function BlogLouerSansCommissionPage() {
           {/* CTA */}
           <div className="mt-12 p-6 rounded-2xl bg-[#F5F0E8] border border-[#07BEB8]/20">
             <p className="font-semibold text-gray-900 mb-1">Prêt à reprendre le contrôle ?</p>
-            <p className="text-sm text-gray-500 mb-4">Essayez VillaHub gratuitement — aucune carte bancaire requise.</p>
+            <p className="text-sm text-gray-500 mb-4">Découvrez comment VillaHub peut simplifier la gestion de vos locations.</p>
             <Link
               to="/plans"
               className="inline-flex items-center gap-2 bg-[#07BEB8] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"

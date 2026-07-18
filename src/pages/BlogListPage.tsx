@@ -23,17 +23,11 @@ export default function BlogListPage() {
   return (
     <div style={{ minHeight: '100vh', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Couche image — filtrée, isolée du contenu */}
+      {/* Couche image */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0,
-        backgroundImage: 'url(https://images.unsplash.com/photo-1650396693060-23a84d5c3c1c?fm=jpg&q=80&w=2000&auto=format&fit=crop)',
+        backgroundImage: 'url(https://images.unsplash.com/photo-1517384084767-6bc118943770?fm=jpg&q=90&w=4000&auto=format&fit=crop)',
         backgroundSize: 'cover', backgroundPosition: 'center',
-        filter: 'saturate(0.78) brightness(1.04)',
-      }} />
-      {/* Voile sable — adoucit le contraste */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 1,
-        background: 'rgba(7,190,184,0.10)',
       }} />
 
       {/* Nav — verre givré sur la texture */}

@@ -102,7 +102,7 @@ export default function PlansPage() {
   }, [tenant])
 
   useEffect(() => {
-    supabase.rpc('get_founding_member_count').then(({ data }) => {
+    supabase.rpc('get_public_founding_count').then(({ data }) => {
       if (typeof data === 'number') setFoundingCount(data)
     })
   }, [])

@@ -1,7 +1,7 @@
 const PLANS = {
   starter: { amount: 2900, name: 'VillaHub Starter', description: "Jusqu'à 3 villas" },
   pro:     { amount: 5900, name: 'VillaHub Pro',     description: "Jusqu'à 10 villas" },
-  agence:  { amount: 9900, name: 'VillaHub Agence',  description: 'Villas illimitées' },
+  agence:  { amount: 9900, name: 'VillaHub Agence',  description: "Jusqu'à 50 villas" },
 }
 
 export default async function handler(req, res) {

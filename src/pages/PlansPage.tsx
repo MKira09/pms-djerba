@@ -46,7 +46,7 @@ const PLANS = [
     description: 'Pour les agences avec un grand portefeuille.',
     highlight: false,
     features: [
-      'Villas illimitées',
+      'Jusqu\'à 50 villas',
       'Tout Pro inclus',
       'Utilisateurs illimités',
       'Accès API',
@@ -156,7 +156,7 @@ export default function PlansPage() {
             <div className="flex-1">
               <p className="font-bold text-amber-900">Offre de lancement — Membres fondateurs</p>
               <p className="text-sm text-amber-700 mt-0.5">
-                Les 3 premiers clients bénéficient du <strong>double de villas à vie</strong> : Starter 10, Pro 20, Agence illimité.
+                Les 3 premiers clients bénéficient du <strong>double de villas à vie</strong> : Starter 10, Pro 20, Agence 100.
               </p>
             </div>
             <div className="shrink-0 text-center bg-amber-400 text-amber-900 font-bold rounded-xl px-4 py-2 text-sm">

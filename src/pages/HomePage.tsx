@@ -97,7 +97,7 @@ const STEPS = [
 const PLANS = [
   { name: 'Starter',      price: 29,  detail: '5 biens · 2 utilisateurs',         cta: false },
   { name: 'Pro',          price: 59,  detail: '10 biens · 5 utilisateurs',         cta: true  },
-  { name: 'Agence',       price: 99,  detail: 'Biens illimités · Équipe illimitée', cta: false },
+  { name: 'Agence',       price: 99,  detail: 'Jusqu\'à 50 biens · Équipe illimitée', cta: false },
   {
     name: 'CLÉS EN MAIN',
     isQuote: true,
@@ -528,7 +528,7 @@ export default function HomePage() {
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 300, lineHeight: 1.7, marginBottom: 32 }}>
               Les 3 premiers clients bénéficient du <span style={{ color: C.teal, fontWeight: 500 }}>double de villas à vie</span> :
-              Starter 10, Pro 20, Agence illimité.
+              Starter 10, Pro 20, Agence 100.
             </p>
             {/* Dots */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 28 }}>

@@ -25,7 +25,7 @@ const DEMO_PROFILE: Profile = {
 
 const DEMO_TENANT: Tenant = {
   id: 'demo-tenant-1',
-  name: 'Agence Djerba Villas',
+  name: 'Agence Démo',
   plan: 'agence',
   trial_ends: null,
   created_at: new Date().toISOString(),

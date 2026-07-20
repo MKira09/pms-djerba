@@ -33,6 +33,7 @@ const DEMO_TENANT: Tenant = {
   slogan: 'Votre séjour de rêve à Djerba',
   founding_member: true,
   welcome_email_enabled: true,
+  slug: 'demo-agence-djerba',
 }
 
 export const useAuthStore = create<AuthState>()(

@@ -64,6 +64,12 @@ const FEATURES = [
     body: 'Fiches clients, historique de séjours et emails automatiques pour un accueil hôtelier irréprochable.',
     icon: '✉️',
   },
+  {
+    num: '04',
+    title: 'Un catalogue à votre nom',
+    body: 'Partagez un lien de réservation professionnel à vos clients, avec vos villas, vos photos et votre calendrier de disponibilités — sans commission, sans intermédiaire.',
+    icon: '🌐',
+  },
 ]
 
 const STEPS = [
@@ -465,8 +471,8 @@ export default function HomePage() {
 
           <div className="lp-feat-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 2,
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 0,
             border: `1px solid ${C.sandDk}`,
           }}>
             {FEATURES.map((f, i) => (
@@ -476,7 +482,8 @@ export default function HomePage() {
                 style={{
                   padding: '56px 44px',
                   background: C.white,
-                  borderRight: i < 2 ? `1px solid ${C.sandDk}` : 'none',
+                  borderRight: i % 2 === 0 ? `1px solid ${C.sandDk}` : 'none',
+                  borderBottom: i < 2 ? `1px solid ${C.sandDk}` : 'none',
                   transition: 'background 0.3s',
                 }}
                 onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.background = C.sand)}

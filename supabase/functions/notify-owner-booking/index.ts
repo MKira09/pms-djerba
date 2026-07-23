@@ -195,6 +195,8 @@ Deno.serve(async (req) => {
 </body>
 </html>`
 
+    const PUSH_SECRET = Deno.env.get('PUSH_SHARED_SECRET') ?? ''
+
     const sendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -213,6 +215,22 @@ Deno.serve(async (req) => {
       const err = await sendRes.text()
       console.error('[notify-owner] Resend error:', err)
       return new Response('Email send failed: ' + err, { status: 500 })
+    }
+
+    // Fire push notification (non-blocking — email already sent)
+    if (PUSH_SECRET) {
+      const checkInStr  = checkIn.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+      const checkOutStr = checkOut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+      fetch(`${APP_URL}/api/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-push-secret': PUSH_SECRET },
+        body: JSON.stringify({
+          tenantId: res.tenant_id,
+          title: `🏡 Nouvelle réservation — ${villaName}`,
+          message: `${clientName} · ${checkInStr} → ${checkOutStr}`,
+          url: '/reservations',
+        }),
+      }).catch(err => console.error('[notify-owner] push error:', err))
     }
 
     return new Response(JSON.stringify({ ok: true }), {

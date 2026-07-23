@@ -25,7 +25,7 @@ export default function PushPermissionBanner() {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-brand-800 text-white px-4 py-3 shrink-0">
+    <div data-push-banner className="flex items-center gap-3 bg-brand-800 text-white px-4 py-3 shrink-0">
       <Bell className="h-4 w-4 shrink-0 text-brand-200" />
       <p className="text-sm flex-1">
         Recevez une alerte instantanée sur cet appareil à chaque nouvelle demande de réservation.

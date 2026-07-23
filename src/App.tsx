@@ -79,15 +79,18 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const { profile: currentProfile, isDemoMode, setProfile, setTenant, logout } = useAuthStore.getState()
-        if (isDemoMode) return
 
         if (!session) {
-          logout()
+          // Keep demo mode intact when there's no real session
+          if (!isDemoMode) logout()
           return
         }
 
-        // Session detected but store empty → initialize (magic link, invite, page refresh)
-        if (currentProfile) return
+        // Real session exists: if coming from demo mode, exit it first
+        if (isDemoMode) logout()
+
+        // Profile already loaded and we're not transitioning from demo → skip re-fetch
+        if (currentProfile && !isDemoMode) return
         const { data: p } = await supabase
           .from('profiles').select('*').eq('id', session.user.id).single()
         if (!p) { await supabase.auth.signOut(); return }

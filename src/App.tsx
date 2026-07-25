@@ -25,6 +25,7 @@ import CataloguePage from '@/pages/CataloguePage'
 import BlogListPage from '@/pages/BlogListPage'
 import BlogLouerSansCommissionPage from '@/pages/BlogLouerSansCommissionPage'
 import HomePage from '@/pages/HomePage'
+import MaintenancePage from '@/components/MaintenancePage'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
 
@@ -114,7 +115,11 @@ export default function App() {
       />
       <Routes>
         {/* Landing */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={
+          import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+            ? <MaintenancePage />
+            : <HomePage />
+        } />
 
         {/* Public */}
         <Route path="/login" element={<LoginPage />} />

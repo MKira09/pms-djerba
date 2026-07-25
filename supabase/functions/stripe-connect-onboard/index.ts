@@ -79,7 +79,9 @@ Deno.serve(async (req) => {
     return json({ url: accountLink.url, type: 'onboarding', account_id: accountId })
 
   } catch (e) {
-    console.error('[stripe-connect-onboard] CRASH:', e)
-    return json({ error: 'Erreur interne', detail: String(e) }, 500)
+    // Return 200 so the client reads the error body (non-2xx swallows the detail)
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[stripe-connect-onboard] ERROR:', msg)
+    return json({ error: msg })
   }
 })

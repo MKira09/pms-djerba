@@ -22,11 +22,11 @@ Deno.serve(async (req) => {
     const SUPABASE_SVC = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const APP_URL      = Deno.env.get('APP_URL') ?? 'https://agencykira.com'
 
-    if (!STRIPE_KEY)                    return json({ error: 'STRIPE_SECRET_KEY manquante' }, 500)
-    if (!SUPABASE_URL || !SUPABASE_SVC) return json({ error: 'Variables Supabase manquantes' }, 500)
+    if (!STRIPE_KEY)                    return json({ error: 'STRIPE_SECRET_KEY manquante dans les secrets Supabase' })
+    if (!SUPABASE_URL || !SUPABASE_SVC) return json({ error: 'Variables Supabase manquantes' })
 
     const { tenant_id } = await req.json() as { tenant_id: string }
-    if (!tenant_id) return json({ error: 'tenant_id requis' }, 400)
+    if (!tenant_id) return json({ error: 'tenant_id requis' })
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SVC)
 
@@ -36,7 +36,11 @@ Deno.serve(async (req) => {
       .eq('id', tenant_id)
       .single()
 
-    if (tErr || !tenant) return json({ error: 'Tenant introuvable' }, 404)
+    if (tErr || !tenant) {
+      const detail = tErr?.message ?? 'aucun résultat'
+      console.error('[stripe-connect-onboard] DB error:', detail, '| tenant_id:', tenant_id)
+      return json({ error: `Tenant introuvable — ${detail}` })
+    }
 
     const stripe = new Stripe(STRIPE_KEY, { apiVersion: '2024-06-20' })
 

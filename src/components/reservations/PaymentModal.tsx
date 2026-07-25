@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { CreditCard, CheckCircle2, ExternalLink } from 'lucide-react'
+import { CreditCard, CheckCircle2, ExternalLink, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth.store'
 import type { Reservation } from '@/types'
 
 interface Props {
@@ -25,6 +27,8 @@ const METHOD_OPTIONS = [
 const QUICK_PCTS = [30, 50, 70]
 
 export default function PaymentModal({ open, reservation, onClose, onUpdated }: Props) {
+  const { tenant } = useAuthStore()
+  const stripeConnected = !!(tenant?.stripe_account_id)
   const [tab, setTab] = useState<'link' | 'manual'>('link')
   // Stripe amount picker
   const [amountType, setAmountType] = useState<'total' | 'deposit'>('total')
@@ -167,6 +171,24 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
             {/* ── Stripe link tab ─────────────────────────────────────────── */}
             {tab === 'link' && (
               <div className="space-y-5">
+
+                {/* Compte Stripe non connecté */}
+                {!stripeConnected && (
+                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Compte Stripe non connecté</p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Connectez votre compte Stripe Express dans{' '}
+                        <Link to="/settings" onClick={onClose} className="underline font-medium">
+                          Paramètres → Recevoir mes paiements
+                        </Link>{' '}
+                        pour pouvoir envoyer des liens de paiement.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {!reservation.client?.email && (
                   <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     Ce client n'a pas d'email enregistré. Ajoutez-en un dans sa fiche.
@@ -294,7 +316,7 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
                   icon={<CreditCard className="h-4 w-4" />}
                   onClick={handleSendLink}
                   loading={loading}
-                  disabled={!reservation.client?.email || !stripeAmountValid}
+                  disabled={!stripeConnected || !reservation.client?.email || !stripeAmountValid}
                   className="w-full"
                 >
                   {payStatus === 'link_sent' ? 'Renvoyer un nouveau lien' : 'Envoyer le lien de paiement'}

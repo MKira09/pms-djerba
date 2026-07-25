@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: res, error: resErr } = await sb
       .from('reservations')
-      .select('*, villa:villas(name), client:clients(full_name, email), tenant:tenants(name, currency)')
+      .select('*, villa:villas(name), client:clients(full_name, email), tenant:tenants(name, currency, stripe_account_id)')
       .eq('id', reservation_id)
       .single()
 
@@ -47,6 +47,14 @@ Deno.serve(async (req) => {
 
     if (resErr || !res) return json({ error: 'Réservation introuvable' }, 404)
     if (!res.client?.email) return json({ error: 'Client sans email — impossible d\'envoyer le lien' }, 400)
+
+    const stripeAccountId: string | null = res.tenant?.stripe_account_id ?? null
+    if (!stripeAccountId) {
+      return json({
+        error: 'Compte Stripe non connecté',
+        detail: 'Connectez votre compte Stripe Express dans Paramètres → Recevoir mes paiements.',
+      }, 400)
+    }
 
     const total = Number(res.total_amount)
     // Use caller-specified amount if valid; otherwise fall back to full total
@@ -60,26 +68,31 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(STRIPE_KEY, { apiVersion: '2024-06-20' })
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: stripeCurrency,
-          product_data: {
-            name:        `Séjour – ${res.villa?.name ?? 'Villa'}`,
-            description: `${res.check_in} → ${res.check_out} · ${res.guests} pers.`,
+    // Create the checkout session directly on the tenant's Express account (direct charge).
+    // Funds land on their account; they pay Stripe fees themselves; we take no platform cut.
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: stripeCurrency,
+            product_data: {
+              name:        `Séjour – ${res.villa?.name ?? 'Villa'}`,
+              description: `${res.check_in} → ${res.check_out} · ${res.guests} pers.`,
+            },
+            unit_amount: Math.round(amountDue * 100),
           },
-          unit_amount: Math.round(amountDue * 100), // centimes
-        },
-        quantity: 1,
-      }],
-      mode:           'payment',
-      customer_email: res.client.email,
-      expires_at:     Math.floor(Date.now() / 1000) + 86400, // 24h
-      success_url:    `${APP_URL}/booking/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:     `${APP_URL}/booking/payment-cancel`,
-      metadata:       { reservation_id },
-    })
+          quantity: 1,
+        }],
+        mode:           'payment',
+        customer_email: res.client.email,
+        expires_at:     Math.floor(Date.now() / 1000) + 86400,
+        success_url:    `${APP_URL}/booking/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:     `${APP_URL}/booking/payment-cancel`,
+        metadata:       { reservation_id },
+      },
+      { stripeAccount: stripeAccountId },
+    )
 
     console.log('[create-payment-link] session:', session.id, session.url?.slice(0, 60))
 

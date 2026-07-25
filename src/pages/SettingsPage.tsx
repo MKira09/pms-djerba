@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, CreditCard, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -22,6 +23,12 @@ export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { profile, tenant, isDemoMode, updateTenant, updateProfile } = useAuthStore()
   const { extras, fetch: fetchExtras, addExtra, updateExtra, removeExtra, toggleExtra } = useExtrasStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // ── Stripe Connect state ──────────────────────────────────────────
+  // null = checking, true = active, false = not connected / incomplete
+  const [stripeStatus, setStripeStatus] = useState<{ charges_enabled: boolean; details_submitted: boolean } | null>(null)
+  const [stripeLoading, setStripeLoading] = useState(false)
   const [name, setName] = useState(profile?.full_name ?? '')
   const [email, setEmail] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
@@ -73,6 +80,49 @@ export default function SettingsPage() {
       if (data.user?.email) setEmail(data.user.email)
     })
   }, [])
+
+  // Handle return from Stripe onboarding
+  useEffect(() => {
+    if (searchParams.get('stripe_return')) {
+      toast.success('Configuration Stripe enregistrée !')
+      setSearchParams({}, { replace: true })
+    } else if (searchParams.get('stripe_refresh')) {
+      toast('Le lien Stripe a expiré. Relancez la connexion.', { icon: '⚠️' })
+      setSearchParams({}, { replace: true })
+    }
+  }, [])
+
+  // Check Stripe account status when account_id is known
+  useEffect(() => {
+    const accountId = tenant?.stripe_account_id
+    if (!accountId) { setStripeStatus(null); return }
+    fetch(`/api/stripe-connect-status?account_id=${accountId}`)
+      .then(r => r.json())
+      .then(d => setStripeStatus({ charges_enabled: d.charges_enabled, details_submitted: d.details_submitted }))
+      .catch(() => setStripeStatus(null))
+  }, [tenant?.stripe_account_id])
+
+  async function handleConnectStripe() {
+    if (!tenant || isDemoMode) return
+    setStripeLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-connect-onboard', {
+        body: { tenant_id: tenant.id },
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''))
+      if (!data?.url) throw new Error('Pas de lien retourné')
+      if (data.type === 'dashboard') {
+        window.open(data.url, '_blank', 'noopener')
+      } else {
+        window.location.href = data.url
+      }
+    } catch (e: unknown) {
+      toast.error('Erreur Stripe : ' + (e instanceof Error ? e.message : String(e)), { duration: 8000 })
+    } finally {
+      setStripeLoading(false)
+    }
+  }
 
   useEffect(() => { fetchExtras() }, [])
 
@@ -409,6 +459,87 @@ export default function SettingsPage() {
           S'applique à tous les montants : dashboard, réservations, villas.
         </p>
         <Button onClick={handleSaveCurrency} loading={savingCurrency}>Enregistrer</Button>
+      </Card>
+
+      {/* ─── Recevoir mes paiements ─── */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-brand-700" /> Recevoir mes paiements
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Connectez un compte Stripe Express pour recevoir les paiements de vos clients directement sur votre compte bancaire.
+          Stripe gère la vérification d'identité, le RIB et les virements automatiques.
+        </p>
+
+        {!tenant?.stripe_account_id ? (
+          /* ── Jamais connecté ── */
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Aucun compte Stripe connecté</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Sans connexion, le bouton « Envoyer lien de paiement » dans les réservations sera désactivé.
+                </p>
+              </div>
+            </div>
+            <Button
+              icon={<ExternalLink className="h-4 w-4" />}
+              onClick={handleConnectStripe}
+              loading={stripeLoading}
+              disabled={isDemoMode}
+            >
+              Connecter mon compte Stripe Express
+            </Button>
+            {isDemoMode && <p className="text-xs text-gray-400">Non disponible en mode démo.</p>}
+          </div>
+        ) : stripeStatus === null ? (
+          /* ── Vérification en cours ── */
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="w-4 h-4 rounded-full border-2 border-brand-800 border-t-transparent animate-spin shrink-0" />
+            Vérification du compte Stripe…
+          </div>
+        ) : stripeStatus.charges_enabled ? (
+          /* ── Compte actif ── */
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-green-800">Compte Stripe actif — paiements activés</p>
+                <p className="text-xs text-green-600 font-mono mt-0.5 select-all">{tenant.stripe_account_id}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              icon={<ExternalLink className="h-4 w-4" />}
+              onClick={handleConnectStripe}
+              loading={stripeLoading}
+            >
+              Gérer mon tableau de bord Stripe
+            </Button>
+          </div>
+        ) : (
+          /* ── Compte créé mais configuration incomplète ── */
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+              <AlertCircle className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800">Configuration Stripe incomplète</p>
+                <p className="text-xs text-orange-700 mt-0.5">
+                  Votre compte a été créé mais la vérification n'est pas terminée.
+                  Cliquez ci-dessous pour reprendre là où vous en étiez.
+                </p>
+              </div>
+            </div>
+            <Button
+              icon={<ExternalLink className="h-4 w-4" />}
+              onClick={handleConnectStripe}
+              loading={stripeLoading}
+            >
+              Continuer la configuration Stripe
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* Notifications */}

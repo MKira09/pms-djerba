@@ -44,6 +44,7 @@ export interface Tenant {
   logo_url?: string | null
   currency?: string | null
   slug?: string | null
+  stripe_account_id?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

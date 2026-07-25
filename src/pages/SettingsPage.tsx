@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, CreditCard, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, CreditCard, ExternalLink, CheckCircle2, AlertCircle, Landmark } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -45,6 +45,15 @@ export default function SettingsPage() {
   const [savingEmail, setSavingEmail] = useState(false)
   const [currency, setCurrency] = useState(tenant?.currency ?? 'EUR')
   const [savingCurrency, setSavingCurrency] = useState(false)
+
+  // PayPal & Virement state
+  const [paypalMe, setPaypalMe] = useState(tenant?.paypal_me ?? '')
+  const [bankHolder, setBankHolder] = useState(tenant?.bank_holder ?? '')
+  const [bankName, setBankName] = useState(tenant?.bank_name ?? '')
+  const [bankIban, setBankIban] = useState(tenant?.bank_iban ?? '')
+  const [bankBic, setBankBic] = useState(tenant?.bank_bic ?? '')
+  const [savingPaypal, setSavingPaypal] = useState(false)
+  const [savingBank, setSavingBank] = useState(false)
 
   // Extra form state
   const [extraFormOpen, setExtraFormOpen] = useState(false)
@@ -295,6 +304,51 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSavePaypal() {
+    if (!tenant) return
+    setSavingPaypal(true)
+    try {
+      let normalized = paypalMe.trim()
+      if (normalized && !normalized.startsWith('http')) {
+        normalized = `https://paypal.me/${normalized}`
+      }
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update({ paypal_me: normalized || null }).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant({ paypal_me: normalized || null })
+      setPaypalMe(normalized)
+      toast.success('Lien PayPal enregistré.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingPaypal(false)
+    }
+  }
+
+  async function handleSaveBank() {
+    if (!tenant) return
+    setSavingBank(true)
+    try {
+      const updates = {
+        bank_holder: bankHolder.trim() || null,
+        bank_name:   bankName.trim()   || null,
+        bank_iban:   bankIban.trim().toUpperCase().replace(/\s+/g, '') || null,
+        bank_bic:    bankBic.trim().toUpperCase() || null,
+      }
+      if (!isDemoMode) {
+        const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
+        if (error) throw error
+      }
+      updateTenant(updates)
+      toast.success('Coordonnées bancaires enregistrées.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingBank(false)
+    }
+  }
+
   async function handleSavePropertyTypes() {
     if (!tenant) return
     setSavingPropertyTypes(true)
@@ -540,6 +594,69 @@ export default function SettingsPage() {
             </Button>
           </div>
         )}
+      </Card>
+
+      {/* ─── PayPal ─── */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <span className="font-extrabold text-blue-600 text-base leading-none">P</span> PayPal
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Entrez votre lien PayPal.me pour envoyer un lien de paiement PayPal à vos clients depuis les réservations.
+        </p>
+        <Input
+          label="Lien PayPal.me"
+          value={paypalMe}
+          onChange={e => setPaypalMe(e.target.value)}
+          placeholder="https://paypal.me/votre-compte"
+        />
+        <p className="text-xs text-gray-400 mt-1 mb-4">
+          Entrez l'URL complète ou juste votre nom d'utilisateur — on complétera automatiquement.
+        </p>
+        <Button onClick={handleSavePaypal} loading={savingPaypal} disabled={isDemoMode}>
+          Enregistrer
+        </Button>
+        {isDemoMode && <p className="text-xs text-gray-400 mt-2">Non disponible en mode démo.</p>}
+      </Card>
+
+      {/* ─── Virement bancaire ─── */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <Landmark className="h-4 w-4 text-brand-700" /> Virement bancaire (RIB)
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Vos coordonnées bancaires seront envoyées par email aux clients avec le montant exact et une référence de paiement.
+        </p>
+        <div className="space-y-3 mb-4">
+          <Input
+            label="Titulaire du compte"
+            value={bankHolder}
+            onChange={e => setBankHolder(e.target.value)}
+            placeholder="Ex : Kira Voyages SARL"
+          />
+          <Input
+            label="Nom de la banque"
+            value={bankName}
+            onChange={e => setBankName(e.target.value)}
+            placeholder="Ex : Banque de Tunisie"
+          />
+          <Input
+            label="IBAN"
+            value={bankIban}
+            onChange={e => setBankIban(e.target.value)}
+            placeholder="Ex : TN5901234567890123456789"
+          />
+          <Input
+            label="BIC / SWIFT"
+            value={bankBic}
+            onChange={e => setBankBic(e.target.value)}
+            placeholder="Ex : BTUNTNTTXXX"
+          />
+        </div>
+        <Button onClick={handleSaveBank} loading={savingBank} disabled={isDemoMode}>
+          Enregistrer les coordonnées
+        </Button>
+        {isDemoMode && <p className="text-xs text-gray-400 mt-2">Non disponible en mode démo.</p>}
       </Card>
 
       {/* Notifications */}

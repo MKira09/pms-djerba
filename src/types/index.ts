@@ -45,6 +45,11 @@ export interface Tenant {
   currency?: string | null
   slug?: string | null
   stripe_account_id?: string | null
+  paypal_me?: string | null
+  bank_holder?: string | null
+  bank_name?: string | null
+  bank_iban?: string | null
+  bank_bic?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────

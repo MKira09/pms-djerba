@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CreditCard, CheckCircle2, ExternalLink, AlertCircle } from 'lucide-react'
+import { CreditCard, CheckCircle2, ExternalLink, AlertCircle, Landmark } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
@@ -17,24 +17,37 @@ interface Props {
 }
 
 const METHOD_OPTIONS = [
-  { value: 'especes',  label: 'Espèces' },
-  { value: 'virement', label: 'Virement bancaire' },
-  { value: 'cheque',   label: 'Chèque' },
-  { value: 'carte',    label: 'Carte bancaire' },
-  { value: 'autre',    label: 'Autre' },
+  { value: 'especes',   label: 'Espèces' },
+  { value: 'virement',  label: 'Virement bancaire' },
+  { value: 'cheque',    label: 'Chèque' },
+  { value: 'carte',     label: 'Carte bancaire' },
+  { value: 'paypal',    label: 'PayPal' },
+  { value: 'autre',     label: 'Autre' },
 ]
 
 const QUICK_PCTS = [30, 50, 70]
 
+const TAB_LABELS: Record<string, string> = {
+  stripe:   'Stripe',
+  paypal:   'PayPal',
+  virement: 'Virement',
+  manual:   'Manuel',
+}
+
 export default function PaymentModal({ open, reservation, onClose, onUpdated }: Props) {
   const { tenant } = useAuthStore()
-  const stripeConnected = !!(tenant?.stripe_account_id)
-  const [tab, setTab] = useState<'link' | 'manual'>('link')
-  // Stripe amount picker
+  const stripeConnected  = !!(tenant?.stripe_account_id)
+  const paypalConfigured = !!(tenant?.paypal_me)
+  const ribConfigured    = !!(tenant?.bank_iban)
+
+  const [tab, setTab] = useState<'stripe' | 'paypal' | 'virement' | 'manual'>('stripe')
+
+  // Amount picker — shared across stripe / paypal / virement tabs
   const [amountType, setAmountType] = useState<'total' | 'deposit'>('total')
   const [pctInput, setPctInput] = useState<string>('30')
   const [amtInput, setAmtInput] = useState<string>('')
   const [inputMode, setInputMode] = useState<'pct' | 'amount'>('pct')
+
   // Manual payment
   const [method, setMethod] = useState('especes')
   const [loading, setLoading] = useState(false)
@@ -42,13 +55,12 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
 
   if (!reservation) return null
 
-  const payStatus = reservation.payment_status ?? 'unpaid'
+  const payStatus    = reservation.payment_status ?? 'unpaid'
   const existingLink = reservation.stripe_payment_link
-  const total = Number(reservation.total_amount)
-  const cur = reservation.currency ?? 'TND'
+  const total        = Number(reservation.total_amount)
+  const cur          = reservation.currency ?? 'TND'
 
-  // Computed Stripe amount to send
-  const stripeAmount: number = (() => {
+  const sendAmount: number = (() => {
     if (amountType === 'total') return total
     if (inputMode === 'pct') {
       const pct = parseFloat(pctInput)
@@ -59,38 +71,49 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
     return amt > 0 && amt <= total ? amt : 0
   })()
 
-  const stripeAmountValid = stripeAmount > 0
+  const sendAmountValid = sendAmount > 0
 
   function handlePctClick(pct: number) {
     setInputMode('pct')
     setPctInput(String(pct))
   }
 
-  async function handleSendLink() {
+  async function handleSendStripeLink() {
     if (!reservation) return
-    if (!reservation.client?.email) {
-      toast.error('Ce client n\'a pas d\'email enregistré.')
-      return
-    }
-    if (!stripeAmountValid) {
-      toast.error('Montant invalide.')
-      return
-    }
+    if (!reservation.client?.email) { toast.error('Ce client n\'a pas d\'email enregistré.'); return }
+    if (!sendAmountValid)            { toast.error('Montant invalide.'); return }
     setLoading(true)
     const tid = toast.loading('Génération du lien Stripe…')
     try {
       const { data, error } = await supabase.functions.invoke('create-payment-link', {
-        body: { reservation_id: reservation.id, amount: stripeAmount },
+        body: { reservation_id: reservation.id, amount: sendAmount },
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''))
       toast.success('Lien de paiement envoyé par email !', { id: tid })
-      onUpdated({
-        ...reservation,
-        payment_status: 'link_sent',
-        stripe_payment_link: data.url,
-        stripe_amount: stripeAmount,
+      onUpdated({ ...reservation, payment_status: 'link_sent', stripe_payment_link: data.url, stripe_amount: sendAmount })
+      onClose()
+    } catch (e: unknown) {
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)), { id: tid, duration: 8000 })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSendPaymentInfo(m: 'paypal' | 'virement') {
+    if (!reservation) return
+    if (!reservation.client?.email) { toast.error('Ce client n\'a pas d\'email enregistré.'); return }
+    if (!sendAmountValid)            { toast.error('Montant invalide.'); return }
+    setLoading(true)
+    const tid = toast.loading(m === 'paypal' ? 'Envoi du lien PayPal…' : 'Envoi des coordonnées bancaires…')
+    try {
+      const { data, error } = await supabase.functions.invoke('send-payment-info', {
+        body: { reservation_id: reservation.id, method: m, amount: sendAmount },
       })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''))
+      toast.success(m === 'paypal' ? 'Lien PayPal envoyé par email !' : 'Coordonnées bancaires envoyées !', { id: tid })
+      onUpdated({ ...reservation, payment_status: 'link_sent', stripe_amount: sendAmount })
       onClose()
     } catch (e: unknown) {
       toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)), { id: tid, duration: 8000 })
@@ -121,6 +144,11 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
     }
   }
 
+  const previewLabel =
+    tab === 'stripe'   ? 'Le client recevra un lien pour :' :
+    tab === 'paypal'   ? 'Le client devra vous envoyer :' :
+                         'Montant à virer :'
+
   return (
     <Modal open={open} onClose={onClose} title="Paiement de la réservation" size="sm">
       <div className="space-y-5">
@@ -135,7 +163,7 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
           {payStatus === 'link_sent' && reservation.stripe_amount != null && (
             <div className="text-xs space-y-0.5 pt-1">
               <p className="text-orange-600 font-medium">
-                Lien envoyé pour {Number(reservation.stripe_amount).toLocaleString('fr-TN')} {cur}
+                Paiement demandé pour {Number(reservation.stripe_amount).toLocaleString('fr-TN')} {cur}
               </p>
               {Number(reservation.stripe_amount) < total && (
                 <p className="text-gray-400">
@@ -152,50 +180,25 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
         {payStatus !== 'paid' && (
           <>
             {/* Tabs */}
-            <div className="flex gap-1 border-b border-gray-200">
-              {(['link', 'manual'] as const).map(t => (
+            <div className="flex gap-0 border-b border-gray-200">
+              {(['stripe', 'paypal', 'virement', 'manual'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  className={`px-3.5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                     tab === t
                       ? 'border-brand-700 text-brand-800'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {t === 'link' ? 'Lien Stripe' : 'Paiement manuel'}
+                  {TAB_LABELS[t]}
                 </button>
               ))}
             </div>
 
-            {/* ── Stripe link tab ─────────────────────────────────────────── */}
-            {tab === 'link' && (
-              <div className="space-y-5">
-
-                {/* Compte Stripe non connecté */}
-                {!stripeConnected && (
-                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800">Compte Stripe non connecté</p>
-                      <p className="text-xs text-amber-700 mt-0.5">
-                        Connectez votre compte Stripe Express dans{' '}
-                        <Link to="/settings" onClick={onClose} className="underline font-medium">
-                          Paramètres → Recevoir mes paiements
-                        </Link>{' '}
-                        pour pouvoir envoyer des liens de paiement.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {!reservation.client?.email && (
-                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    Ce client n'a pas d'email enregistré. Ajoutez-en un dans sa fiche.
-                  </p>
-                )}
-
-                {/* Amount type */}
+            {/* ── Shared amount picker (stripe / paypal / virement) ── */}
+            {tab !== 'manual' && (
+              <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">Montant à demander</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -213,19 +216,15 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
                           {type === 'total' ? 'Montant total' : 'Acompte'}
                         </span>
                         <span className="block text-xs mt-0.5 opacity-70">
-                          {type === 'total'
-                            ? `${total.toLocaleString('fr-TN')} ${cur}`
-                            : 'Montant partiel'}
+                          {type === 'total' ? `${total.toLocaleString('fr-TN')} ${cur}` : 'Montant partiel'}
                         </span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Deposit picker */}
                 {amountType === 'deposit' && (
                   <div className="space-y-3">
-                    {/* Quick pct buttons */}
                     <div>
                       <p className="text-xs text-gray-500 mb-1.5">Pourcentage rapide</p>
                       <div className="flex gap-2">
@@ -254,15 +253,10 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
                         </button>
                       </div>
                     </div>
-
-                    {/* Pct or amount input */}
                     {inputMode === 'pct' ? (
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={pctInput}
+                          type="number" min={1} max={100} value={pctInput}
                           onChange={e => setPctInput(e.target.value)}
                           className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                           placeholder="30"
@@ -272,10 +266,7 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
                     ) : (
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
-                          min={1}
-                          max={total}
-                          value={amtInput}
+                          type="number" min={1} max={total} value={amtInput}
                           onChange={e => setAmtInput(e.target.value)}
                           className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                           placeholder="0"
@@ -286,37 +277,58 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
                   </div>
                 )}
 
-                {/* Preview */}
-                <div className={`rounded-xl px-4 py-3 border ${stripeAmountValid ? 'bg-teal-50 border-teal-200' : 'bg-gray-50 border-gray-200'}`}>
-                  <p className="text-xs text-gray-500 mb-0.5">Le client recevra un lien pour :</p>
-                  <p className={`text-xl font-bold ${stripeAmountValid ? 'text-teal-700' : 'text-gray-400'}`}>
-                    {stripeAmountValid ? stripeAmount.toLocaleString('fr-TN') : '—'} {cur}
+                {/* Amount preview */}
+                <div className={`rounded-xl px-4 py-3 border ${sendAmountValid ? 'bg-teal-50 border-teal-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <p className="text-xs text-gray-500 mb-0.5">{previewLabel}</p>
+                  <p className={`text-xl font-bold ${sendAmountValid ? 'text-teal-700' : 'text-gray-400'}`}>
+                    {sendAmountValid ? sendAmount.toLocaleString('fr-TN') : '—'} {cur}
                   </p>
-                  {stripeAmountValid && amountType === 'deposit' && stripeAmount < total && (
+                  {sendAmountValid && amountType === 'deposit' && sendAmount < total && (
                     <p className="text-xs text-gray-400 mt-0.5">
-                      Reste après acompte : {(total - stripeAmount).toLocaleString('fr-TN')} {cur}
+                      Reste après acompte : {(total - sendAmount).toLocaleString('fr-TN')} {cur}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">Lien valable 24h · Paiement sécurisé par carte</p>
+                  {tab === 'stripe' && (
+                    <p className="text-xs text-gray-400 mt-1">Lien valable 24h · Paiement sécurisé par carte</p>
+                  )}
                 </div>
+              </div>
+            )}
 
+            {/* ── Stripe tab ─────────────────────────────────────────── */}
+            {tab === 'stripe' && (
+              <div className="space-y-3">
+                {!stripeConnected && (
+                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Compte Stripe non connecté</p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Connectez votre compte dans{' '}
+                        <Link to="/settings" onClick={onClose} className="underline font-medium">
+                          Paramètres → Recevoir mes paiements
+                        </Link>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {!reservation.client?.email && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    Ce client n'a pas d'email enregistré. Ajoutez-en un dans sa fiche.
+                  </p>
+                )}
                 {existingLink && payStatus === 'link_sent' && (
-                  <a
-                    href={existingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-brand-700 hover:underline"
-                  >
+                  <a href={existingLink} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-brand-700 hover:underline">
                     <ExternalLink className="h-3.5 w-3.5" />
                     Voir le lien précédent
                   </a>
                 )}
-
                 <Button
                   icon={<CreditCard className="h-4 w-4" />}
-                  onClick={handleSendLink}
+                  onClick={handleSendStripeLink}
                   loading={loading}
-                  disabled={!stripeConnected || !reservation.client?.email || !stripeAmountValid}
+                  disabled={!stripeConnected || !reservation.client?.email || !sendAmountValid}
                   className="w-full"
                 >
                   {payStatus === 'link_sent' ? 'Renvoyer un nouveau lien' : 'Envoyer le lien de paiement'}
@@ -324,14 +336,113 @@ export default function PaymentModal({ open, reservation, onClose, onUpdated }: 
               </div>
             )}
 
-            {/* ── Manual tab ──────────────────────────────────────────────── */}
+            {/* ── PayPal tab ─────────────────────────────────────────── */}
+            {tab === 'paypal' && (
+              <div className="space-y-3">
+                {!paypalConfigured ? (
+                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">PayPal non configuré</p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Ajoutez votre lien PayPal.me dans{' '}
+                        <Link to="/settings" onClick={onClose} className="underline font-medium">
+                          Paramètres → PayPal
+                        </Link>.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                    <span className="font-extrabold text-blue-700 text-base leading-none">P</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500">Votre lien PayPal.me</p>
+                      <p className="text-sm font-medium text-blue-700 truncate">{tenant?.paypal_me}</p>
+                    </div>
+                  </div>
+                )}
+                {!reservation.client?.email && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    Ce client n'a pas d'email enregistré. Ajoutez-en un dans sa fiche.
+                  </p>
+                )}
+                <Button
+                  onClick={() => handleSendPaymentInfo('paypal')}
+                  loading={loading}
+                  disabled={!paypalConfigured || !reservation.client?.email || !sendAmountValid}
+                  className="w-full"
+                >
+                  Envoyer le lien PayPal par email
+                </Button>
+                <p className="text-xs text-gray-400 text-center">
+                  Le client reçoit votre lien PayPal.me avec le montant à vous envoyer.
+                </p>
+              </div>
+            )}
+
+            {/* ── Virement tab ────────────────────────────────────────── */}
+            {tab === 'virement' && (
+              <div className="space-y-3">
+                {!ribConfigured ? (
+                  <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">RIB non configuré</p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Ajoutez vos coordonnées bancaires dans{' '}
+                        <Link to="/settings" onClick={onClose} className="underline font-medium">
+                          Paramètres → Virement bancaire
+                        </Link>.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 space-y-2">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <Landmark className="h-3.5 w-3.5 text-gray-400" />
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Coordonnées bancaires</p>
+                    </div>
+                    {[
+                      { label: 'Titulaire', value: tenant?.bank_holder },
+                      { label: 'Banque',    value: tenant?.bank_name },
+                      { label: 'IBAN',      value: tenant?.bank_iban },
+                      { label: 'BIC',       value: tenant?.bank_bic },
+                    ].filter(r => r.value).map(row => (
+                      <div key={row.label} className="flex justify-between gap-4 text-sm">
+                        <span className="text-gray-500 shrink-0">{row.label}</span>
+                        <span className="font-mono text-gray-800 text-right break-all">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!reservation.client?.email && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    Ce client n'a pas d'email enregistré. Ajoutez-en un dans sa fiche.
+                  </p>
+                )}
+                <Button
+                  icon={<Landmark className="h-4 w-4" />}
+                  onClick={() => handleSendPaymentInfo('virement')}
+                  loading={loading}
+                  disabled={!ribConfigured || !reservation.client?.email || !sendAmountValid}
+                  className="w-full"
+                >
+                  Envoyer les coordonnées bancaires
+                </Button>
+                <p className="text-xs text-gray-400 text-center">
+                  Le client reçoit votre IBAN, le montant et la référence de paiement.
+                </p>
+              </div>
+            )}
+
+            {/* ── Manuel tab ──────────────────────────────────────────── */}
             {tab === 'manual' && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Marquer la réservation comme payée manuellement (espèces, virement, chèque…).
+                  Marquer la réservation comme payée manuellement (espèces, virement reçu, chèque…).
                 </p>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mode de paiement</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mode de paiement reçu</label>
                   <Select options={METHOD_OPTIONS} value={method} onChange={e => setMethod(e.target.value)} />
                 </div>
                 {!confirmManual ? (

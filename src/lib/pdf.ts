@@ -8,8 +8,7 @@ import { fmtCurrency } from './utils'
 type RGB = [number, number, number]
 type AugDoc = jsPDF & { lastAutoTable: { finalY: number } }
 
-const NAVY: RGB  = [12, 68, 124]
-const TEAL: RGB  = [7, 190, 184]
+const DEFAULT_BRAND: RGB = [107, 124, 69]   // olive #6B7C45
 const GRAY: RGB  = [107, 122, 133]
 const BEIGE: RGB = [245, 240, 232]
 const DARK: RGB  = [13, 31, 45]
@@ -20,13 +19,30 @@ const fc = (doc: jsPDF, c: RGB) => doc.setFillColor(c[0], c[1], c[2])
 const tc = (doc: jsPDF, c: RGB) => doc.setTextColor(c[0], c[1], c[2])
 const dc = (doc: jsPDF, c: RGB) => doc.setDrawColor(c[0], c[1], c[2])
 
+function hexToRgb(hex: string | null | undefined): RGB {
+  if (!hex) return DEFAULT_BRAND
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  return [isNaN(r) ? DEFAULT_BRAND[0] : r, isNaN(g) ? DEFAULT_BRAND[1] : g, isNaN(b) ? DEFAULT_BRAND[2] : b]
+}
+
+function lighten(c: RGB, amount = 0.4): RGB {
+  return [
+    Math.round(c[0] + (255 - c[0]) * amount),
+    Math.round(c[1] + (255 - c[1]) * amount),
+    Math.round(c[2] + (255 - c[2]) * amount),
+  ]
+}
+
 function frDate(iso: string) {
   return format(parseISO(iso), 'dd MMMM yyyy', { locale: fr })
 }
 
-function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: string) {
-  fc(doc, NAVY); doc.rect(0, 0, 210, 36, 'F')
-  fc(doc, TEAL); doc.rect(0, 36, 210, 3, 'F')
+function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: string, brand: RGB) {
+  fc(doc, brand); doc.rect(0, 0, 210, 36, 'F')
+  fc(doc, lighten(brand, 0.4)); doc.rect(0, 36, 210, 3, 'F')
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); tc(doc, WHITE)
   doc.text(agencyName, 14, 17)
@@ -39,13 +55,13 @@ function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: 
   doc.text(`Émis le ${format(new Date(), 'dd/MM/yyyy')}`, 196, 29, { align: 'right' })
 }
 
-function drawInfoBoxes(doc: jsPDF, r: Reservation): number {
+function drawInfoBoxes(doc: jsPDF, r: Reservation, brand: RGB): number {
   const y = 47
   const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
 
   // Client box
   fc(doc, BEIGE); doc.rect(14, y, 86, 33, 'F')
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); tc(doc, TEAL)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); tc(doc, brand)
   doc.text('CLIENT', 19, y + 8)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); tc(doc, DARK)
   doc.text(r.client?.full_name ?? '—', 19, y + 16)
@@ -56,7 +72,7 @@ function drawInfoBoxes(doc: jsPDF, r: Reservation): number {
 
   // Reservation box
   fc(doc, BEIGE); doc.rect(106, y, 90, 33, 'F')
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); tc(doc, TEAL)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); tc(doc, brand)
   doc.text('RÉSERVATION', 111, y + 8)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); tc(doc, DARK)
   doc.text(r.villa?.name ?? '—', 111, y + 16)
@@ -67,24 +83,35 @@ function drawInfoBoxes(doc: jsPDF, r: Reservation): number {
   return y + 40
 }
 
-function drawFooter(doc: jsPDF, agencyName: string) {
-  fc(doc, NAVY); doc.rect(0, 278, 210, 19, 'F')
+function drawFooter(doc: jsPDF, agencyName: string, brand: RGB) {
+  fc(doc, brand); doc.rect(0, 278, 210, 19, 'F')
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); tc(doc, MUTED)
-  doc.text('Merci pour votre confiance !', 105, 286, { align: 'center' })
-  doc.text(`${agencyName} · Propulsé par VillaHub`, 105, 292, { align: 'center' })
+  doc.text(`${agencyName} · Document non contractuel`, 105, 286, { align: 'center' })
+  doc.text(`Document établi le ${format(new Date(), 'dd/MM/yyyy')}`, 105, 292, { align: 'center' })
+}
+
+function makeFmt(r: Reservation, tenant: Tenant) {
+  const tenantCurrency = tenant.currency ?? 'EUR'
+  if (r.client_currency && r.client_currency_rate && r.client_currency !== tenantCurrency) {
+    const cr = r.client_currency
+    const rate = r.client_currency_rate
+    return (n: number) => fmtCurrency(Math.round(n * rate * 100) / 100, cr)
+  }
+  return (n: number) => fmtCurrency(n, tenantCurrency)
 }
 
 export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: string): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const fmt = (n: number) => fmtCurrency(n, tenant.currency ?? 'EUR')
+  const brand = hexToRgb(tenant.brand_color_primary)
+  const fmt = makeFmt(r, tenant)
   const deposit = r.deposit_amount ?? 0
   const remaining = r.total_amount - deposit
 
-  drawHeader(doc, "REÇU D'ACOMPTE", docNumber, tenant.name)
-  let y = drawInfoBoxes(doc, r) + 6
+  drawHeader(doc, "REÇU D'ACOMPTE", docNumber, tenant.name, brand)
+  let y = drawInfoBoxes(doc, r, brand) + 6
 
   // Section label
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); tc(doc, TEAL)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); tc(doc, brand)
   doc.text('RÉCAPITULATIF DU PAIEMENT', 14, y)
   y += 5
 
@@ -98,17 +125,17 @@ export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: st
   y += 8
 
   // Acompte row
-  doc.setFont('helvetica', 'normal'); tc(doc, TEAL)
+  doc.setFont('helvetica', 'normal'); tc(doc, brand)
   doc.text("Acompte reçu", 14, y)
   doc.setFont('helvetica', 'bold')
   doc.text(`- ${fmt(deposit)}`, 196, y, { align: 'right' })
   y += 5
 
   // Bold separator
-  dc(doc, NAVY); doc.setLineWidth(0.5); doc.line(14, y, 196, y); doc.setLineWidth(0.2); y += 6
+  dc(doc, brand); doc.setLineWidth(0.5); doc.line(14, y, 196, y); doc.setLineWidth(0.2); y += 6
 
   // Reste à payer
-  fc(doc, NAVY); doc.rect(14, y, 182, 13, 'F')
+  fc(doc, brand); doc.rect(14, y, 182, 13, 'F')
   doc.setFont('helvetica', 'bold'); doc.setFontSize(11); tc(doc, WHITE)
   doc.text('Reste à payer', 20, y + 9)
   doc.text(fmt(remaining), 192, y + 9, { align: 'right' })
@@ -122,21 +149,22 @@ export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: st
   }
   if (r.deposit_method) doc.text(`Mode de règlement : ${r.deposit_method}`, 14, y)
 
-  drawFooter(doc, tenant.name)
+  drawFooter(doc, tenant.name, brand)
   return doc
 }
 
 export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: string): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const fmt = (n: number) => fmtCurrency(n, tenant.currency ?? 'EUR')
+  const brand = hexToRgb(tenant.brand_color_primary)
+  const fmt = makeFmt(r, tenant)
   const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
   const deposit = r.deposit_amount ?? 0
 
-  drawHeader(doc, 'FACTURE', docNumber, tenant.name)
-  let y = drawInfoBoxes(doc, r) + 6
+  drawHeader(doc, 'FACTURE', docNumber, tenant.name, brand)
+  let y = drawInfoBoxes(doc, r, brand) + 6
 
   // Section label
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); tc(doc, TEAL)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); tc(doc, brand)
   doc.text('DÉTAIL DES PRESTATIONS', 14, y)
   y += 4
 
@@ -165,7 +193,7 @@ export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: st
     head: [['Description', 'Prix / nuit', 'Nuits', 'Total']],
     body: rows,
     theme: 'striped',
-    headStyles: { fillColor: NAVY, textColor: WHITE, fontSize: 9, fontStyle: 'bold' },
+    headStyles: { fillColor: brand, textColor: WHITE, fontSize: 9, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: BEIGE },
     bodyStyles: { fontSize: 9, textColor: DARK },
     columnStyles: {
@@ -180,7 +208,7 @@ export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: st
   const fY = (doc as AugDoc).lastAutoTable.finalY + 5
 
   // Total
-  fc(doc, NAVY); doc.rect(110, fY, 86, 13, 'F')
+  fc(doc, brand); doc.rect(110, fY, 86, 13, 'F')
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); tc(doc, WHITE)
   doc.text('TOTAL', 116, fY + 9)
   doc.text(fmt(r.total_amount), 192, fY + 9, { align: 'right' })
@@ -198,7 +226,7 @@ export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: st
     }
   }
 
-  drawFooter(doc, tenant.name)
+  drawFooter(doc, tenant.name, brand)
   return doc
 }
 

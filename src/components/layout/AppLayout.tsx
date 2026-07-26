@@ -4,11 +4,12 @@ import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
 import Header from './Header'
 import PushPermissionBanner from '@/components/notifications/PushPermissionBanner'
+import BrandStyle from '@/components/brand/BrandStyle'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
 
 export default function AppLayout() {
-  const { profile, isDemoMode, setTenant } = useAuthStore()
+  const { profile, isDemoMode, setTenant, tenant } = useAuthStore()
 
   // Re-fetch tenant on mount to pick up any new columns (e.g. property_types)
   // that may be missing from the cached localStorage version.
@@ -24,6 +25,11 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen bg-sable overflow-hidden">
+      <BrandStyle
+        primary={tenant?.brand_color_primary}
+        secondary={tenant?.brand_color_secondary}
+        font={tenant?.brand_font}
+      />
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />

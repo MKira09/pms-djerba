@@ -50,6 +50,10 @@ export interface Tenant {
   bank_name?: string | null
   bank_iban?: string | null
   bank_bic?: string | null
+  brand_color_primary?: string | null
+  brand_color_secondary?: string | null
+  brand_font?: string | null
+  review_link?: string | null
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────
@@ -183,6 +187,8 @@ export interface Reservation {
   reminder_j1_sent?: boolean
   receipt_number?: string | null
   invoice_number?: string | null
+  client_currency?: string | null
+  client_currency_rate?: number | null
   // joined
   villa?: Villa
   client?: Client

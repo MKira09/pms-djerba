@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, CreditCard, ExternalLink, CheckCircle2, AlertCircle, Landmark } from 'lucide-react'
+import { Globe, Moon, Bell, Shield, ShoppingBag, Building2, Home, Check, Mail, Plus, Pencil, Trash2, Upload, Coins, CreditCard, ExternalLink, CheckCircle2, AlertCircle, Landmark, Palette, RotateCcw, Eye, Star } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -12,6 +12,7 @@ import { useExtrasStore } from '@/stores/extras.store'
 import { supabase } from '@/lib/supabase'
 import { PROPERTY_TYPE_LIST } from '@/hooks/usePropertyTerm'
 import { CURRENCIES } from '@/lib/utils'
+import { BRAND_FONTS } from '@/components/brand/BrandStyle'
 import type { Extra } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -54,6 +55,15 @@ export default function SettingsPage() {
   const [bankBic, setBankBic] = useState(tenant?.bank_bic ?? '')
   const [savingPaypal, setSavingPaypal] = useState(false)
   const [savingBank, setSavingBank] = useState(false)
+
+  const [brandPrimary, setBrandPrimary] = useState(tenant?.brand_color_primary ?? '')
+  const [brandSecondary, setBrandSecondary] = useState(tenant?.brand_color_secondary ?? '')
+  const [brandFont, setBrandFont] = useState(tenant?.brand_font ?? 'Inter')
+  const [savingBrand, setSavingBrand] = useState(false)
+  const [brandPreview, setBrandPreview] = useState(false)
+
+  const [reviewLink, setReviewLink] = useState(tenant?.review_link ?? '')
+  const [savingReview, setSavingReview] = useState(false)
 
   // Extra form state
   const [extraFormOpen, setExtraFormOpen] = useState(false)
@@ -376,6 +386,54 @@ export default function SettingsPage() {
     i18n.changeLanguage(lang)
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.lang = lang
+  }
+
+  async function handleSaveBrand() {
+    if (!tenant || isDemoMode) return
+    setSavingBrand(true)
+    try {
+      const updates = {
+        brand_color_primary:   brandPrimary   || null,
+        brand_color_secondary: brandSecondary || null,
+        brand_font:            brandFont === 'Inter' ? null : brandFont,
+      }
+      const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id)
+      if (error) throw error
+      updateTenant(updates)
+      toast.success('Personnalisation enregistrée — actualisez la page pour voir les changements.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingBrand(false)
+    }
+  }
+
+  async function handleSaveReviewLink() {
+    if (!tenant || isDemoMode) return
+    setSavingReview(true)
+    try {
+      const link = reviewLink.trim() || null
+      const { error } = await supabase.from('tenants').update({ review_link: link }).eq('id', tenant.id)
+      if (error) throw error
+      updateTenant({ review_link: link })
+      toast.success('Lien enregistré.')
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement.')
+    } finally {
+      setSavingReview(false)
+    }
+  }
+
+  async function handleResetBrand() {
+    if (!tenant || isDemoMode) return
+    setBrandPrimary('')
+    setBrandSecondary('')
+    setBrandFont('Inter')
+    setBrandPreview(false)
+    const updates = { brand_color_primary: null, brand_color_secondary: null, brand_font: null }
+    await supabase.from('tenants').update(updates).eq('id', tenant.id)
+    updateTenant(updates)
+    toast.success('Personnalisation réinitialisée.')
   }
 
   return (
@@ -762,6 +820,193 @@ export default function SettingsPage() {
           </button>
         </label>
         <Button onClick={handleSaveEmailSettings} loading={savingEmail}>Enregistrer</Button>
+      </Card>
+
+      {/* Avis clients */}
+      <Card>
+        <h2 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+          <Star className="h-4 w-4 text-brand-700" /> Avis clients
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Un email est envoyé automatiquement au client le lendemain de son départ. Si un lien est renseigné ici, un bouton "Laisser un avis" apparaît dans cet email.
+        </p>
+        <Input
+          label="Lien pour recevoir des avis"
+          value={reviewLink}
+          onChange={e => setReviewLink(e.target.value)}
+          placeholder="https://g.page/votre-page ou lien Instagram, TripAdvisor…"
+          disabled={isDemoMode}
+        />
+        <p className="text-xs text-gray-400 mt-1.5 mb-4">
+          Fonctionne avec Google Business, Facebook, TripAdvisor, Instagram, ou tout autre lien.
+        </p>
+        <Button onClick={handleSaveReviewLink} loading={savingReview} disabled={isDemoMode}>
+          Enregistrer le lien
+        </Button>
+        {isDemoMode && <p className="text-xs text-gray-400 mt-2">Non disponible en mode démo.</p>}
+      </Card>
+
+      {/* ─── Personnalisation de marque ─── */}
+      <Card>
+        <div className="flex items-start justify-between mb-4">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+            <Palette className="h-4 w-4 text-brand-700" /> Personnalisation de marque
+          </h2>
+          <button
+            onClick={handleResetBrand}
+            disabled={isDemoMode}
+            title="Revenir aux couleurs VillaHub"
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <RotateCcw className="h-3 w-3" /> Réinitialiser
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500 mb-5">
+          Appliqué à votre tableau de bord et à votre catalogue public. Si non renseigné, les couleurs VillaHub par défaut sont utilisées.
+        </p>
+
+        <div className="space-y-5">
+          {/* Colours */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Couleur principale</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={brandPrimary || '#7A8F58'}
+                  onChange={e => setBrandPrimary(e.target.value)}
+                  disabled={isDemoMode}
+                  className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5 disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  value={brandPrimary}
+                  onChange={e => setBrandPrimary(e.target.value)}
+                  placeholder="#7A8F58"
+                  maxLength={7}
+                  disabled={isDemoMode}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Couleur secondaire <span className="font-normal text-gray-400">(optionnel)</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={brandSecondary || '#07BEB8'}
+                  onChange={e => setBrandSecondary(e.target.value)}
+                  disabled={isDemoMode}
+                  className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5 disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  value={brandSecondary}
+                  onChange={e => setBrandSecondary(e.target.value)}
+                  placeholder="#07BEB8"
+                  maxLength={7}
+                  disabled={isDemoMode}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-50"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Font */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Police de caractères</label>
+            <select
+              value={brandFont}
+              onChange={e => setBrandFont(e.target.value)}
+              disabled={isDemoMode}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-50"
+            >
+              {BRAND_FONTS.map(f => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+            {brandFont && brandFont !== 'Inter' && (
+              <p className="text-xs text-gray-400 mt-1" style={{ fontFamily: `'${brandFont}', sans-serif` }}>
+                Aperçu : Villa Djerba — Séjour de rêve en bord de mer
+              </p>
+            )}
+          </div>
+
+          {/* Preview toggle */}
+          <button
+            type="button"
+            onClick={() => setBrandPreview(v => !v)}
+            className="flex items-center gap-1.5 text-sm text-brand-700 hover:text-brand-900 font-medium transition-colors"
+          >
+            <Eye className="h-4 w-4" />
+            {brandPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
+          </button>
+
+          {brandPreview && (
+            <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
+              <div className="text-xs font-medium text-gray-500 px-3 py-2 border-b bg-gray-100">
+                Aperçu — tableau de bord &amp; catalogue
+              </div>
+              <div className="flex h-44">
+                {/* Mini sidebar */}
+                <div
+                  className="w-28 flex flex-col px-2 py-3 gap-1 flex-shrink-0"
+                  style={{ backgroundColor: brandPrimary || '#7A8F58', fontFamily: brandFont !== 'Inter' ? `'${brandFont}', sans-serif` : undefined }}
+                >
+                  <div className="flex items-center gap-1.5 mb-2 px-1">
+                    {tenant?.logo_url
+                      ? <img src={tenant.logo_url} className="w-5 h-5 rounded object-cover" alt="" />
+                      : <div className="w-5 h-5 rounded bg-white/20 flex-shrink-0" />
+                    }
+                    <div className="text-white text-[9px] font-semibold truncate">VillaHub</div>
+                  </div>
+                  {['Tableau de bord', 'Réservations', 'Calendrier', 'Paramètres'].map(item => (
+                    <div key={item} className="h-6 rounded flex items-center px-1.5 gap-1.5 bg-white/15">
+                      <div className="w-2 h-2 rounded-sm bg-white/60 flex-shrink-0" />
+                      <span className="text-white text-[8px] truncate">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mini catalogue card */}
+                <div
+                  className="flex-1 p-3 bg-[#F5F0E8] flex flex-col gap-2"
+                  style={{ fontFamily: brandFont !== 'Inter' ? `'${brandFont}', sans-serif` : undefined }}
+                >
+                  <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide">Catalogue public</div>
+                  <div className="bg-white rounded-lg p-2 shadow-sm flex flex-col gap-1">
+                    <div className="h-10 rounded bg-gray-200" />
+                    <div className="text-[9px] font-bold text-gray-800">Villa Al Baraka</div>
+                    <div className="text-[8px] text-gray-400">Midoun · 8 pers.</div>
+                    <div
+                      className="text-[10px] font-bold"
+                      style={{ color: brandPrimary || '#7A8F58' }}
+                    >
+                      850 TND<span className="font-normal text-gray-400 text-[8px]">/nuit</span>
+                    </div>
+                    <div
+                      className="text-white text-[8px] font-medium px-2 py-0.5 rounded-md text-center"
+                      style={{ backgroundColor: brandPrimary || '#7A8F58' }}
+                    >
+                      Réserver →
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 mt-5">
+          <Button onClick={handleSaveBrand} loading={savingBrand} disabled={isDemoMode}>
+            Enregistrer la personnalisation
+          </Button>
+        </div>
+        {isDemoMode && <p className="text-xs text-gray-400 mt-2">Non disponible en mode démo.</p>}
       </Card>
 
       {/* Dark mode */}

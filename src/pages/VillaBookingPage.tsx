@@ -9,6 +9,8 @@ import { fr } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Users, Bed, Bath, MapPin, Home, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import PhotoCarousel from '@/components/ui/PhotoCarousel'
+import { useCatalogCurrency } from '@/hooks/useCatalogCurrency'
+import BrandStyle from '@/components/brand/BrandStyle'
 
 type VillaInfo = {
   id: string; name: string; description: string | null; city: string
@@ -105,6 +107,10 @@ export default function VillaBookingPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [tenantCurrency, setTenantCurrency] = useState('TND')
+  const [tenantBrand, setTenantBrand] = useState<{ primary?: string | null; secondary?: string | null; font?: string | null }>({})
+
+  const { displayCurrency, formatAmount, rate, isConverted } = useCatalogCurrency(tenantCurrency)
 
   useEffect(() => {
     if (!villaId) return
@@ -126,12 +132,21 @@ export default function VillaBookingPage() {
       }
       setVilla(v)
       // Always query reservations by the real UUID, regardless of how we looked up the villa
-      const { data: r } = await supabase
-        .from('reservations')
-        .select('check_in,check_out')
-        .eq('villa_id', v.id)
-        .eq('status', 'confirmed')
+      const [{ data: r }, { data: t }] = await Promise.all([
+        supabase
+          .from('reservations')
+          .select('check_in,check_out')
+          .eq('villa_id', v.id)
+          .eq('status', 'confirmed'),
+        supabase
+          .from('tenants')
+          .select('currency, brand_color_primary, brand_color_secondary, brand_font')
+          .eq('id', v.tenant_id)
+          .single(),
+      ])
       setBlocked(r ?? [])
+      if (t?.currency) setTenantCurrency(t.currency)
+      if (t) setTenantBrand({ primary: t.brand_color_primary, secondary: t.brand_color_secondary, font: t.brand_font })
       setLoading(false)
     })
   }, [villaId])
@@ -204,6 +219,13 @@ export default function VillaBookingPage() {
     } else {
       setSubmitted(true)
       if (reservationId) {
+        // Store client's currency preference for PDF/email generation
+        const clientRate = isConverted && rate != null ? rate : null
+        supabase.from('reservations').update({
+          client_currency: displayCurrency,
+          client_currency_rate: clientRate,
+        }).eq('id', reservationId).then()
+
         supabase.functions.invoke('notify-owner-booking', {
           body: { reservation_id: reservationId },
         }).catch((e) => console.warn('[booking] owner notification failed:', e))
@@ -254,8 +276,9 @@ export default function VillaBookingPage() {
 
   return (
     <div className="min-h-screen bg-sable">
+      <BrandStyle primary={tenantBrand.primary} secondary={tenantBrand.secondary} font={tenantBrand.font} />
       {/* Header */}
-      <header className="bg-brand-800 text-white px-6 py-4 flex items-center gap-3 shadow-md">
+      <header className="bg-brand-800 text-white px-6 py-4 flex items-center gap-3 shadow-md" style={tenantBrand.primary ? { backgroundColor: tenantBrand.primary } : undefined}>
         <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <Home className="h-4 w-4" />
         </div>
@@ -292,7 +315,10 @@ export default function VillaBookingPage() {
               <span className="flex items-center gap-1"><Bed className="h-4 w-4" /> {villa?.bedrooms} ch.</span>
               <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {villa?.bathrooms} SDB</span>
               {villa?.base_price ? (
-                <span className="font-semibold text-brand-800">{villa.base_price} TND<span className="font-normal text-gray-400">/nuit</span></span>
+                <span className="font-semibold text-brand-800">
+                  {isConverted ? '≈ ' : ''}{formatAmount(villa.base_price)}
+                  <span className="font-normal text-gray-400">/nuit</span>
+                </span>
               ) : null}
             </div>
 
@@ -441,9 +467,9 @@ export default function VillaBookingPage() {
               <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3.5 space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">
-                    {basePrice} TND / nuit × {nights} nuit{nights > 1 ? 's' : ''}
+                    {isConverted ? '≈ ' : ''}{formatAmount(basePrice)} / nuit × {nights} nuit{nights > 1 ? 's' : ''}
                   </span>
-                  <span className="font-bold text-gray-900">{basePrice * nights} TND</span>
+                  <span className="font-bold text-gray-900">{isConverted ? '≈ ' : ''}{formatAmount(basePrice * nights)}</span>
                 </div>
                 <p className="text-xs text-teal-600">
                   Estimation basée sur le tarif de base — le propriétaire vous confirmera le montant définitif.

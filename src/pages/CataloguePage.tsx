@@ -3,14 +3,14 @@ import { useParams, Link } from 'react-router-dom'
 import { Users, BedDouble, ArrowRight, Home } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Villa } from '@/types'
-import { fmtCurrency } from '@/lib/utils'
 import PhotoCarousel from '@/components/ui/PhotoCarousel'
+import { useCatalogCurrency } from '@/hooks/useCatalogCurrency'
+import CurrencySelector from '@/components/catalogue/CurrencySelector'
+import BrandStyle from '@/components/brand/BrandStyle'
 
-const C = {
-  teal: '#07BEB8',
-  sand: '#F5F0E8',
-  dark: '#0D1F2D',
-}
+const SAND = '#F5F0E8'
+const DARK = '#0D1F2D'
+const DEFAULT_TEAL = '#07BEB8'
 
 type TenantPublic = {
   id: string
@@ -19,6 +19,9 @@ type TenantPublic = {
   slogan: string | null
   currency: string | null
   slug: string | null
+  brand_color_primary: string | null
+  brand_color_secondary: string | null
+  brand_font: string | null
 }
 
 export default function CataloguePage() {
@@ -32,12 +35,15 @@ export default function CataloguePage() {
   const [notFound, setNotFound] = useState(false)
   const [checking, setChecking] = useState(false)
 
+  const { displayCurrency, setDisplayCurrency, formatAmount, rateLoading, isConverted } =
+    useCatalogCurrency(tenant?.currency ?? 'TND')
+
   useEffect(() => {
     async function load() {
       setLoading(true)
       const { data: t } = await supabase
         .from('tenants')
-        .select('id, name, logo_url, slogan, currency, slug')
+        .select('id, name, logo_url, slogan, currency, slug, brand_color_primary, brand_color_secondary, brand_font')
         .eq('slug', tenantSlug!)
         .single()
       if (!t) {
@@ -78,45 +84,57 @@ export default function CataloguePage() {
       })
   }, [checkIn, checkOut, tenant])
 
+  const primaryColor = tenant?.brand_color_primary ?? DEFAULT_TEAL
+
   const today = new Date().toISOString().split('T')[0]
   const datesSelected = !!(checkIn && checkOut && checkIn < checkOut)
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: C.sand }}>
-        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: C.teal, borderTopColor: 'transparent' }} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: SAND }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: primaryColor, borderTopColor: 'transparent' }} />
       </div>
     )
   }
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4" style={{ background: C.sand }}>
-        <Home className="h-12 w-12 opacity-20" style={{ color: C.dark }} />
-        <h1 className="text-2xl font-bold" style={{ color: C.dark }}>Catalogue introuvable</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4" style={{ background: SAND }}>
+        <Home className="h-12 w-12 opacity-20" style={{ color: DARK }} />
+        <h1 className="text-2xl font-bold" style={{ color: DARK }}>Catalogue introuvable</h1>
         <p className="text-gray-500">Ce lien de catalogue n'existe pas ou a été modifié.</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ background: C.sand }}>
+    <div className="min-h-screen" style={{ background: SAND }}>
+      <BrandStyle
+        primary={tenant?.brand_color_primary}
+        secondary={tenant?.brand_color_secondary}
+        font={tenant?.brand_font}
+      />
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
           {tenant?.logo_url ? (
             <img src={tenant.logo_url} alt={tenant.name} className="h-10 w-10 rounded-xl object-cover" onError={e => { e.currentTarget.style.display = 'none' }} />
           ) : (
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.teal }}>
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: primaryColor }}>
               <Home className="h-5 w-5 text-white" />
             </div>
           )}
-          <div>
-            <p className="font-bold text-base leading-tight" style={{ color: C.dark }}>{tenant?.name}</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-base leading-tight truncate" style={{ color: DARK }}>{tenant?.name}</p>
             {tenant?.slogan && (
-              <p className="text-sm text-gray-500 leading-tight">{tenant.slogan}</p>
+              <p className="text-sm text-gray-500 leading-tight truncate">{tenant.slogan}</p>
             )}
           </div>
+          <CurrencySelector
+            value={displayCurrency}
+            onChange={setDisplayCurrency}
+            loading={rateLoading}
+          />
         </div>
       </header>
 
@@ -176,7 +194,6 @@ export default function CataloguePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {villas.map(villa => {
               const isUnavailable = datesSelected && unavailableIds.has(villa.id)
-              const currency = tenant?.currency ?? 'TND'
 
               return (
                 <div
@@ -188,15 +205,15 @@ export default function CataloguePage() {
                     {(villa.photos ?? []).length > 0 ? (
                       <PhotoCarousel photos={villa.photos} villaName={villa.name} />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ background: C.sand }}>
-                        <Home className="h-10 w-10 opacity-20" style={{ color: C.dark }} />
+                      <div className="w-full h-full flex items-center justify-center" style={{ background: SAND }}>
+                        <Home className="h-10 w-10 opacity-20" style={{ color: DARK }} />
                       </div>
                     )}
                     {datesSelected && (
                       <span
                         className="absolute top-3 right-3 z-20 text-xs font-bold px-3 py-1 rounded-full shadow pointer-events-none"
                         style={{
-                          background: isUnavailable ? '#e5e7eb' : C.teal,
+                          background: isUnavailable ? '#e5e7eb' : primaryColor,
                           color: isUnavailable ? '#6b7280' : 'white',
                         }}
                       >
@@ -207,7 +224,7 @@ export default function CataloguePage() {
 
                   {/* Info */}
                   <div className="p-4 flex-1 flex flex-col gap-2">
-                    <h2 className="font-bold text-base leading-snug" style={{ color: C.dark }}>
+                    <h2 className="font-bold text-base leading-snug" style={{ color: DARK }}>
                       {villa.name}
                     </h2>
                     {villa.city && (
@@ -224,8 +241,8 @@ export default function CataloguePage() {
                       </span>
                     </div>
 
-                    <p className="font-bold text-lg mt-auto pt-2" style={{ color: C.teal }}>
-                      {fmtCurrency(villa.base_price, currency)}
+                    <p className="font-bold text-lg mt-auto pt-2" style={{ color: primaryColor }}>
+                      {isConverted ? '≈ ' : ''}{formatAmount(villa.base_price)}
                       <span className="text-sm font-normal text-gray-400"> /nuit</span>
                     </p>
 
@@ -237,7 +254,7 @@ export default function CataloguePage() {
                       <Link
                         to={`/book/${villa.id}`}
                         className="w-full py-2.5 rounded-xl text-sm font-semibold text-center text-white flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
-                        style={{ background: C.teal }}
+                        style={{ background: primaryColor }}
                       >
                         Réserver <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
@@ -257,7 +274,7 @@ export default function CataloguePage() {
 
       <footer className="text-center text-xs text-gray-400 py-8 mt-4">
         Propulsé par{' '}
-        <span className="font-semibold" style={{ color: C.teal }}>VillaHub</span>
+        <span className="font-semibold" style={{ color: primaryColor }}>VillaHub</span>
       </footer>
     </div>
   )

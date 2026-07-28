@@ -8,12 +8,22 @@ import { fmtCurrency } from './utils'
 type RGB = [number, number, number]
 type AugDoc = jsPDF & { lastAutoTable: { finalY: number } }
 
+const DEFAULT_BRAND: RGB = [107, 124, 69]   // olive #6B7C45
 const DARK: RGB = [13, 31, 45]
 const GRAY: RGB = [120, 130, 140]
 const RULE: RGB = [185, 185, 185]
 
 const tc = (doc: jsPDF, c: RGB) => doc.setTextColor(c[0], c[1], c[2])
 const dc = (doc: jsPDF, c: RGB) => doc.setDrawColor(c[0], c[1], c[2])
+
+function hexToRgb(hex: string | null | undefined): RGB {
+  if (!hex) return DEFAULT_BRAND
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  return [isNaN(r) ? DEFAULT_BRAND[0] : r, isNaN(g) ? DEFAULT_BRAND[1] : g, isNaN(b) ? DEFAULT_BRAND[2] : b]
+}
 
 function frDate(iso: string) {
   return format(parseISO(iso), 'dd MMMM yyyy', { locale: fr })
@@ -31,11 +41,11 @@ function hRule(doc: jsPDF, y: number, x1 = 14, x2 = 196) {
   doc.setLineWidth(0.2)
 }
 
-function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: string): number {
-  // Agency name — serif, large, editorial
+function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: string, brand: RGB): number {
+  // Agency name — serif, large, brand color
   doc.setFont('times', 'bold')
   doc.setFontSize(22)
-  tc(doc, DARK)
+  tc(doc, brand)
   doc.text(agencyName, 14, 21)
 
   // Doc type / number / date — right, discreet
@@ -58,14 +68,14 @@ function drawHeader(doc: jsPDF, docType: string, docNumber: string, agencyName: 
   return 33
 }
 
-function drawInfoSection(doc: jsPDF, r: Reservation, startY: number): number {
+function drawInfoSection(doc: jsPDF, r: Reservation, startY: number, brand: RGB): number {
   const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
   let y = startY + 11
 
-  // Column labels
+  // Column labels — brand color
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7)
-  tc(doc, GRAY)
+  tc(doc, brand)
   doc.text('CLIENT', 14, y)
   doc.text('RÉSERVATION', 110, y)
   y += 7
@@ -119,12 +129,13 @@ function makeFmt(r: Reservation, tenant: Tenant) {
 
 export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: string): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const brand = hexToRgb(tenant.brand_color_primary)
   const fmt = makeFmt(r, tenant)
   const deposit = r.deposit_amount ?? 0
   const remaining = r.total_amount - deposit
 
-  let y = drawHeader(doc, "REÇU D'ACOMPTE", docNumber, tenant.name)
-  y = drawInfoSection(doc, r, y)
+  let y = drawHeader(doc, "REÇU D'ACOMPTE", docNumber, tenant.name, brand)
+  y = drawInfoSection(doc, r, y, brand)
   y += 13
 
   // Amounts — right-aligned block
@@ -148,11 +159,12 @@ export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: st
   hRule(doc, y, 100, 196)
   y += 9
 
-  // Reste à payer — serif, large, no box
+  // Reste à payer — label noir, montant olive
   doc.setFont('times', 'bold')
   doc.setFontSize(15)
   tc(doc, DARK)
   doc.text('Reste à payer', 100, y)
+  tc(doc, brand)
   doc.text(fmt(remaining), 196, y, { align: 'right' })
   y += 15
 
@@ -174,12 +186,13 @@ export function generateReceiptPDF(r: Reservation, tenant: Tenant, docNumber: st
 
 export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: string): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const brand = hexToRgb(tenant.brand_color_primary)
   const fmt = makeFmt(r, tenant)
   const nights = differenceInDays(parseISO(r.check_out), parseISO(r.check_in))
   const deposit = r.deposit_amount ?? 0
 
-  let y = drawHeader(doc, 'FACTURE', docNumber, tenant.name)
-  y = drawInfoSection(doc, r, y)
+  let y = drawHeader(doc, 'FACTURE', docNumber, tenant.name, brand)
+  y = drawInfoSection(doc, r, y, brand)
   y += 8
 
   const extrasTotal = (r.extras ?? []).reduce((s, e) => s + e.price * (e.quantity ?? 1), 0)
@@ -207,7 +220,7 @@ export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: st
     body: rows,
     theme: 'plain',
     headStyles: {
-      textColor: DARK,
+      textColor: brand,
       fontStyle: 'bold',
       fontSize: 8.5,
       cellPadding: { top: 2, bottom: 5, left: 2, right: 2 },
@@ -241,11 +254,12 @@ export function generateInvoicePDF(r: Reservation, tenant: Tenant, docNumber: st
   // Thin rule before total (right side)
   hRule(doc, fY - 1, 120, 196)
 
-  // Total — serif, large, no box
+  // Total — label noir, montant olive
   doc.setFont('times', 'bold')
   doc.setFontSize(16)
   tc(doc, DARK)
   doc.text('Total', 140, fY + 8)
+  tc(doc, brand)
   doc.text(fmt(r.total_amount), 196, fY + 8, { align: 'right' })
 
   // Deposit summary

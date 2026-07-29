@@ -50,7 +50,8 @@ async function uploadDocumentHtml(
   try {
     const year = new Date().getFullYear()
     const path = `${tenantId}/${year}/${filename}`
-    const blob = new Blob([html], { type: 'text/html; charset=utf-8' })
+    // BOM UTF-8 (EF BB BF) — signal le plus fort, lu avant tout header HTTP ou meta tag
+    const blob = new Blob(['﻿' + html], { type: 'text/html; charset=utf-8' })
     const { error } = await supabase.storage
       .from('factures')
       .upload(path, blob, { contentType: 'text/html; charset=utf-8', upsert: true })

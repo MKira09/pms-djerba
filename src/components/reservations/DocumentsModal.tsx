@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
-import { generateReceiptPDF, generateInvoicePDF, downloadPDF, pdfToBase64 } from '@/lib/pdf'
+import { buildInvoiceHtml, buildReceiptHtml, openPrintWindow } from '@/lib/invoiceTemplate'
 import { fmtCurrency } from '@/lib/utils'
 import type { Reservation } from '@/types'
 
@@ -42,20 +42,26 @@ async function getOrCreateDocNumber(
   return num
 }
 
-async function uploadToStorage(pdfBase64: string, tenantId: string, filename: string) {
+async function uploadDocumentHtml(
+  html: string,
+  tenantId: string,
+  filename: string,
+): Promise<string | null> {
   try {
-    const binary = atob(pdfBase64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    const blob = new Blob([bytes], { type: 'application/pdf' })
     const year = new Date().getFullYear()
-    await supabase.storage.from('factures').upload(
-      `${tenantId}/${year}/${filename}`,
-      blob,
-      { contentType: 'application/pdf', upsert: true },
-    )
+    const path = `${tenantId}/${year}/${filename}`
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' })
+    const { error } = await supabase.storage
+      .from('factures')
+      .upload(path, blob, { contentType: 'text/html; charset=utf-8', upsert: true })
+    if (error) { console.warn('[uploadDocumentHtml]', error); return null }
+    const { data } = await supabase.storage
+      .from('factures')
+      .createSignedUrl(path, 60 * 60 * 24 * 90) // 90 jours
+    return data?.signedUrl ?? null
   } catch (e) {
-    console.warn('[uploadToStorage]', e) // non-fatal
+    console.warn('[uploadDocumentHtml]', e)
+    return null
   }
 }
 
@@ -80,22 +86,19 @@ export default function DocumentsModal({ open, reservation, onClose, onNumberSav
 
       const year = new Date().getFullYear()
       const prefix = type === 'receipt' ? 'recu' : 'facture'
-      const filename = `${prefix}_${docNumber.replace(/-/g, '_')}_${year}.pdf`
+      const filename = `${prefix}_${docNumber.replace(/-/g, '_')}_${year}.html`
 
-      const doc = type === 'receipt'
-        ? generateReceiptPDF(reservation!, tenant!, docNumber)
-        : generateInvoicePDF(reservation!, tenant!, docNumber)
-
-      const base64 = pdfToBase64(doc)
+      const html = type === 'receipt'
+        ? buildReceiptHtml(reservation!, tenant!, docNumber)
+        : buildInvoiceHtml(reservation!, tenant!, docNumber)
 
       if (action === 'download') {
-        downloadPDF(doc, filename)
-        uploadToStorage(base64, tenant!.id, filename) // background, non-bloquant
-        toast.success(`${type === 'receipt' ? 'Reçu' : 'Facture'} téléchargé`)
+        openPrintWindow(html)
+        toast.success(`${type === 'receipt' ? 'Reçu' : 'Facture'} ouvert — utilisez Imprimer pour sauvegarder en PDF`)
       } else {
-        uploadToStorage(base64, tenant!.id, filename) // background
+        const docUrl = await uploadDocumentHtml(html, tenant!.id, filename)
         const { error } = await supabase.functions.invoke('send-payment-doc', {
-          body: { reservation_id: reservation!.id, doc_type: type, pdf_base64: base64, filename },
+          body: { reservation_id: reservation!.id, doc_type: type, doc_url: docUrl },
         })
         if (error) throw error
         toast.success(`Email envoyé à ${reservation!.client?.email}`)

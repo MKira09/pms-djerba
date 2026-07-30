@@ -420,6 +420,68 @@ export function buildReceiptHtml(r: Reservation, tenant: Tenant, docNumber: stri
 
 // ── Export : utilitaires ───────────────────────────────────────────────────
 
+/** Télécharge directement le HTML en PDF via html2pdf.js (sans fenêtre intermédiaire). */
+export async function downloadAsPdf(html: string, filename: string): Promise<void> {
+  // Import dynamique — évite d'alourdir le bundle initial
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const h2p: (...args: unknown[]) => any = ((await import('html2pdf.js')) as any).default
+
+  // Iframe hors-écran : isolation CSS totale (le CSS du template reset * margin/padding,
+  // il ne faut pas qu'il s'applique au document principal de l'app)
+  const iframe = document.createElement('iframe')
+  iframe.style.cssText = [
+    'position:fixed',
+    'left:-9999px',
+    'top:0',
+    'width:210mm',
+    'min-height:297mm',
+    'border:none',
+    'pointer-events:none',
+  ].join(';')
+  document.body.appendChild(iframe)
+
+  try {
+    const iDoc = iframe.contentDocument!
+    iDoc.open()
+    iDoc.write(html)
+    iDoc.close()
+
+    // Masquer la barre d'impression (visible uniquement en @media screen, mais
+    // html2canvas capture en mode screen → elle apparaîtrait dans le PDF)
+    const printBar = iDoc.querySelector<HTMLElement>('.print-bar')
+    if (printBar) printBar.style.display = 'none'
+
+    // Attendre que Google Fonts soit chargé dans l'iframe
+    if (iframe.contentWindow?.document?.fonts) {
+      await iframe.contentWindow.document.fonts.ready
+    }
+    // Buffer court pour que le rendu CSS se stabilise (gradients, shadows…)
+    await new Promise<void>(r => setTimeout(r, 350))
+
+    const page = iDoc.querySelector<HTMLElement>('.page')
+    if (!page) return
+
+    await h2p()
+      .set({
+        margin:   0,
+        filename,
+        image:    { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale:           2,
+          useCORS:         true,
+          allowTaint:      false,
+          logging:         false,
+          backgroundColor: '#FBF9F4',
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      })
+      .from(page)
+      .save()
+  } finally {
+    document.body.removeChild(iframe)
+  }
+}
+
 export function openPrintWindow(html: string): void {
   const win = window.open('', '_blank', 'width=960,height=800')
   if (!win) {

@@ -13,6 +13,15 @@ function json(data: unknown, status = 200) {
   })
 }
 
+// Extrait le chemin Storage depuis une ancienne signed URL, ex:
+// https://xxx.supabase.co/storage/v1/object/sign/factures/<path>?token=...
+// -> <path>
+function extractPathFromLegacyUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  const match = url.match(/\/object\/sign\/factures\/([^?]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
@@ -21,16 +30,45 @@ Deno.serve(async (req) => {
     const SUPABASE_URL   = Deno.env.get('SUPABASE_URL')
     const SUPABASE_SVC   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'VillaHub <noreply@villahub.io>'
+    // Domaine du site (Vercel) — sert /api/view-invoice avec le bon Content-Type,
+    // contrairement à *.supabase.co qui force text/plain sur le HTML.
+    const APP_URL        = Deno.env.get('APP_URL') ?? 'https://agencykira.com'
 
     if (!RESEND_API_KEY) return json({ error: 'RESEND_API_KEY non configurée' }, 500)
     if (!SUPABASE_URL)   return json({ error: 'SUPABASE_URL non configurée' }, 500)
     if (!SUPABASE_SVC)   return json({ error: 'SUPABASE_SERVICE_ROLE_KEY non configurée' }, 500)
 
     const body = await req.json()
-    const { reservation_id, doc_type, doc_url } = body as {
+    // Accepte doc_path (nouveau) et doc_url (legacy) — le frontend peut envoyer l'un ou l'autre
+    // selon la version déployée. doc_path = chemin Storage, doc_url = ancienne signed URL.
+    const { reservation_id, doc_type, doc_path, doc_url: legacy_url } = body as {
       reservation_id: string
       doc_type: 'receipt' | 'invoice'
-      doc_url: string | null
+      doc_path?: string | null
+      doc_url?: string | null
+    }
+
+    console.log('[send-payment-doc] body keys:', Object.keys(body), '| doc_path:', doc_path, '| legacy_url:', legacy_url)
+
+    // Construit l'URL publique vers /api/view-invoice (sur notre propre domaine) si on a
+    // un chemin Storage. Si le frontend a envoyé l'ancienne signed URL directement
+    // (legacy_url), elle pointe vers le CDN Storage qui force text/plain sur les .html —
+    // on en extrait le chemin pour reconstruire l'URL correcte.
+    // Note : on route vers APP_URL/api/view-invoice (Vercel) et non plus vers la fonction
+    // Supabase view-invoice, car Supabase force aussi text/plain sur le HTML renvoyé par
+    // ses propres Edge Functions (sauf domaine custom en plan Pro).
+    const resolvedPath = doc_path ?? extractPathFromLegacyUrl(legacy_url)
+
+    const doc_url = resolvedPath
+      ? `${APP_URL}/api/view-invoice?path=${encodeURIComponent(resolvedPath)}`
+      : null
+
+    if (!doc_path && legacy_url) {
+      console.warn(
+        resolvedPath
+          ? '[send-payment-doc] frontend a envoyé doc_url (legacy) — path extrait et routé via view-invoice. Mettre à jour le frontend pour envoyer doc_path directement.'
+          : '[send-payment-doc] frontend a envoyé doc_url (legacy) mais le chemin n\'a pas pu être extrait — vérifier le format de l\'URL.',
+      )
     }
 
     if (!reservation_id || !doc_type) {

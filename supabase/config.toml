@@ -1,0 +1,13 @@
+[api]
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+# view-invoice est publique (no JWT) : c'est une URL dans un email client.
+# La sécurité repose sur l'opacité du chemin (UUID tenantId + année + nom de fichier).
+[functions.view-invoice]
+verify_jwt = false

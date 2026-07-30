@@ -443,9 +443,17 @@ async function renderInvoiceIframe(html: string): Promise<{ iframe: HTMLIFrameEl
   ].join(';')
   document.body.appendChild(iframe)
 
+  // Le HTML de la facture embarque un <script> qui déclenche window.print()
+  // automatiquement (pensé pour l'ancien flux "ouvrir la page et imprimer").
+  // Dans notre iframe hors-écran, ce script s'exécuterait quand même et
+  // perturbe la capture html2canvas (le dialogue d'impression interfère avec
+  // le rendu, ce qui produisait un PDF sans aucune mise en forme). On retire
+  // tout <script> avant l'injection — on ne veut aucun effet de bord ici.
+  const htmlForCapture = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+
   const iDoc = iframe.contentDocument!
   iDoc.open()
-  iDoc.write(html)
+  iDoc.write(htmlForCapture)
   iDoc.close()
 
   // Masquer la barre d'impression (visible uniquement en @media screen, mais

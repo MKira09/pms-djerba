@@ -13,13 +13,13 @@ function json(data: unknown, status = 200) {
   })
 }
 
-// Extrait le chemin Storage depuis une ancienne signed URL, ex:
-// https://xxx.supabase.co/storage/v1/object/sign/factures/<path>?token=...
-// -> <path>
-function extractPathFromLegacyUrl(url: string | null | undefined): string | null {
-  if (!url) return null
-  const match = url.match(/\/object\/sign\/factures\/([^?]+)/)
-  return match ? decodeURIComponent(match[1]) : null
+// Limite Resend : 40MB par email (toutes pièces jointes comprises). Une facture
+// A4 en PDF fait quelques centaines de Ko — grosse marge de sécurité à 15MB.
+const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024
+
+function base64SizeInBytes(b64: string): number {
+  const clean = b64.replace(/=+$/, '')
+  return Math.floor((clean.length * 3) / 4)
 }
 
 Deno.serve(async (req) => {
@@ -30,49 +30,41 @@ Deno.serve(async (req) => {
     const SUPABASE_URL   = Deno.env.get('SUPABASE_URL')
     const SUPABASE_SVC   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'VillaHub <noreply@villahub.io>'
-    // Domaine du site (Vercel) — sert /api/view-invoice avec le bon Content-Type,
-    // contrairement à *.supabase.co qui force text/plain sur le HTML.
-    const APP_URL        = Deno.env.get('APP_URL') ?? 'https://agencykira.com'
 
     if (!RESEND_API_KEY) return json({ error: 'RESEND_API_KEY non configurée' }, 500)
     if (!SUPABASE_URL)   return json({ error: 'SUPABASE_URL non configurée' }, 500)
     if (!SUPABASE_SVC)   return json({ error: 'SUPABASE_SERVICE_ROLE_KEY non configurée' }, 500)
 
     const body = await req.json()
-    // Accepte doc_path (nouveau) et doc_url (legacy) — le frontend peut envoyer l'un ou l'autre
-    // selon la version déployée. doc_path = chemin Storage, doc_url = ancienne signed URL.
-    const { reservation_id, doc_type, doc_path, doc_url: legacy_url } = body as {
+    // Le PDF est généré côté client (html2pdf.js) et envoyé en base64, pour être
+    // joint directement à l'email — pas de lien à cliquer, pas de page à héberger.
+    // (Anciennement : lien vers Supabase Storage/Edge Function, qui forcent toutes
+    // les deux Content-Type: text/plain sur le HTML servi depuis *.supabase.co —
+    // ce qui cassait l'affichage côté client. Le PDF en pièce jointe évite tout ça.)
+    const { reservation_id, doc_type, pdf_base64, pdf_filename } = body as {
       reservation_id: string
       doc_type: 'receipt' | 'invoice'
-      doc_path?: string | null
-      doc_url?: string | null
+      pdf_base64?: string | null
+      pdf_filename?: string | null
     }
 
-    console.log('[send-payment-doc] body keys:', Object.keys(body), '| doc_path:', doc_path, '| legacy_url:', legacy_url)
-
-    // Construit l'URL publique vers /api/view-invoice (sur notre propre domaine) si on a
-    // un chemin Storage. Si le frontend a envoyé l'ancienne signed URL directement
-    // (legacy_url), elle pointe vers le CDN Storage qui force text/plain sur les .html —
-    // on en extrait le chemin pour reconstruire l'URL correcte.
-    // Note : on route vers APP_URL/api/view-invoice (Vercel) et non plus vers la fonction
-    // Supabase view-invoice, car Supabase force aussi text/plain sur le HTML renvoyé par
-    // ses propres Edge Functions (sauf domaine custom en plan Pro).
-    const resolvedPath = doc_path ?? extractPathFromLegacyUrl(legacy_url)
-
-    const doc_url = resolvedPath
-      ? `${APP_URL}/api/view-invoice?path=${encodeURIComponent(resolvedPath)}`
-      : null
-
-    if (!doc_path && legacy_url) {
-      console.warn(
-        resolvedPath
-          ? '[send-payment-doc] frontend a envoyé doc_url (legacy) — path extrait et routé via view-invoice. Mettre à jour le frontend pour envoyer doc_path directement.'
-          : '[send-payment-doc] frontend a envoyé doc_url (legacy) mais le chemin n\'a pas pu être extrait — vérifier le format de l\'URL.',
-      )
-    }
+    console.log(
+      '[send-payment-doc] body keys:', Object.keys(body),
+      '| has pdf_base64:', !!pdf_base64,
+      '| pdf_filename:', pdf_filename,
+    )
 
     if (!reservation_id || !doc_type) {
       return json({ error: 'Champs requis manquants', received: Object.keys(body) }, 400)
+    }
+
+    let attachment: { filename: string; content: string } | null = null
+    if (pdf_base64) {
+      const size = base64SizeInBytes(pdf_base64)
+      if (size > MAX_ATTACHMENT_BYTES) {
+        return json({ error: `PDF trop volumineux (${(size / 1024 / 1024).toFixed(1)}MB, max 15MB)` }, 413)
+      }
+      attachment = { filename: pdf_filename ?? 'document.pdf', content: pdf_base64 }
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SVC)
@@ -102,19 +94,9 @@ Deno.serve(async (req) => {
 
     const stayHtml = `<strong>Arrivée</strong> &middot; ${frDate(res.check_in)}<br/><strong>Départ</strong> &middot; ${frDate(res.check_out)}`
 
-    const ctaBlock = doc_url
-      ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px">
-           <tr>
-             <td align="center">
-               <a href="${doc_url}" target="_blank"
-                  style="display:inline-block;padding:13px 30px;background:${accent};color:#FFFFFF;font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;letter-spacing:0.04em">
-                 ${isReceipt ? "Voir mon reçu d'acompte" : 'Voir ma facture'}
-               </a>
-             </td>
-           </tr>
-         </table>
-         <p style="margin:10px 0 0;text-align:center;font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#8a9aaa">
-           Le lien est valable 90 jours. Imprimez ou sauvegardez en PDF depuis votre navigateur.
+    const ctaBlock = attachment
+      ? `<p style="margin:20px 0 0;font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#5C6B77;text-align:center">
+           📎 ${isReceipt ? 'Votre reçu' : 'Votre facture'} est jointe à cet email au format PDF.
          </p>`
       : `<p style="margin:20px 0 0;font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#5C6B77">
            Pour récupérer votre document, contactez-nous directement en répondant à cet email.
@@ -151,7 +133,14 @@ Deno.serve(async (req) => {
     const sendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [clientEmail], reply_to: FROM_EMAIL, subject, html }),
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: [clientEmail],
+        reply_to: FROM_EMAIL,
+        subject,
+        html,
+        ...(attachment ? { attachments: [attachment] } : {}),
+      }),
     })
 
     if (!sendRes.ok) {

@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
-import { buildInvoiceHtml, buildReceiptHtml, downloadAsPdf } from '@/lib/invoiceTemplate'
+import { buildInvoiceHtml, buildReceiptHtml, downloadAsPdf, generateInvoicePdfBase64 } from '@/lib/invoiceTemplate'
 import { fmtCurrency } from '@/lib/utils'
 import type { Reservation } from '@/types'
 
@@ -42,29 +42,6 @@ async function getOrCreateDocNumber(
   return num
 }
 
-// Retourne le chemin de stockage (pas la signed URL) — la fonction view-invoice
-// sert le fichier avec les bons headers via service role, en contournant le
-// Content-Type: text/plain que Supabase Storage force sur les .html (politique anti-XSS CDN).
-async function uploadDocumentHtml(
-  html: string,
-  tenantId: string,
-  filename: string,
-): Promise<string | null> {
-  try {
-    const year = new Date().getFullYear()
-    const path = `${tenantId}/${year}/${filename}`
-    const blob = new Blob(['﻿' + html], { type: 'text/html; charset=utf-8' })
-    const { error } = await supabase.storage
-      .from('factures')
-      .upload(path, blob, { contentType: 'text/html; charset=utf-8', upsert: true })
-    if (error) { console.warn('[uploadDocumentHtml]', error); return null }
-    return path
-  } catch (e) {
-    console.warn('[uploadDocumentHtml]', e)
-    return null
-  }
-}
-
 export default function DocumentsModal({ open, reservation, onClose, onNumberSaved }: Props) {
   const { tenant } = useAuthStore()
   const [loading, setLoading] = useState<LoadingKey>(null)
@@ -86,20 +63,28 @@ export default function DocumentsModal({ open, reservation, onClose, onNumberSav
 
       const year = new Date().getFullYear()
       const prefix = type === 'receipt' ? 'recu' : 'facture'
-      const filename = `${prefix}_${docNumber.replace(/-/g, '_')}_${year}.html`
+      const pdfFilename = `${prefix}_${docNumber.replace(/-/g, '_')}_${year}.pdf`
 
       const html = type === 'receipt'
         ? buildReceiptHtml(reservation!, tenant!, docNumber)
         : buildInvoiceHtml(reservation!, tenant!, docNumber)
 
       if (action === 'download') {
-        const pdfFilename = filename.replace('.html', '.pdf')
         await downloadAsPdf(html, pdfFilename)
         toast.success(`${type === 'receipt' ? 'Reçu' : 'Facture'} téléchargé`)
       } else {
-        const docPath = await uploadDocumentHtml(html, tenant!.id, filename)
+        // PDF en pièce jointe directe — pas de lien à cliquer, pas de problème
+        // de Content-Type côté hébergeur.
+        const pdfBase64 = await generateInvoicePdfBase64(html, pdfFilename)
+        if (!pdfBase64) throw new Error('Échec de la génération du PDF')
+
         const { error } = await supabase.functions.invoke('send-payment-doc', {
-          body: { reservation_id: reservation!.id, doc_type: type, doc_path: docPath },
+          body: {
+            reservation_id: reservation!.id,
+            doc_type: type,
+            pdf_base64: pdfBase64,
+            pdf_filename: pdfFilename,
+          },
         })
         if (error) throw error
         toast.success(`Email envoyé à ${reservation!.client?.email}`)

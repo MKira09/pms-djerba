@@ -420,12 +420,15 @@ export function buildReceiptHtml(r: Reservation, tenant: Tenant, docNumber: stri
 
 // ── Export : utilitaires ───────────────────────────────────────────────────
 
-/** Télécharge directement le HTML en PDF via html2pdf.js (sans fenêtre intermédiaire). */
-export async function downloadAsPdf(html: string, filename: string): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadHtml2Pdf(): Promise<(...args: unknown[]) => any> {
   // Import dynamique — évite d'alourdir le bundle initial
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const h2p: (...args: unknown[]) => any = ((await import('html2pdf.js')) as any).default
+  return ((await import('html2pdf.js')) as any).default
+}
 
+/** Rend le HTML de la facture dans un iframe hors-écran, prêt pour la capture html2canvas. */
+async function renderInvoiceIframe(html: string): Promise<{ iframe: HTMLIFrameElement; page: HTMLElement | null }> {
   // Iframe hors-écran : isolation CSS totale (le CSS du template reset * margin/padding,
   // il ne faut pas qu'il s'applique au document principal de l'app)
   const iframe = document.createElement('iframe')
@@ -440,43 +443,69 @@ export async function downloadAsPdf(html: string, filename: string): Promise<voi
   ].join(';')
   document.body.appendChild(iframe)
 
+  const iDoc = iframe.contentDocument!
+  iDoc.open()
+  iDoc.write(html)
+  iDoc.close()
+
+  // Masquer la barre d'impression (visible uniquement en @media screen, mais
+  // html2canvas capture en mode screen → elle apparaîtrait dans le PDF)
+  const printBar = iDoc.querySelector<HTMLElement>('.print-bar')
+  if (printBar) printBar.style.display = 'none'
+
+  // Attendre que Google Fonts soit chargé dans l'iframe
+  if (iframe.contentWindow?.document?.fonts) {
+    await iframe.contentWindow.document.fonts.ready
+  }
+  // Buffer court pour que le rendu CSS se stabilise (gradients, shadows…)
+  await new Promise<void>(r => setTimeout(r, 350))
+
+  const page = iDoc.querySelector<HTMLElement>('.page')
+  return { iframe, page }
+}
+
+function pdfOptions(filename: string) {
+  return {
+    margin:   0,
+    filename,
+    image:    { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale:           2,
+      useCORS:         true,
+      allowTaint:      false,
+      logging:         false,
+      backgroundColor: '#FBF9F4',
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  }
+}
+
+/** Télécharge directement le HTML en PDF via html2pdf.js (sans fenêtre intermédiaire). */
+export async function downloadAsPdf(html: string, filename: string): Promise<void> {
+  const h2p = await loadHtml2Pdf()
+  const { iframe, page } = await renderInvoiceIframe(html)
   try {
-    const iDoc = iframe.contentDocument!
-    iDoc.open()
-    iDoc.write(html)
-    iDoc.close()
-
-    // Masquer la barre d'impression (visible uniquement en @media screen, mais
-    // html2canvas capture en mode screen → elle apparaîtrait dans le PDF)
-    const printBar = iDoc.querySelector<HTMLElement>('.print-bar')
-    if (printBar) printBar.style.display = 'none'
-
-    // Attendre que Google Fonts soit chargé dans l'iframe
-    if (iframe.contentWindow?.document?.fonts) {
-      await iframe.contentWindow.document.fonts.ready
-    }
-    // Buffer court pour que le rendu CSS se stabilise (gradients, shadows…)
-    await new Promise<void>(r => setTimeout(r, 350))
-
-    const page = iDoc.querySelector<HTMLElement>('.page')
     if (!page) return
+    await h2p().set(pdfOptions(filename)).from(page).save()
+  } finally {
+    document.body.removeChild(iframe)
+  }
+}
 
-    await h2p()
-      .set({
-        margin:   0,
-        filename,
-        image:    { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale:           2,
-          useCORS:         true,
-          allowTaint:      false,
-          logging:         false,
-          backgroundColor: '#FBF9F4',
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .from(page)
-      .save()
+/**
+ * Génère le PDF de la facture et le retourne en base64 (sans préfixe data URI),
+ * pour l'envoyer en pièce jointe d'email (via Resend). On évite ainsi tout lien
+ * cliquable vers Supabase Storage / Edge Functions, qui forcent text/plain sur
+ * le HTML — un PDF en pièce jointe n'a pas ce problème et s'ouvre partout.
+ */
+export async function generateInvoicePdfBase64(html: string, filename: string): Promise<string | null> {
+  const h2p = await loadHtml2Pdf()
+  const { iframe, page } = await renderInvoiceIframe(html)
+  try {
+    if (!page) return null
+    const dataUri: string = await h2p().set(pdfOptions(filename)).from(page).outputPdf('datauristring')
+    const base64 = dataUri.split(',')[1]
+    return base64 ?? null
   } finally {
     document.body.removeChild(iframe)
   }

@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
-import { buildInvoiceHtml, buildReceiptHtml, downloadAsPdf, generateInvoicePdfBase64 } from '@/lib/invoiceTemplate'
+import { buildInvoiceHtml, buildReceiptHtml, downloadAsPdf, generateInvoicePdfForEmail } from '@/lib/invoiceTemplate'
 import { fmtCurrency } from '@/lib/utils'
 import type { Reservation } from '@/types'
 
@@ -75,8 +75,7 @@ export default function DocumentsModal({ open, reservation, onClose, onNumberSav
       } else {
         // PDF en pièce jointe directe — pas de lien à cliquer, pas de problème
         // de Content-Type côté hébergeur.
-        const pdfBase64 = await generateInvoicePdfBase64(html, pdfFilename)
-        if (!pdfBase64) throw new Error('Échec de la génération du PDF')
+        const pdfBase64 = await generateInvoicePdfForEmail(html)
 
         const { error } = await supabase.functions.invoke('send-payment-doc', {
           body: {

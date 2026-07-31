@@ -1,6 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import html2pdf from 'html2pdf.js'
 import type { Reservation, Tenant } from '@/types'
 import { fmtCurrency } from './utils'
 
@@ -421,94 +420,62 @@ export function buildReceiptHtml(r: Reservation, tenant: Tenant, docNumber: stri
 
 // ── Export : utilitaires ───────────────────────────────────────────────────
 
-/** Rend le HTML de la facture dans un iframe hors-écran, prêt pour la capture html2canvas. */
-async function renderInvoiceIframe(html: string): Promise<{ iframe: HTMLIFrameElement; page: HTMLElement | null }> {
-  // Iframe hors-écran : isolation CSS totale (le CSS du template reset * margin/padding,
-  // il ne faut pas qu'il s'applique au document principal de l'app)
-  const iframe = document.createElement('iframe')
-  iframe.style.cssText = [
-    'position:fixed',
-    'left:-9999px',
-    'top:0',
-    'width:210mm',
-    'min-height:297mm',
-    'border:none',
-    'pointer-events:none',
-  ].join(';')
-  document.body.appendChild(iframe)
+/**
+ * Génère le PDF de la facture côté serveur (Puppeteer, vrai Chrome headless)
+ * et le retourne en base64 (sans préfixe data URI).
+ *
+ * On est passé de la génération côté navigateur (html2canvas) à une route
+ * serveur car html2canvas produisait systématiquement un rendu sans aucune
+ * mise en forme (texte brut, sans couleurs ni tableau) malgré plusieurs
+ * correctifs ciblés (scripts embarqués, polices cross-origin, import
+ * dynamique). Le moteur d'impression natif de Chrome (celui qu'utilise
+ * Puppeteer) rend ce même HTML parfaitement, comme confirmé en testant
+ * l'impression manuelle (Cmd+P) du même document.
+ */
+async function generateInvoicePdfBase64(html: string): Promise<string> {
+  const res = await fetch('/api/generate-invoice-pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ html }),
+  })
 
-  // Le HTML de la facture embarque un <script> qui déclenche window.print()
-  // automatiquement (pensé pour l'ancien flux "ouvrir la page et imprimer").
-  // Dans notre iframe hors-écran, ce script s'exécuterait quand même et
-  // perturbe la capture html2canvas (le dialogue d'impression interfère avec
-  // le rendu, ce qui produisait un PDF sans aucune mise en forme). On retire
-  // tout <script> avant l'injection — on ne veut aucun effet de bord ici.
-  const htmlForCapture = html.replace(/<script[\s\S]*?<\/script>/gi, '')
-
-  const iDoc = iframe.contentDocument!
-  iDoc.open()
-  iDoc.write(htmlForCapture)
-  iDoc.close()
-
-  // Masquer la barre d'impression (visible uniquement en @media screen, mais
-  // html2canvas capture en mode screen → elle apparaîtrait dans le PDF)
-  const printBar = iDoc.querySelector<HTMLElement>('.print-bar')
-  if (printBar) printBar.style.display = 'none'
-
-  // Attendre que Google Fonts soit chargé dans l'iframe
-  if (iframe.contentWindow?.document?.fonts) {
-    await iframe.contentWindow.document.fonts.ready
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Échec de génération du PDF (${res.status}) ${detail}`)
   }
-  // Buffer court pour que le rendu CSS se stabilise (gradients, shadows…)
-  await new Promise<void>(r => setTimeout(r, 350))
 
-  const page = iDoc.querySelector<HTMLElement>('.page')
-  return { iframe, page }
+  const { pdf_base64 } = await res.json() as { pdf_base64?: string }
+  if (!pdf_base64) throw new Error('Réponse serveur invalide : pdf_base64 manquant')
+  return pdf_base64
 }
 
-function pdfOptions(filename: string) {
-  return {
-    margin:   0,
-    filename,
-    image:    { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: {
-      scale:           2,
-      useCORS:         true,
-      allowTaint:      false,
-      logging:         false,
-      backgroundColor: '#FBF9F4',
-    },
-    jsPDF: { unit: 'mm', format: 'a4' as const, orientation: 'portrait' as const },
-  }
+function base64ToBlob(base64: string, mimeType: string): Blob {
+  const bytes = atob(base64)
+  const arr = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
+  return new Blob([arr], { type: mimeType })
 }
 
-/** Télécharge directement le HTML en PDF via html2pdf.js (sans fenêtre intermédiaire). */
+/** Télécharge le PDF de la facture (généré côté serveur) directement dans le navigateur. */
 export async function downloadAsPdf(html: string, filename: string): Promise<void> {
-  const { iframe, page } = await renderInvoiceIframe(html)
-  try {
-    if (!page) return
-    await html2pdf().set(pdfOptions(filename)).from(page).save()
-  } finally {
-    document.body.removeChild(iframe)
-  }
+  const base64 = await generateInvoicePdfBase64(html)
+  const blob = base64ToBlob(base64, 'application/pdf')
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 /**
  * Génère le PDF de la facture et le retourne en base64 (sans préfixe data URI),
- * pour l'envoyer en pièce jointe d'email (via Resend). On évite ainsi tout lien
- * cliquable vers Supabase Storage / Edge Functions, qui forcent text/plain sur
- * le HTML — un PDF en pièce jointe n'a pas ce problème et s'ouvre partout.
+ * pour l'envoyer en pièce jointe d'email (via Resend).
  */
-export async function generateInvoicePdfBase64(html: string, filename: string): Promise<string | null> {
-  const { iframe, page } = await renderInvoiceIframe(html)
-  try {
-    if (!page) return null
-    const dataUri: string = await html2pdf().set(pdfOptions(filename)).from(page).outputPdf('datauristring')
-    const base64 = dataUri.split(',')[1]
-    return base64 ?? null
-  } finally {
-    document.body.removeChild(iframe)
-  }
+export async function generateInvoicePdfForEmail(html: string): Promise<string> {
+  return generateInvoicePdfBase64(html)
 }
 
 export function openPrintWindow(html: string): void {

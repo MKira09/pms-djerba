@@ -3,6 +3,12 @@
     { "handle": "filesystem" },
     { "src": "/((?!api/).*)", "dest": "/index.html" }
   ],
+  "functions": {
+    "api/generate-invoice-pdf.js": {
+      "memory": 2048,
+      "maxDuration": 60
+    }
+  },
   "crons": [
     {
       "path": "/api/scheduled-emails",

@@ -1,5 +1,6 @@
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import html2pdf from 'html2pdf.js'
 import type { Reservation, Tenant } from '@/types'
 import { fmtCurrency } from './utils'
 
@@ -420,13 +421,6 @@ export function buildReceiptHtml(r: Reservation, tenant: Tenant, docNumber: stri
 
 // ── Export : utilitaires ───────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadHtml2Pdf(): Promise<(...args: unknown[]) => any> {
-  // Import dynamique — évite d'alourdir le bundle initial
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ((await import('html2pdf.js')) as any).default
-}
-
 /** Rend le HTML de la facture dans un iframe hors-écran, prêt pour la capture html2canvas. */
 async function renderInvoiceIframe(html: string): Promise<{ iframe: HTMLIFrameElement; page: HTMLElement | null }> {
   // Iframe hors-écran : isolation CSS totale (le CSS du template reset * margin/padding,
@@ -476,7 +470,7 @@ function pdfOptions(filename: string) {
   return {
     margin:   0,
     filename,
-    image:    { type: 'jpeg', quality: 0.98 },
+    image:    { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: {
       scale:           2,
       useCORS:         true,
@@ -484,17 +478,16 @@ function pdfOptions(filename: string) {
       logging:         false,
       backgroundColor: '#FBF9F4',
     },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    jsPDF: { unit: 'mm', format: 'a4' as const, orientation: 'portrait' as const },
   }
 }
 
 /** Télécharge directement le HTML en PDF via html2pdf.js (sans fenêtre intermédiaire). */
 export async function downloadAsPdf(html: string, filename: string): Promise<void> {
-  const h2p = await loadHtml2Pdf()
   const { iframe, page } = await renderInvoiceIframe(html)
   try {
     if (!page) return
-    await h2p().set(pdfOptions(filename)).from(page).save()
+    await html2pdf().set(pdfOptions(filename)).from(page).save()
   } finally {
     document.body.removeChild(iframe)
   }
@@ -507,11 +500,10 @@ export async function downloadAsPdf(html: string, filename: string): Promise<voi
  * le HTML — un PDF en pièce jointe n'a pas ce problème et s'ouvre partout.
  */
 export async function generateInvoicePdfBase64(html: string, filename: string): Promise<string | null> {
-  const h2p = await loadHtml2Pdf()
   const { iframe, page } = await renderInvoiceIframe(html)
   try {
     if (!page) return null
-    const dataUri: string = await h2p().set(pdfOptions(filename)).from(page).outputPdf('datauristring')
+    const dataUri: string = await html2pdf().set(pdfOptions(filename)).from(page).outputPdf('datauristring')
     const base64 = dataUri.split(',')[1]
     return base64 ?? null
   } finally {

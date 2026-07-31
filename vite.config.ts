@@ -37,6 +37,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // html2pdf.js (jsPDF + html2canvas) est maintenant importé statiquement
+        // (plus fiable qu'un dynamic import qui pouvait casser après déploiement),
+        // ce qui grossit le chunk principal au-delà de la limite par défaut de
+        // Workbox (2MB) — on la relève pour que le service worker continue de
+        // précacher ce chunk normalement.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

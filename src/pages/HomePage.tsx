@@ -264,7 +264,7 @@ export default function HomePage() {
 
         {/* CTA */}
         <button
-          onClick={() => navigate('/plans')}
+          onClick={() => navigate('/register')}
           style={{
             background: C.teal, color: C.white,
             border: 'none', borderRadius: 2,
@@ -359,7 +359,7 @@ export default function HomePage() {
           {/* Buttons */}
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
-              onClick={() => navigate('/plans')}
+              onClick={() => navigate('/register')}
               style={{
                 background: C.teal, color: C.white,
                 border: 'none', padding: '14px 36px', borderRadius: 2,
@@ -555,7 +555,7 @@ export default function HomePage() {
                 : '…'}
             </p>
             <button
-              onClick={() => navigate('/plans')}
+              onClick={() => navigate('/register')}
               style={{
                 background: C.teal, color: C.white, border: 'none',
                 padding: '14px 40px', borderRadius: 2,
@@ -742,7 +742,7 @@ export default function HomePage() {
           <div style={{ textAlign: 'center', marginTop: 72 }}>
             <div style={{ width: 40, height: 1, background: C.teal, margin: '0 auto 32px' }} />
             <button
-              onClick={() => navigate('/plans')}
+              onClick={() => navigate('/register')}
               style={{
                 background: C.navy, color: C.white, border: 'none',
                 padding: '14px 40px', borderRadius: 2,
@@ -851,7 +851,7 @@ export default function HomePage() {
               </ul>
 
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/register')}
                 style={{
                   width: '100%', padding: '14px',
                   background: C.teal, color: C.white,

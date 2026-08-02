@@ -101,14 +101,17 @@ const STEPS = [
 ]
 
 const INCLUDED_FEATURES = [
-  'Villas & appartements illimités',
-  'Réservations, calendrier & paiements',
-  'Factures & reçus PDF automatiques',
-  'Emails clients automatisés',
-  'Lien de paiement sécurisé Stripe',
-  'Tableau de bord & statistiques',
-  'Multi-utilisateurs (admin, manager)',
+  'Villas illimités',
+  'Réservations & calendrier',
+  'Factures & reçus PDF',
+  'Emails automatisés',
+  'Paiement sécurisé Stripe',
+  'Dashboard & stats',
+  'Multi-utilisateurs',
   'Support inclus',
+  'Aucun forfait fixe',
+  'Aucun engagement',
+  'Facture mensuelle auto',
 ]
 
 const CLÉS_EN_MAIN_FEATURES = [
@@ -838,9 +841,9 @@ export default function HomePage() {
 
               <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.08)', margin: '28px 0' }} />
 
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[...INCLUDED_FEATURES, 'Aucun forfait fixe', 'Aucun engagement', 'Facture mensuelle automatique'].map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300 }}>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
+                {INCLUDED_FEATURES.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 300 }}>
                     <span style={{ color: C.teal, flexShrink: 0 }}>✓</span>
                     {f}
                   </li>

@@ -100,26 +100,25 @@ const STEPS = [
   },
 ]
 
-const PLANS = [
-  { name: 'Starter',      price: 29,  detail: '5 biens · 2 utilisateurs',         cta: false },
-  { name: 'Pro',          price: 59,  detail: '10 biens · 5 utilisateurs',         cta: true  },
-  { name: 'Agence',       price: 99,  detail: 'Jusqu\'à 50 biens · Équipe illimitée', cta: false },
-  {
-    name: 'CLÉS EN MAIN',
-    isQuote: true,
-    detail: 'Service clé en main',
-    description: 'Vous n\'avez rien à faire. Nous configurons tout, vous gérez.',
-    cta: false,
-    features: [
-      'Invitation et configuration de votre espace',
-      'Ajout de toutes vos villas (photos, tarifs, description)',
-      'Configuration de vos extras et services',
-      'Ajout de votre équipe',
-      'Code WiFi et contacts configurés',
-      'Formation d\'1h en visio incluse',
-      'Livré 100% prêt à l\'emploi',
-    ],
-  },
+const INCLUDED_FEATURES = [
+  'Villas & appartements illimités',
+  'Réservations, calendrier & paiements',
+  'Factures & reçus PDF automatiques',
+  'Emails clients automatisés',
+  'Lien de paiement sécurisé Stripe',
+  'Tableau de bord & statistiques',
+  'Multi-utilisateurs (admin, manager)',
+  'Support inclus',
+]
+
+const CLÉS_EN_MAIN_FEATURES = [
+  'Invitation et configuration de votre espace',
+  'Ajout de toutes vos villas (photos, tarifs, description)',
+  'Configuration de vos extras et services',
+  'Ajout de votre équipe',
+  'Code WiFi et contacts configurés',
+  "Formation d'1h en visio incluse",
+  'Livré 100 % prêt à l\'emploi',
 ]
 
 /* ─────── Component ─────── */
@@ -763,6 +762,8 @@ export default function HomePage() {
       ════════════════════════════════ */}
       <section id="tarifs" style={{ background: C.sand, padding: '112px 48px' }}>
         <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+
+          {/* Heading */}
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
             <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
               Tarifs
@@ -772,176 +773,211 @@ export default function HomePage() {
               fontSize: 42, fontWeight: 600, fontStyle: 'italic',
               color: C.navy, lineHeight: 1.2, marginTop: 12,
             }}>
-              Simple. Transparent. Sans surprise.
+              Sans abonnement. Vous ne payez<br />que sur vos revenus réels.
             </h2>
+            <p style={{ color: C.grey, fontSize: 15, fontWeight: 300, marginTop: 16, lineHeight: 1.7 }}>
+              Aucun forfait fixe. Aucun engagement. Juste 3 % du CA que vous enregistrez.
+            </p>
           </div>
 
-          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
-            {PLANS.map((plan, i) => (
-              <div
-                key={i}
-                className={plan.cta ? 'lp-plan-featured' : undefined}
-                style={{
-                  background: 'isQuote' in plan
-                    ? 'linear-gradient(160deg, #0D1F2D 0%, #1B3E3E 100%)'
-                    : plan.cta ? C.navy : C.white,
-                  padding: '52px 36px',
-                  border: 'isQuote' in plan || plan.cta ? 'none' : `1px solid ${C.sandDk}`,
-                  position: 'relative',
-                  transform: plan.cta ? 'translateY(-10px)' : 'none',
-                  boxShadow: 'isQuote' in plan
-                    ? '0 28px 64px rgba(7,190,184,0.14)'
-                    : plan.cta ? '0 24px 60px rgba(12,68,124,0.22)' : 'none',
-                  transition: 'transform 0.3s',
-                }}
-              >
-                {plan.cta && (
-                  <div style={{
-                    position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                    background: C.teal, color: C.white,
-                    fontSize: 10, fontWeight: 600, letterSpacing: '0.14em',
-                    textTransform: 'uppercase', padding: '5px 18px', borderRadius: 2,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    Le plus populaire
-                  </div>
-                )}
+          {/* 3 cards */}
+          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'start' }}>
 
-                {'isQuote' in plan ? null : (
-                  <p style={{
-                    color: plan.cta ? 'rgba(255,255,255,0.5)' : C.teal,
-                    fontSize: 11, fontWeight: 400, letterSpacing: '0.16em',
-                    textTransform: 'uppercase', marginBottom: 20,
-                  }}>
-                    {plan.detail}
-                  </p>
-                )}
-
-                {'isQuote' in plan ? (
-                  /* ── CLÉS EN MAIN : Premium ── */
-                  <>
-                    {/* Badge premium */}
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center',
-                      background: 'rgba(7,190,184,0.12)',
-                      border: '1px solid rgba(7,190,184,0.25)',
-                      borderRadius: 2,
-                      padding: '4px 12px', marginBottom: 24,
-                    }}>
-                      <span style={{
-                        color: C.teal, fontSize: 10,
-                        fontWeight: 500, letterSpacing: '0.2em',
-                        textTransform: 'uppercase',
-                      }}>
-                        ✦ Service clé en main
-                      </span>
-                    </div>
-
-                    {/* Headline */}
-                    <h3 style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 26, fontWeight: 600, lineHeight: 1.3,
-                      color: C.white, marginBottom: 10,
-                    }}>
-                      Vous n'avez rien à faire.<br />On s'occupe de tout.
-                    </h3>
-
-                    {/* Sous-titre */}
-                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 300, marginBottom: 28, lineHeight: 1.7 }}>
-                      Votre espace VillaHub livré 100 % opérationnel.
-                    </p>
-
-                    <div style={{ width: '100%', height: 1, background: 'rgba(7,190,184,0.2)', marginBottom: 24 }} />
-
-                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {(plan as { features: string[] }).features.map((f, j) => (
-                        <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300, lineHeight: 1.5 }}>
-                          <span style={{ color: C.teal, flexShrink: 0, marginTop: 1 }}>✓</span>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* Prix */}
-                    <div style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 32, fontWeight: 600,
-                      color: C.teal, marginBottom: 24, lineHeight: 1,
-                    }}>
-                      Sur devis
-                    </div>
-
-                    <a
-                      href="#contact"
-                      style={{
-                        display: 'block', width: '100%', padding: '14px',
-                        background: C.teal,
-                        color: C.white,
-                        border: 'none',
-                        borderRadius: 2,
-                        fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
-                        textTransform: 'uppercase', cursor: 'pointer',
-                        textDecoration: 'none', textAlign: 'center',
-                        transition: 'opacity 0.2s',
-                        boxSizing: 'border-box',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                    >
-                      Nous contacter →
-                    </a>
-                  </>
-                ) : (
-                  /* ── Plans standards ── */
-                  <>
-                    <div style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 56, fontWeight: 600,
-                      color: plan.cta ? C.teal : C.navy,
-                      lineHeight: 1, marginBottom: 4,
-                    }}>
-                      {(plan as { price: number }).price}€
-                    </div>
-                    <p style={{ color: plan.cta ? 'rgba(255,255,255,0.4)' : C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32 }}>
-                      par mois
-                    </p>
-
-                    <div style={{ width: '100%', height: 1, background: plan.cta ? 'rgba(255,255,255,0.08)' : C.sandDk, marginBottom: 32 }} />
-
-                    <div style={{
-                      fontFamily: "'Cormorant', serif",
-                      fontSize: 28, fontWeight: 600,
-                      color: plan.cta ? C.white : C.navy,
-                      marginBottom: 32,
-                    }}>
-                      {plan.name}
-                    </div>
-
-                    <button
-                      onClick={() => navigate('/plans')}
-                      style={{
-                        width: '100%', padding: '14px',
-                        background: plan.cta ? C.teal : 'transparent',
-                        color: plan.cta ? C.white : C.navy,
-                        border: plan.cta ? 'none' : `1px solid ${C.sandDk}`,
-                        borderRadius: 2,
-                        fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
-                        textTransform: 'uppercase', cursor: 'pointer',
-                        transition: 'opacity 0.2s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                    >
-                      Choisir ce plan
-                    </button>
-                  </>
-                )}
+            {/* ── Card 1 : Ce qui est inclus ── */}
+            <div style={{
+              background: C.white,
+              padding: '48px 36px',
+              border: `1px solid ${C.sandDk}`,
+            }}>
+              <p style={{ color: C.teal, fontSize: 11, fontWeight: 400, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 20 }}>
+                Accès complet
+              </p>
+              <div style={{ fontFamily: "'Cormorant', serif", fontSize: 28, fontWeight: 600, color: C.navy, marginBottom: 8 }}>
+                Tout inclus
               </div>
-            ))}
+              <p style={{ color: C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32, lineHeight: 1.6 }}>
+                Une seule plateforme pour gérer toute votre activité locative.
+              </p>
+              <div style={{ width: '100%', height: 1, background: C.sandDk, marginBottom: 28 }} />
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {INCLUDED_FEATURES.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: C.dark, fontWeight: 300, lineHeight: 1.5 }}>
+                    <span style={{ color: C.teal, flexShrink: 0, fontSize: 15 }}>✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate('/signup')}
+                style={{
+                  width: '100%', padding: '14px',
+                  background: 'transparent', color: C.navy,
+                  border: `1px solid ${C.sandDk}`,
+                  borderRadius: 2,
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Essayer gratuitement
+              </button>
+            </div>
+
+            {/* ── Card 2 : Commission 3% (featured) ── */}
+            <div className="lp-plan-featured" style={{
+              background: C.navy,
+              padding: '52px 36px',
+              position: 'relative',
+              transform: 'translateY(-10px)',
+              boxShadow: '0 24px 60px rgba(12,68,124,0.22)',
+            }}>
+              {/* Badge */}
+              <div style={{
+                position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+                background: C.teal, color: C.white,
+                fontSize: 10, fontWeight: 600, letterSpacing: '0.14em',
+                textTransform: 'uppercase', padding: '5px 18px', borderRadius: 2,
+                whiteSpace: 'nowrap',
+              }}>
+                Notre modèle
+              </div>
+
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 400, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 20 }}>
+                Commission unique
+              </p>
+
+              {/* Big % */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 1, marginBottom: 4 }}>
+                <span style={{ fontFamily: "'Cormorant', serif", fontSize: 72, fontWeight: 600, color: C.teal, lineHeight: 1 }}>3</span>
+                <span style={{ fontFamily: "'Cormorant', serif", fontSize: 40, fontWeight: 600, color: C.teal, marginTop: 10 }}>%</span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 300, marginBottom: 32, lineHeight: 1.6 }}>
+                sur votre chiffre d'affaires enregistré
+              </p>
+
+              <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 28 }} />
+
+              {/* Exemple concret */}
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 14 }}>
+                Exemple concret
+              </p>
+              {[
+                { label: '5 villas · 2 000 € / mois de CA', value: '60 € / mois' },
+                { label: '10 villas · 5 000 € / mois de CA', value: '150 € / mois' },
+                { label: 'Mois creux — 500 € de CA', value: '15 € / mois' },
+              ].map((ex, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '9px 0',
+                  borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                }}>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 300 }}>{ex.label}</span>
+                  <span style={{ fontSize: 13, color: C.teal, fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 12 }}>{ex.value}</span>
+                </div>
+              ))}
+
+              <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.08)', margin: '28px 0' }} />
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Aucun forfait fixe', 'Aucun engagement', 'Paiements Stripe ou virement', 'Facture mensuelle automatique'].map((f, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300 }}>
+                    <span style={{ color: C.teal, flexShrink: 0 }}>✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => navigate('/signup')}
+                style={{
+                  width: '100%', padding: '14px',
+                  background: C.teal, color: C.white,
+                  border: 'none', borderRadius: 2,
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Démarrer gratuitement →
+              </button>
+            </div>
+
+            {/* ── Card 3 : Clés en main ── */}
+            <div style={{
+              background: 'linear-gradient(160deg, #0D1F2D 0%, #1B3E3E 100%)',
+              padding: '48px 36px',
+              boxShadow: '0 28px 64px rgba(7,190,184,0.14)',
+            }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center',
+                background: 'rgba(7,190,184,0.12)',
+                border: '1px solid rgba(7,190,184,0.25)',
+                borderRadius: 2,
+                padding: '4px 12px', marginBottom: 24,
+              }}>
+                <span style={{ color: C.teal, fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                  ✦ Service clé en main
+                </span>
+              </div>
+
+              <h3 style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 26, fontWeight: 600, lineHeight: 1.3,
+                color: C.white, marginBottom: 10,
+              }}>
+                Vous n'avez rien à faire.<br />On s'occupe de tout.
+              </h3>
+
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 300, marginBottom: 28, lineHeight: 1.7 }}>
+                Votre espace VillaHub livré 100 % opérationnel.
+              </p>
+
+              <div style={{ width: '100%', height: 1, background: 'rgba(7,190,184,0.2)', marginBottom: 24 }} />
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {CLÉS_EN_MAIN_FEATURES.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300, lineHeight: 1.5 }}>
+                    <span style={{ color: C.teal, flexShrink: 0, marginTop: 1 }}>✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div style={{
+                fontFamily: "'Cormorant', serif",
+                fontSize: 32, fontWeight: 600,
+                color: C.teal, marginBottom: 24, lineHeight: 1,
+              }}>
+                Sur devis
+              </div>
+
+              <a
+                href="#contact"
+                style={{
+                  display: 'block', width: '100%', padding: '14px',
+                  background: C.teal, color: C.white,
+                  border: 'none', borderRadius: 2,
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  textDecoration: 'none', textAlign: 'center',
+                  transition: 'opacity 0.2s',
+                  boxSizing: 'border-box',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Nous contacter →
+              </a>
+            </div>
+
           </div>
 
           <p style={{ textAlign: 'center', color: C.grey, fontSize: 13, fontWeight: 300, marginTop: 40 }}>
-            Annulation à tout moment · Aucun engagement
+            Aucun engagement · Résiliable à tout moment
           </p>
         </div>
       </section>

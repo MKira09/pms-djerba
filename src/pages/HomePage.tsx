@@ -860,7 +860,7 @@ export default function HomePage() {
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
               >
-                Démarrer gratuitement →
+                Commencer sans engagement →
               </button>
             </div>
 

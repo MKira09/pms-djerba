@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase'
-import { Home, Users, Building, TrendingUp, Star } from 'lucide-react'
+import { Home, Users, Building, TrendingUp, Star, Euro, CreditCard, Clock } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import toast from 'react-hot-toast'
@@ -16,6 +16,17 @@ interface TenantStat {
   villa_count: number
 }
 
+interface RevenueStat {
+  tenant_id: string
+  tenant_name: string
+  has_stripe: boolean
+  ca_amount: number
+  booking_count: number
+  commission_amount: number
+  currency: string
+  billing_status: string | null
+}
+
 interface FoundingMap { [id: string]: boolean }
 
 const PLAN_COLORS: Record<string, string> = {
@@ -24,12 +35,24 @@ const PLAN_COLORS: Record<string, string> = {
   agence:  'bg-amber-100 text-amber-700',
 }
 
+const BILLING_STATUS_LABELS: Record<string, string> = {
+  pending:   'En attente',
+  paid:      'Payée',
+  cancelled: 'Annulée',
+  waived:    'Offerte',
+}
+
 export default function AdminPage() {
   const [tenants, setTenants] = useState<TenantStat[]>([])
   const [founding, setFounding] = useState<FoundingMap>({})
   const [toggling, setToggling] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+  const [revenue, setRevenue] = useState<RevenueStat[]>([])
+  const [revenueLoading, setRevenueLoading] = useState(true)
+  const [revenueError, setRevenueError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -46,6 +69,39 @@ export default function AdminPage() {
     }
     load()
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadRevenue() {
+      setRevenueLoading(true)
+      const { data, error } = await supabase.rpc('get_admin_revenue_stats', { p_period: period })
+      if (cancelled) return
+      if (error) {
+        setRevenueError(error.message)
+      } else {
+        setRevenue(data ?? [])
+        setRevenueError(null)
+      }
+      setRevenueLoading(false)
+    }
+    loadRevenue()
+    return () => { cancelled = true }
+  }, [period])
+
+  const revenueSummary = useMemo(() => {
+    const withCa = revenue.filter(r => (r.ca_amount ?? 0) > 0)
+    const totalCA = withCa.reduce((s, r) => s + (r.ca_amount ?? 0), 0)
+    const totalCommission = withCa.reduce((s, r) => s + (r.commission_amount ?? 0), 0)
+    const autoCommission = withCa.filter(r => r.has_stripe).reduce((s, r) => s + (r.commission_amount ?? 0), 0)
+    const manualRows = withCa.filter(r => !r.has_stripe)
+    const manualPaid = manualRows.filter(r => r.billing_status === 'paid').reduce((s, r) => s + (r.commission_amount ?? 0), 0)
+    const manualPending = manualRows.filter(r => r.billing_status !== 'paid').reduce((s, r) => s + (r.commission_amount ?? 0), 0)
+    const currency = withCa[0]?.currency ?? 'EUR'
+    return { totalCA, totalCommission, autoCommission, manualPaid, manualPending, currency, rows: withCa }
+  }, [revenue])
+
+  const fmtMoney = (n: number, currency: string) =>
+    `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
 
   async function toggleFounding(tenantId: string, current: boolean) {
     setToggling(tenantId)
@@ -130,6 +186,113 @@ export default function AdminPage() {
             <p className="text-xs text-gray-500">Membres fondateurs</p>
           </Card>
         </div>
+
+        {/* Revenus */}
+        <Card padding={false}>
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+            <h2 className="font-semibold text-gray-800">Revenus & commissions</h2>
+            <input
+              type="month"
+              value={period}
+              onChange={e => setPeriod(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700"
+            />
+          </div>
+
+          <div className="p-5">
+            {revenueError && (
+              <p className="text-sm text-red-600">Erreur : {revenueError}</p>
+            )}
+
+            {!revenueError && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-xl mx-auto mb-2">
+                    <Euro className="h-5 w-5 text-green-700" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenueLoading ? '…' : fmtMoney(revenueSummary.totalCA, revenueSummary.currency)}
+                  </p>
+                  <p className="text-xs text-gray-500">CA total enregistré</p>
+                </Card>
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-brand-100 rounded-xl mx-auto mb-2">
+                    <TrendingUp className="h-5 w-5 text-brand-700" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenueLoading ? '…' : fmtMoney(revenueSummary.totalCommission, revenueSummary.currency)}
+                  </p>
+                  <p className="text-xs text-gray-500">Commission totale (3%)</p>
+                </Card>
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-xl mx-auto mb-2">
+                    <CreditCard className="h-5 w-5 text-purple-700" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenueLoading ? '…' : fmtMoney(revenueSummary.autoCommission, revenueSummary.currency)}
+                  </p>
+                  <p className="text-xs text-gray-500">Prélevée auto (Stripe)</p>
+                </Card>
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-amber-100 rounded-xl mx-auto mb-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenueLoading ? '…' : fmtMoney(revenueSummary.manualPending, revenueSummary.currency)}
+                  </p>
+                  <p className="text-xs text-gray-500">À encaisser (virement)</p>
+                </Card>
+              </div>
+            )}
+
+            {!revenueError && revenueSummary.rows.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50 text-left">
+                      <th className="px-3 py-2 font-semibold text-gray-500">Agence</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500 text-right">CA</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500 text-right">Commission</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">Mode</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {revenueSummary.rows.map(r => (
+                      <tr key={r.tenant_id}>
+                        <td className="px-3 py-2 font-medium text-gray-900">{r.tenant_name}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{fmtMoney(r.ca_amount, r.currency)}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{fmtMoney(r.commission_amount, r.currency)}</td>
+                        <td className="px-3 py-2">
+                          <Badge className={r.has_stripe ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}>
+                            {r.has_stripe ? 'Stripe auto' : 'Manuel'}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-2">
+                          {r.has_stripe ? (
+                            <span className="text-gray-400 text-xs">—</span>
+                          ) : (
+                            <Badge className={
+                              r.billing_status === 'paid'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-amber-100 text-amber-700'
+                            }>
+                              {r.billing_status ? BILLING_STATUS_LABELS[r.billing_status] ?? r.billing_status : 'Pas encore facturée'}
+                            </Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {!revenueError && !revenueLoading && revenueSummary.rows.length === 0 && (
+              <p className="text-center text-gray-400 py-6">Aucune réservation enregistrée sur cette période.</p>
+            )}
+          </div>
+        </Card>
 
         {/* Table */}
         <Card padding={false}>

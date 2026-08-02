@@ -13,8 +13,6 @@ function json(data: unknown, status = 200) {
   })
 }
 
-// Limite Resend : 40MB par email (toutes pièces jointes comprises). Une facture
-// A4 en PDF fait quelques centaines de Ko — grosse marge de sécurité à 15MB.
 const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024
 
 function base64SizeInBytes(b64: string): number {
@@ -36,11 +34,6 @@ Deno.serve(async (req) => {
     if (!SUPABASE_SVC)   return json({ error: 'SUPABASE_SERVICE_ROLE_KEY non configurée' }, 500)
 
     const body = await req.json()
-    // Le PDF est généré côté client (html2pdf.js) et envoyé en base64, pour être
-    // joint directement à l'email — pas de lien à cliquer, pas de page à héberger.
-    // (Anciennement : lien vers Supabase Storage/Edge Function, qui forcent toutes
-    // les deux Content-Type: text/plain sur le HTML servi depuis *.supabase.co —
-    // ce qui cassait l'affichage côté client. Le PDF en pièce jointe évite tout ça.)
     const { reservation_id, doc_type, pdf_base64, pdf_filename } = body as {
       reservation_id: string
       doc_type: 'receipt' | 'invoice'

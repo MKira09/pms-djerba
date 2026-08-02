@@ -13,6 +13,10 @@
     {
       "path": "/api/scheduled-emails",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/monthly-billing",
+      "schedule": "0 6 1 * *"
     }
   ]
 }

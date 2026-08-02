@@ -68,31 +68,36 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(STRIPE_KEY, { apiVersion: '2024-06-20' })
 
-    // Create the checkout session directly on the tenant's Express account (direct charge).
-    // Funds land on their account; they pay Stripe fees themselves; we take no platform cut.
-    const session = await stripe.checkout.sessions.create(
-      {
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: stripeCurrency,
-            product_data: {
-              name:        `Séjour – ${res.villa?.name ?? 'Villa'}`,
-              description: `${res.check_in} → ${res.check_out} · ${res.guests} pers.`,
-            },
-            unit_amount: Math.round(amountDue * 100),
+    // Destination charge : le paiement transite par le compte plateforme VillaHub,
+    // qui prélève 3% de commission puis transfère le reste au compte Express de l'agence.
+    const COMMISSION_RATE = 0.03
+    const amountCents     = Math.round(amountDue * 100)
+    const feeCents        = Math.round(amountCents * COMMISSION_RATE)
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: stripeCurrency,
+          product_data: {
+            name:        `Séjour – ${res.villa?.name ?? 'Villa'}`,
+            description: `${res.check_in} → ${res.check_out} · ${res.guests} pers.`,
           },
-          quantity: 1,
-        }],
-        mode:           'payment',
-        customer_email: res.client.email,
-        expires_at:     Math.floor(Date.now() / 1000) + 86400,
-        success_url:    `${APP_URL}/booking/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url:     `${APP_URL}/booking/payment-cancel`,
-        metadata:       { reservation_id },
+          unit_amount: amountCents,
+        },
+        quantity: 1,
+      }],
+      mode:           'payment',
+      customer_email: res.client.email,
+      expires_at:     Math.floor(Date.now() / 1000) + 86400,
+      success_url:    `${APP_URL}/booking/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:     `${APP_URL}/booking/payment-cancel`,
+      metadata:       { reservation_id },
+      payment_intent_data: {
+        application_fee_amount: feeCents,
+        transfer_data: { destination: stripeAccountId },
       },
-      { stripeAccount: stripeAccountId },
-    )
+    })
 
     console.log('[create-payment-link] session:', session.id, session.url?.slice(0, 60))
 

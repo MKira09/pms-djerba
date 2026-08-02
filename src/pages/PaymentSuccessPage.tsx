@@ -96,7 +96,7 @@ export default function PaymentSuccessPage() {
           <p className="text-gray-500 text-sm mb-4">
             Si vous venez de payer, contactez-nous à support@villahub.app
           </p>
-          <Link to="/plans" className="text-brand-700 underline text-sm">Retour aux plans</Link>
+          <Link to="/" className="text-brand-700 underline text-sm">Retour à l'accueil</Link>
         </div>
       </div>
     )

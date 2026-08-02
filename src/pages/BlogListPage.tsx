@@ -48,7 +48,7 @@ export default function BlogListPage() {
           </Link>
           <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             <Link to="/blog" style={{ fontSize: 14, color: 'white', textDecoration: 'none', fontWeight: 600 }}>Blog</Link>
-            <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', textDecoration: 'none' }}>Tarifs</Link>
+            <Link to="/#tarifs" style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', textDecoration: 'none' }}>Tarifs</Link>
             <Link to="/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.72)', textDecoration: 'none' }}>Connexion</Link>
           </nav>
         </div>
@@ -133,7 +133,7 @@ export default function BlogListPage() {
           <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>© 2026 VillaHub</span>
           <div style={{ display: 'flex', gap: 20 }}>
             <Link to="/" style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Accueil</Link>
-            <Link to="/plans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Tarifs</Link>
+            <Link to="/#tarifs" style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Tarifs</Link>
           </div>
         </div>
       </footer>

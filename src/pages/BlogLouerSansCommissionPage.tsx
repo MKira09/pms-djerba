@@ -22,7 +22,7 @@ export default function BlogLouerSansCommissionPage() {
           </Link>
           <nav className="flex items-center gap-6 text-sm text-gray-500">
             <Link to="/blog" className="hover:text-gray-900 transition-colors">Blog</Link>
-            <Link to="/plans" className="hover:text-gray-900 transition-colors">Tarifs</Link>
+            <Link to="/#tarifs" className="hover:text-gray-900 transition-colors">Tarifs</Link>
             <Link to="/login" className="hover:text-gray-900 transition-colors">Connexion</Link>
           </nav>
         </div>
@@ -118,7 +118,7 @@ export default function BlogLouerSansCommissionPage() {
             <p className="font-semibold text-gray-900 mb-1">Prêt à reprendre le contrôle ?</p>
             <p className="text-sm text-gray-500 mb-4">Découvrez comment VillaHub peut simplifier la gestion de vos locations.</p>
             <Link
-              to="/plans"
+              to="/#tarifs"
               className="inline-flex items-center gap-2 bg-[#07BEB8] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
             >
               Voir les tarifs →
@@ -133,7 +133,7 @@ export default function BlogLouerSansCommissionPage() {
           <div className="flex gap-4">
             <Link to="/" className="hover:text-gray-600 transition-colors">Accueil</Link>
             <Link to="/blog" className="hover:text-gray-600 transition-colors">Blog</Link>
-            <Link to="/plans" className="hover:text-gray-600 transition-colors">Tarifs</Link>
+            <Link to="/#tarifs" className="hover:text-gray-600 transition-colors">Tarifs</Link>
           </div>
         </div>
       </footer>

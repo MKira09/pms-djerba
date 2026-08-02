@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePageMeta } from '@/hooks/usePageMeta'
@@ -129,6 +129,17 @@ export default function HomePage() {
   usePageMeta()
 
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.slice(1)
+    const el = document.getElementById(id)
+    if (el) {
+      // Laisse le temps au DOM de se peindre avant de scroller.
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    }
+  }, [location.hash])
   const { tenant: authTenant } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)
   const [foundingCount, setFoundingCount] = useState<number | null>(null)

@@ -6,7 +6,6 @@ import '@/i18n'
 import AppLayout from '@/components/layout/AppLayout'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
-import PlansPage from '@/pages/PlansPage'
 import PaymentSuccessPage from '@/pages/PaymentSuccessPage'
 import BlacklistPage from '@/pages/BlacklistPage'
 import AdminPage from '@/pages/AdminPage'
@@ -121,7 +120,7 @@ export default function App() {
         {/* Public */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/plans" element={<PlansPage />} />
+        <Route path="/plans" element={<Navigate to="/#tarifs" replace />} />
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/book/:villaId" element={<VillaBookingPage />} />

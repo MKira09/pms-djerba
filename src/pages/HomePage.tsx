@@ -67,7 +67,7 @@ const FEATURES = [
   {
     num: '04',
     title: 'Un catalogue à votre nom',
-    body: 'Partagez un lien de réservation professionnel à vos clients, avec vos villas, vos photos et votre calendrier de disponibilités — sans commission, sans intermédiaire.',
+    body: 'Partagez un lien de réservation professionnel à vos clients, avec vos villas, vos photos et votre calendrier de disponibilités — en direct, sans passer par les grandes plateformes.',
     icon: '🌐',
   },
 ]
@@ -409,7 +409,7 @@ export default function HomePage() {
             fontSize: 34, fontWeight: 500, fontStyle: 'italic',
             color: C.navy, lineHeight: 1.5, letterSpacing: '-0.01em',
           }}>
-            Gérez vos biens, choisissez vos clients, gardez 100% de vos revenus.
+            Gérez vos biens, choisissez vos clients, gardez la maîtrise de vos revenus.
           </p>
           <div style={{ width: 40, height: 2, background: C.teal, margin: '40px auto 0' }} />
         </div>

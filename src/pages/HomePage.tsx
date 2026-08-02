@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/stores/auth.store'
 import { usePageMeta } from '@/hooks/usePageMeta'
 
 /* ─────── Palette ─────── */
@@ -140,11 +139,8 @@ export default function HomePage() {
       requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }))
     }
   }, [location.hash])
-  const { tenant: authTenant } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)
   const [foundingCount, setFoundingCount] = useState<number | null>(null)
-  const [agencyName, setAgencyName] = useState('')
-  const [agencyLogo, setAgencyLogo] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -164,26 +160,6 @@ export default function HomePage() {
       if (typeof data === 'number') setFoundingCount(data)
     })
   }, [])
-
-  // Load agency name + logo: auth store first, then Supabase anon query as fallback
-  useEffect(() => {
-    if (authTenant) {
-      setAgencyName(authTenant.name)
-      setAgencyLogo(authTenant.logo_url ?? '')
-      return
-    }
-    supabase
-      .from('tenants')
-      .select('name, logo_url')
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setAgencyName(data.name ?? '')
-          setAgencyLogo(data.logo_url ?? '')
-        }
-      })
-  }, [authTenant])
 
   const remaining = foundingCount !== null ? Math.max(0, 3 - foundingCount) : null
 
@@ -222,21 +198,13 @@ export default function HomePage() {
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {agencyLogo && (
-            <img
-              src={agencyLogo}
-              alt="Logo"
-              style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
-              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-            />
-          )}
           <span style={{
             fontFamily: "'Cormorant', serif",
             fontSize: 22, fontWeight: 600, letterSpacing: '0.06em',
             color: scrolled ? C.navy : C.white,
             transition: 'color 0.4s', cursor: 'default',
           }}>
-            {agencyName ? `Agency ${agencyName}` : 'VillaHub'}
+            VillaHub
           </span>
         </div>
 
@@ -339,7 +307,7 @@ export default function HomePage() {
             color: C.white, lineHeight: 1,
             letterSpacing: '0.04em', marginBottom: 20,
           }}>
-            {agencyName ? `${agencyName} Agency` : 'VillaHub'}
+            VillaHub
           </div>
 
           {/* Tagline */}
@@ -1044,10 +1012,10 @@ export default function HomePage() {
         flexWrap: 'wrap', gap: 16,
       }}>
         <span style={{ fontFamily: "'Cormorant', serif", fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>
-          {agencyName || 'VillaHub'}
+          VillaHub
         </span>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 300 }}>
-          © {new Date().getFullYear()} {agencyName || 'VillaHub'} — Tous droits réservés
+          © {new Date().getFullYear()} VillaHub — Tous droits réservés
         </p>
         <div style={{ display: 'flex', gap: 28 }}>
           {[

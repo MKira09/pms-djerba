@@ -780,52 +780,10 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 3 cards */}
-          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'start' }}>
+          {/* 2 cards */}
+          <div className="lp-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, alignItems: 'start', maxWidth: 900, margin: '0 auto' }}>
 
-            {/* ── Card 1 : Ce qui est inclus ── */}
-            <div style={{
-              background: C.white,
-              padding: '48px 36px',
-              border: `1px solid ${C.sandDk}`,
-            }}>
-              <p style={{ color: C.teal, fontSize: 11, fontWeight: 400, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 20 }}>
-                Accès complet
-              </p>
-              <div style={{ fontFamily: "'Cormorant', serif", fontSize: 28, fontWeight: 600, color: C.navy, marginBottom: 8 }}>
-                Tout inclus
-              </div>
-              <p style={{ color: C.grey, fontSize: 13, fontWeight: 300, marginBottom: 32, lineHeight: 1.6 }}>
-                Une seule plateforme pour gérer toute votre activité locative.
-              </p>
-              <div style={{ width: '100%', height: 1, background: C.sandDk, marginBottom: 28 }} />
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {INCLUDED_FEATURES.map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: C.dark, fontWeight: 300, lineHeight: 1.5 }}>
-                    <span style={{ color: C.teal, flexShrink: 0, fontSize: 15 }}>✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/signup')}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: 'transparent', color: C.navy,
-                  border: `1px solid ${C.sandDk}`,
-                  borderRadius: 2,
-                  fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', cursor: 'pointer',
-                  transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-              >
-                Essayer gratuitement
-              </button>
-            </div>
-
-            {/* ── Card 2 : Commission 3% (featured) ── */}
+            {/* ── Card 1 : Commission 3% (featured) ── */}
             <div className="lp-plan-featured" style={{
               background: C.navy,
               padding: '52px 36px',
@@ -881,7 +839,7 @@ export default function HomePage() {
               <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.08)', margin: '28px 0' }} />
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {['Aucun forfait fixe', 'Aucun engagement', 'Paiements Stripe ou virement', 'Facture mensuelle automatique'].map((f, i) => (
+                {[...INCLUDED_FEATURES, 'Aucun forfait fixe', 'Aucun engagement', 'Facture mensuelle automatique'].map((f, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 300 }}>
                     <span style={{ color: C.teal, flexShrink: 0 }}>✓</span>
                     {f}
@@ -906,7 +864,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* ── Card 3 : Clés en main ── */}
+            {/* ── Card 2 : Clés en main ── */}
             <div style={{
               background: 'linear-gradient(160deg, #0D1F2D 0%, #1B3E3E 100%)',
               padding: '48px 36px',

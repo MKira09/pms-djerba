@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Home, Calendar, ClipboardList,
-  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert, ChevronDown,
+  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert, ChevronDown, Shield,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
@@ -12,6 +12,9 @@ import { useVillasStore } from '@/stores/villas.store'
 import { usePendingCount } from '@/hooks/usePendingCount'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
+
+// Doit rester identique à ADMIN_EMAIL dans App.tsx (AdminRoute)
+const SUPER_ADMIN_EMAIL = 'prokmbconsulting@gmail.com'
 
 const BOTTOM_NAV = [
   { to: '/settings',     icon: Settings,    key: 'nav.settings' },
@@ -42,10 +45,17 @@ export default function Sidebar() {
   const location = useLocation()
   const onVillas = location.pathname === '/villas'
   const [bienOpen, setBienOpen] = useState(onVillas)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
     if (onVillas) setBienOpen(true)
   }, [onVillas])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setIsSuperAdmin(data.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL)
+    })
+  }, [])
 
   function countByType(type: string) {
     return villas.filter(v => (v.property_type || types[0]) === type).length
@@ -169,6 +179,12 @@ export default function Sidebar() {
 
       {/* Bottom */}
       <div className="px-3 py-3 border-t border-brand-700 space-y-0.5">
+        {isSuperAdmin && (
+          <NavLink to="/admin" className={({ isActive }) => LINK_CLASS(isActive)}>
+            <Shield className="h-4 w-4 flex-shrink-0" />
+            Admin VillaHub
+          </NavLink>
+        )}
         {BOTTOM_NAV.map(({ to, icon: Icon, key }) => (
           <NavLink
             key={to}

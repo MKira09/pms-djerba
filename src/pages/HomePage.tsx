@@ -140,7 +140,6 @@ export default function HomePage() {
     }
   }, [location.hash])
   const [scrolled, setScrolled] = useState(false)
-  const [foundingCount, setFoundingCount] = useState<number | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -154,14 +153,6 @@ export default function HomePage() {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  useEffect(() => {
-    supabase.rpc('get_public_founding_count').then(({ data }) => {
-      if (typeof data === 'number') setFoundingCount(data)
-    })
-  }, [])
-
-  const remaining = foundingCount !== null ? Math.max(0, 3 - foundingCount) : null
 
   async function handleContact(e: React.FormEvent) {
     e.preventDefault()
@@ -494,62 +485,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════
-          FOUNDING MEMBER BAND
-      ════════════════════════════════ */}
-      {(remaining === null || remaining > 0) && (
-        <section style={{
-          background: C.navy,
-          padding: '72px 48px',
-          textAlign: 'center',
-        }}>
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <span style={{ color: C.teal, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-              Offre de lancement
-            </span>
-            <h2 style={{
-              fontFamily: "'Cormorant', serif",
-              fontSize: 36, fontWeight: 600, fontStyle: 'italic',
-              color: C.white, lineHeight: 1.3, margin: '16px 0 12px',
-            }}>
-              Devenez membre fondateur
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 300, lineHeight: 1.7, marginBottom: 32 }}>
-              Les 3 premiers clients bénéficient du <span style={{ color: C.teal, fontWeight: 500 }}>double de villas à vie</span> :
-              Starter 10, Pro 20, Agence 100.
-            </p>
-            {/* Dots */}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 28 }}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} style={{
-                  width: 48, height: 6, borderRadius: 3,
-                  background: foundingCount !== null && i < foundingCount
-                    ? C.teal : 'rgba(255,255,255,0.12)',
-                }} />
-              ))}
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, marginBottom: 32 }}>
-              {remaining !== null
-                ? <><span style={{ color: C.white, fontWeight: 500 }}>{remaining} place{remaining > 1 ? 's' : ''}</span> restante{remaining > 1 ? 's' : ''} sur 5</>
-                : '…'}
-            </p>
-            <button
-              onClick={() => navigate('/register')}
-              style={{
-                background: C.teal, color: C.white, border: 'none',
-                padding: '14px 40px', borderRadius: 2,
-                fontSize: 12, fontWeight: 500, letterSpacing: '0.12em',
-                textTransform: 'uppercase', cursor: 'pointer',
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Réserver ma place →
-            </button>
-          </div>
-        </section>
-      )}
 
       {/* ════════════════════════════════
           NOTRE HISTOIRE

@@ -40,6 +40,7 @@ interface UnpaidInvoice {
 }
 
 interface FoundingMap { [id: string]: boolean }
+interface StripeMap { [id: string]: boolean }
 
 const PLAN_COLORS: Record<string, string> = {
   starter: 'bg-blue-100 text-blue-700',
@@ -57,6 +58,7 @@ const BILLING_STATUS_LABELS: Record<string, string> = {
 export default function AdminPage() {
   const [tenants, setTenants] = useState<TenantStat[]>([])
   const [founding, setFounding] = useState<FoundingMap>({})
+  const [stripeMap, setStripeMap] = useState<StripeMap>({})
   const [toggling, setToggling] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,13 +77,18 @@ export default function AdminPage() {
     async function load() {
       const [statsRes, foundingRes] = await Promise.all([
         supabase.rpc('get_admin_stats'),
-        supabase.from('tenants').select('id, founding_member'),
+        supabase.from('tenants').select('id, founding_member, stripe_account_id'),
       ])
       if (statsRes.error) { setError(statsRes.error.message); setLoading(false); return }
       setTenants(statsRes.data ?? [])
       const map: FoundingMap = {}
-      for (const row of (foundingRes.data ?? [])) map[row.id] = !!row.founding_member
+      const sMap: StripeMap = {}
+      for (const row of (foundingRes.data ?? [])) {
+        map[row.id] = !!row.founding_member
+        sMap[row.id] = !!row.stripe_account_id
+      }
       setFounding(map)
+      setStripeMap(sMap)
       setLoading(false)
     }
     load()
@@ -456,6 +463,7 @@ export default function AdminPage() {
                   <th className="px-5 py-3 font-semibold text-gray-500">Plan</th>
                   <th className="px-5 py-3 font-semibold text-gray-500 text-right">Biens</th>
                   <th className="px-5 py-3 font-semibold text-gray-500">Inscrit le</th>
+                  <th className="px-5 py-3 font-semibold text-gray-500">Paiement</th>
                   <th className="px-5 py-3 font-semibold text-gray-500">Fondateur</th>
                 </tr>
               </thead>
@@ -483,6 +491,11 @@ export default function AdminPage() {
                         {t.created_at ? format(parseISO(t.created_at), 'dd/MM/yyyy') : '—'}
                       </td>
                       <td className="px-5 py-3">
+                        <Badge className={stripeMap[t.tenant_id] ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}>
+                          {stripeMap[t.tenant_id] ? 'Stripe auto' : 'Manuel'}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-3">
                         <button
                           onClick={() => toggleFounding(t.tenant_id, isFounder)}
                           disabled={isToggling}
@@ -500,7 +513,7 @@ export default function AdminPage() {
                   )
                 })}
                 {tenants.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-10 text-center text-gray-400">Aucun tenant</td></tr>
+                  <tr><td colSpan={7} className="px-5 py-10 text-center text-gray-400">Aucun tenant</td></tr>
                 )}
               </tbody>
             </table>

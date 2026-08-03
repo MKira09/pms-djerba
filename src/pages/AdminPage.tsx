@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase'
-import { Home, Users, Building, TrendingUp, Star, Euro, CreditCard, Clock, AlertTriangle, Check } from 'lucide-react'
+import { Home, Users, Building, TrendingUp, Star, Euro, CreditCard, Clock, AlertTriangle, Check, Zap } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import toast from 'react-hot-toast'
@@ -72,6 +72,8 @@ export default function AdminPage() {
   const [unpaidLoading, setUnpaidLoading] = useState(true)
   const [unpaidError, setUnpaidError] = useState<string | null>(null)
   const [markingPaid, setMarkingPaid] = useState<string | null>(null)
+
+  const [triggering, setTriggering] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -149,6 +151,37 @@ export default function AdminPage() {
   const unpaidTotal = unpaid.reduce((s, u) => s + (u.commission_amount ?? 0), 0)
   const unpaidCurrency = unpaid[0]?.currency ?? 'EUR'
   const overdueCount = unpaid.filter(u => u.days_overdue > 0).length
+
+  async function triggerBilling() {
+    setTriggering(true)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      if (!token) { toast.error('Session expirée, reconnecte-toi.'); return }
+
+      const res = await fetch('/api/admin-trigger-billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ period }),
+      })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error('Erreur : ' + (data.error ?? res.status))
+        return
+      }
+
+      toast.success(`Facturation lancée — ${data.billed ?? 0} facturée(s), ${data.skipped ?? 0} ignorée(s), ${data.errors ?? 0} erreur(s)`)
+      loadUnpaid()
+      // Rafraîchit le bloc Revenus pour la période affichée.
+      const { data: revenueData } = await supabase.rpc('get_admin_revenue_stats', { p_period: period })
+      setRevenue(revenueData ?? [])
+    } catch (e) {
+      toast.error('Erreur réseau : ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setTriggering(false)
+    }
+  }
 
   const revenueSummary = useMemo(() => {
     const withCa = revenue.filter(r => (r.ca_amount ?? 0) > 0)
@@ -253,12 +286,23 @@ export default function AdminPage() {
         <Card padding={false}>
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
             <h2 className="font-semibold text-gray-800">Revenus & commissions</h2>
-            <input
-              type="month"
-              value={period}
-              onChange={e => setPeriod(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700"
-            />
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="month"
+                value={period}
+                onChange={e => setPeriod(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700"
+              />
+              <button
+                onClick={triggerBilling}
+                disabled={triggering}
+                title="Déclenche la facturation manuelle pour la période affichée (facture les agences sans Stripe qui ne le sont pas déjà)"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-100 text-brand-700 hover:bg-brand-200 transition-colors disabled:opacity-50"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {triggering ? 'Facturation…' : 'Facturer maintenant'}
+              </button>
+            </div>
           </div>
 
           <div className="p-5">

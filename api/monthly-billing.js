@@ -12,6 +12,28 @@ const APP_URL       = process.env.APP_URL ?? 'https://agencykira.com'
 const FROM_EMAIL    = process.env.FROM_EMAIL ?? 'VillaHub Facturation <billing@agencykira.com>'
 const COMMISSION    = 0.03
 const MIN_INVOICE   = 1  // euros — en-dessous on ne facture pas
+const ADMIN_ALERT_EMAIL = 'contact.agencykira@gmail.com'
+
+async function sendAdminAlert(subject, lines) {
+  if (!RESEND_KEY) return
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: [ADMIN_ALERT_EMAIL],
+        subject: `[VillaHub] ${subject}`,
+        html: `<div style="font-family:sans-serif;font-size:14px;color:#0D1F2D">
+          <p><strong>${subject}</strong></p>
+          <ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul>
+        </div>`,
+      }),
+    })
+  } catch (e) {
+    console.error('[monthly-billing] alert email failed:', e.message)
+  }
+}
 
 const sbHeaders = {
   apikey: SERVICE_KEY,
@@ -225,7 +247,7 @@ function buildBillingEmailHtml({ tenantName, periodLabel, commissionAmount, invo
 }
 
 // ─── Handler principal ────────────────────────────────────────────────────────
-export default async function handler(req, res) {
+async function runBilling(req, res) {
   // Sécurité : Vercel envoie automatiquement "Authorization: Bearer <CRON_SECRET>"
   // pour les déclenchements cron programmés — on l'accepte en plus du header
   // custom / query param (utiles pour les tests manuels).
@@ -295,6 +317,7 @@ export default async function handler(req, res) {
 
   // 5. Traitement par agence
   const results = []
+  const problems = []
 
   for (const tenant of tenants) {
     const data = caByTenant[tenant.id]
@@ -313,6 +336,7 @@ export default async function handler(req, res) {
     const adminEmail = emailByTenant[tenant.id]
     if (!adminEmail) {
       results.push({ tenant: tenant.name, status: 'error_no_email' })
+      problems.push(`${tenant.name} : aucun email admin trouvé, facture ${periodLabel} non envoyée`)
       continue
     }
 
@@ -345,9 +369,11 @@ export default async function handler(req, res) {
         pdfBase64 = pdf_base64
       } else {
         console.error('[monthly-billing] PDF error', pdfRes.status, await pdfRes.text())
+        problems.push(`${tenant.name} : échec de génération du PDF (${pdfRes.status}), facture envoyée sans pièce jointe`)
       }
     } catch (e) {
       console.error('[monthly-billing] PDF fetch error:', e.message)
+      problems.push(`${tenant.name} : échec de génération du PDF (${e.message}), facture envoyée sans pièce jointe`)
     }
 
     // Enregistrement DB (avant envoi email pour garder une trace même si email échoue)
@@ -383,6 +409,9 @@ export default async function handler(req, res) {
         }),
       })
       console.log('[monthly-billing] Resend:', adminEmail, emailRes.status)
+      if (!emailRes.ok) {
+        problems.push(`${tenant.name} : échec d'envoi de l'email de facturation (Resend ${emailRes.status})`)
+      }
     }
 
     results.push({
@@ -401,5 +430,23 @@ export default async function handler(req, res) {
   const errors  = results.filter(r => r.status.startsWith('error')).length
 
   console.log(`[monthly-billing] done — billed:${billed} skipped:${skipped} errors:${errors}`)
+
+  if (problems.length > 0) {
+    await sendAdminAlert(
+      `Facturation ${periodLabel} — ${problems.length} problème${problems.length > 1 ? 's' : ''}`,
+      problems,
+    )
+  }
+
   return res.status(200).json({ period, billed, skipped, errors, results })
+}
+
+export default async function handler(req, res) {
+  try {
+    return await runBilling(req, res)
+  } catch (e) {
+    console.error('[monthly-billing] fatal error:', e)
+    await sendAdminAlert('Erreur fatale lors de la facturation mensuelle', [e.message || String(e)])
+    if (!res.headersSent) return res.status(500).json({ error: 'Internal error' })
+  }
 }

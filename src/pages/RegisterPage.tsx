@@ -48,6 +48,16 @@ export default function RegisterPage() {
       })
       if (rpcError) { showError(rpcError, 'Erreur profil'); return }
 
+      // Notification (best-effort, ne doit jamais bloquer l'inscription)
+      supabase.functions.invoke('notify-signup', {
+        body: {
+          agency_name: form.company_name || 'Mon agence',
+          owner_name: form.full_name,
+          owner_email: form.email,
+          plan: selectedPlan,
+        },
+      }).catch(() => {})
+
       // Charger le profil et le tenant dans le store
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single()
       if (profile) {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase'
-import { Home, Users, Building, TrendingUp, Star, Euro, CreditCard, Clock } from 'lucide-react'
+import { Home, Users, Building, TrendingUp, Star, Euro, CreditCard, Clock, AlertTriangle, Check } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import toast from 'react-hot-toast'
@@ -25,6 +25,18 @@ interface RevenueStat {
   commission_amount: number
   currency: string
   billing_status: string | null
+}
+
+interface UnpaidInvoice {
+  id: string
+  tenant_id: string
+  tenant_name: string
+  period: string
+  commission_amount: number
+  currency: string
+  invoice_number: string
+  sent_at: string | null
+  days_overdue: number
 }
 
 interface FoundingMap { [id: string]: boolean }
@@ -53,6 +65,11 @@ export default function AdminPage() {
   const [revenue, setRevenue] = useState<RevenueStat[]>([])
   const [revenueLoading, setRevenueLoading] = useState(true)
   const [revenueError, setRevenueError] = useState<string | null>(null)
+
+  const [unpaid, setUnpaid] = useState<UnpaidInvoice[]>([])
+  const [unpaidLoading, setUnpaidLoading] = useState(true)
+  const [unpaidError, setUnpaidError] = useState<string | null>(null)
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -87,6 +104,44 @@ export default function AdminPage() {
     loadRevenue()
     return () => { cancelled = true }
   }, [period])
+
+  async function loadUnpaid() {
+    setUnpaidLoading(true)
+    const { data, error } = await supabase.rpc('get_admin_unpaid_invoices')
+    if (error) {
+      setUnpaidError(error.message)
+    } else {
+      setUnpaid(data ?? [])
+      setUnpaidError(null)
+    }
+    setUnpaidLoading(false)
+  }
+
+  useEffect(() => {
+    loadUnpaid()
+  }, [])
+
+  async function markPaid(invoice: UnpaidInvoice) {
+    setMarkingPaid(invoice.id)
+    const { error } = await supabase.rpc('admin_mark_billing_paid', { p_billing_id: invoice.id })
+    if (error) {
+      toast.error('Erreur : ' + error.message)
+    } else {
+      toast.success(`Facture ${invoice.invoice_number} marquée payée ✓`)
+      setUnpaid(prev => prev.filter(u => u.id !== invoice.id))
+      // Rafraîchit aussi le bloc Revenus si la période affichée correspond.
+      if (invoice.period === period) {
+        setRevenue(prev => prev.map(r =>
+          r.tenant_id === invoice.tenant_id ? { ...r, billing_status: 'paid' } : r
+        ))
+      }
+    }
+    setMarkingPaid(null)
+  }
+
+  const unpaidTotal = unpaid.reduce((s, u) => s + (u.commission_amount ?? 0), 0)
+  const unpaidCurrency = unpaid[0]?.currency ?? 'EUR'
+  const overdueCount = unpaid.filter(u => u.days_overdue > 0).length
 
   const revenueSummary = useMemo(() => {
     const withCa = revenue.filter(r => (r.ca_amount ?? 0) > 0)
@@ -290,6 +345,99 @@ export default function AdminPage() {
 
             {!revenueError && !revenueLoading && revenueSummary.rows.length === 0 && (
               <p className="text-center text-gray-400 py-6">Aucune réservation enregistrée sur cette période.</p>
+            )}
+          </div>
+        </Card>
+
+        {/* Factures impayées */}
+        <Card padding={false}>
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-800">Factures impayées</h2>
+          </div>
+
+          <div className="p-5">
+            {unpaidError && (
+              <p className="text-sm text-red-600">Erreur : {unpaidError}</p>
+            )}
+
+            {!unpaidError && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-amber-100 rounded-xl mx-auto mb-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {unpaidLoading ? '…' : unpaid.length}
+                  </p>
+                  <p className="text-xs text-gray-500">Factures en attente</p>
+                </Card>
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-red-100 rounded-xl mx-auto mb-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {unpaidLoading ? '…' : overdueCount}
+                  </p>
+                  <p className="text-xs text-gray-500">En retard (+30j)</p>
+                </Card>
+                <Card className="text-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-brand-100 rounded-xl mx-auto mb-2">
+                    <Euro className="h-5 w-5 text-brand-700" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {unpaidLoading ? '…' : fmtMoney(unpaidTotal, unpaidCurrency)}
+                  </p>
+                  <p className="text-xs text-gray-500">Total à encaisser</p>
+                </Card>
+              </div>
+            )}
+
+            {!unpaidError && unpaid.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50 text-left">
+                      <th className="px-3 py-2 font-semibold text-gray-500">Agence</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">Période</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">N° facture</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500 text-right">Montant</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">Retard</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {unpaid.map(u => (
+                      <tr key={u.id} className={u.days_overdue > 0 ? 'bg-red-50/40' : ''}>
+                        <td className="px-3 py-2 font-medium text-gray-900">{u.tenant_name}</td>
+                        <td className="px-3 py-2 text-gray-700">{u.period}</td>
+                        <td className="px-3 py-2 text-gray-500 font-mono text-xs">{u.invoice_number}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{fmtMoney(u.commission_amount, u.currency)}</td>
+                        <td className="px-3 py-2">
+                          {u.days_overdue > 0 ? (
+                            <Badge className="bg-red-100 text-red-700">{u.days_overdue} j</Badge>
+                          ) : (
+                            <span className="text-gray-400 text-xs">À échéance</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={() => markPaid(u)}
+                            disabled={markingPaid === u.id}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition-colors disabled:opacity-50"
+                          >
+                            <Check className="h-3 w-3" />
+                            {markingPaid === u.id ? '…' : 'Marquer payée'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {!unpaidError && !unpaidLoading && unpaid.length === 0 && (
+              <p className="text-center text-gray-400 py-6">Aucune facture en attente de paiement.</p>
             )}
           </div>
         </Card>

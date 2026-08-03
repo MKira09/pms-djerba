@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom'
 import { useVillasStore } from '@/stores/villas.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { usePropertyTerm } from '@/hooks/usePropertyTerm'
-import { VILLA_STATUS_COLORS, PLAN_LIMITS, AMENITY_OPTIONS } from '@/lib/utils'
+import { VILLA_STATUS_COLORS, AMENITY_OPTIONS } from '@/lib/utils'
 import { useCurrency } from '@/hooks/useCurrency'
 import type { Villa } from '@/types'
 
@@ -34,11 +34,6 @@ export default function VillasPage() {
   useEffect(() => { fetch() }, [])
 
   const isFoundingMember = !!tenant?.founding_member
-  // Founding member = double de la limite du plan (Starter: 10, Pro: 20, Agence: 100)
-  const FOUNDING_LIMITS: Record<string, number> = { starter: 10, pro: 20, agence: 100 }
-  const limit = isFoundingMember
-    ? (FOUNDING_LIMITS[tenant?.plan ?? 'starter'] ?? PLAN_LIMITS[tenant?.plan ?? 'starter'])
-    : PLAN_LIMITS[tenant?.plan ?? 'starter']
   const filtered = villas.filter(v => {
     const matchSearch = v.name.toLowerCase().includes(search.toLowerCase())
     const matchType = !typeFilter || (v.property_type || singular) === typeFilter
@@ -79,7 +74,6 @@ export default function VillasPage() {
   }
 
   function openCreate() {
-    if (villas.length >= limit) { toast.error(t('villas.plan_limit')); return }
     setEditVilla(null)
     setFormOpen(true)
   }
@@ -94,10 +88,9 @@ export default function VillasPage() {
           </h1>
           <p className="text-sm text-gray-500">
             {villas.filter(v => v.status === 'active').length} actifs
-            {isFoundingMember
-              ? <span className="ml-2 text-amber-600 font-medium">★ Membre fondateur — {limit} villas max</span>
-              : <> · limite plan : {limit}</>
-            }
+            {isFoundingMember && (
+              <span className="ml-2 text-amber-600 font-medium">★ Membre fondateur</span>
+            )}
           </p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>

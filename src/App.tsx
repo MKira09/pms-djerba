@@ -6,7 +6,6 @@ import '@/i18n'
 import AppLayout from '@/components/layout/AppLayout'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
-import PaymentSuccessPage from '@/pages/PaymentSuccessPage'
 import BlacklistPage from '@/pages/BlacklistPage'
 import AdminPage from '@/pages/AdminPage'
 import DashboardPage from '@/pages/DashboardPage'
@@ -17,7 +16,6 @@ import TeamPage from '@/pages/TeamPage'
 import PricingPage from '@/pages/PricingPage'
 import CommunicationsPage from '@/pages/CommunicationsPage'
 import SettingsPage from '@/pages/SettingsPage'
-import SubscriptionPage from '@/pages/SubscriptionPage'
 import BookingPage from '@/pages/BookingPage'
 import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
@@ -121,7 +119,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/plans" element={<Navigate to="/#tarifs" replace />} />
-        <Route path="/payment-success" element={<PaymentSuccessPage />} />
+        <Route path="/payment-success" element={<Navigate to="/dashboard" replace />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/book/:villaId" element={<VillaBookingPage />} />
         <Route path="/catalogue/:tenantSlug" element={<CataloguePage />} />
@@ -142,7 +140,6 @@ export default function App() {
           <Route path="/communications"  element={<CommunicationsPage />} />
           <Route path="/blacklist"       element={<BlacklistPage />} />
           <Route path="/settings"        element={<SettingsPage />} />
-          <Route path="/subscription"    element={<SubscriptionPage />} />
         </Route>
 
         {/* Fallback */}

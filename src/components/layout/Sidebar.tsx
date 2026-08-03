@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Home, Calendar, ClipboardList,
-  Users, TrendingUp, Mail, Settings, CreditCard, LogOut, ShieldAlert, ChevronDown, Shield,
+  Users, TrendingUp, Mail, Settings, LogOut, ShieldAlert, ChevronDown, Shield,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
@@ -18,7 +18,6 @@ const SUPER_ADMIN_EMAIL = 'prokmbconsulting@gmail.com'
 
 const BOTTOM_NAV = [
   { to: '/settings',     icon: Settings,    key: 'nav.settings' },
-  { to: '/subscription', icon: CreditCard,  key: 'nav.subscription' },
 ]
 
 const NAV_LINKS = [

@@ -119,14 +119,3 @@ export const FULL_ACCESS_EMAILS: string[] = [
   'mydjerbavillas@gmail.com',
 ]
 
-export const PLAN_LIMITS: Record<string, number> = {
-  starter: 5,
-  pro:     15,
-  agence:  50,
-}
-
-export const PLAN_PRICES: Record<string, number> = {
-  starter: 29,
-  pro:     79,
-  agence:  149,
-}

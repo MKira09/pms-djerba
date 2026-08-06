@@ -1,10 +1,14 @@
 self.addEventListener('push', event => {
-  const data = event.data?.json() ?? {}
+  let data = {}
+  try {
+    data = event.data?.json() ?? {}
+  } catch {
+    data = { title: 'VillaHub', body: event.data?.text() ?? 'Nouvelle notification' }
+  }
   event.waitUntil(
     self.registration.showNotification(data.title ?? 'VillaHub', {
       body: data.body ?? 'Nouvelle notification',
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
       tag: data.tag ?? 'villahub-booking',
       renotify: true,
       data: { url: data.url ?? '/reservations' },

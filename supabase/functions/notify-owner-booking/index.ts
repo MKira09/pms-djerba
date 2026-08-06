@@ -217,20 +217,29 @@ Deno.serve(async (req) => {
       return new Response('Email send failed: ' + err, { status: 500 })
     }
 
-    // Fire push notification (non-blocking — email already sent)
+    // Fire push notification — awaited so Deno doesn't kill context before completion
+    let pushDebug: Record<string, unknown> = { skipped: 'no PUSH_SECRET' }
     if (PUSH_SECRET) {
       const checkInStr  = checkIn.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
       const checkOutStr = checkOut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-      fetch(`${APP_URL}/api/send-push`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-push-secret': PUSH_SECRET },
-        body: JSON.stringify({
-          tenantId: res.tenant_id,
-          title: `🏡 Nouvelle réservation — ${villaName}`,
-          message: `${clientName} · ${checkInStr} → ${checkOutStr}`,
-          url: '/reservations',
-        }),
-      }).catch(err => console.error('[notify-owner] push error:', err))
+      try {
+        const pushRes = await fetch(`${APP_URL}/api/send-push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-push-secret': PUSH_SECRET },
+          body: JSON.stringify({
+            tenantId: res.tenant_id,
+            title: `🏡 Nouvelle réservation — ${villaName}`,
+            message: `${clientName} · ${checkInStr} → ${checkOutStr}`,
+            url: '/reservations',
+          }),
+        })
+        const pushBody = await pushRes.text()
+        pushDebug = { status: pushRes.status, body: pushBody, url: `${APP_URL}/api/send-push` }
+        console.log('[notify-owner] push result:', pushRes.status, pushBody)
+      } catch (err) {
+        pushDebug = { error: String(err) }
+        console.error('[notify-owner] push error:', err)
+      }
     }
 
     return new Response(JSON.stringify({ ok: true }), {

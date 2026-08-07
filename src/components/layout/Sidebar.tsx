@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Home, Calendar, ClipboardList,
-  Users, TrendingUp, Mail, Settings, LogOut, ShieldAlert, ChevronDown, Shield,
+  Users, TrendingUp, Mail, Settings, LogOut, ShieldAlert, ChevronDown, Shield, Receipt,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
@@ -17,7 +17,8 @@ import toast from 'react-hot-toast'
 const SUPER_ADMIN_EMAIL = 'prokmbconsulting@gmail.com'
 
 const BOTTOM_NAV = [
-  { to: '/settings',     icon: Settings,    key: 'nav.settings' },
+  { to: '/billing',      icon: Receipt,     key: 'Mes factures',  adminOnly: true },
+  { to: '/settings',     icon: Settings,    key: 'nav.settings',  adminOnly: false },
 ]
 
 const NAV_LINKS = [
@@ -184,7 +185,7 @@ export default function Sidebar() {
             Admin VillaHub
           </NavLink>
         )}
-        {BOTTOM_NAV.map(({ to, icon: Icon, key }) => (
+        {BOTTOM_NAV.filter(({ adminOnly }) => !adminOnly || profile?.role === 'admin').map(({ to, icon: Icon, key }) => (
           <NavLink
             key={to}
             to={to}
@@ -196,7 +197,7 @@ export default function Sidebar() {
             }
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
-            {t(key)}
+            {key.startsWith('nav.') ? t(key) : key}
           </NavLink>
         ))}
 

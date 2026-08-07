@@ -37,6 +37,15 @@ interface UnpaidInvoice {
   invoice_number: string
   sent_at: string | null
   days_overdue: number
+  reminder_count: number
+  last_reminder_at: string | null
+}
+
+const REMINDER_LABELS: Record<number, string> = {
+  0: 'Aucune',
+  1: 'Relance 1',
+  2: 'Relance 2',
+  3: 'Dernier rappel',
 }
 
 interface FoundingMap { [id: string]: boolean }
@@ -439,6 +448,7 @@ export default function AdminPage() {
                       <th className="px-3 py-2 font-semibold text-gray-500">N° facture</th>
                       <th className="px-3 py-2 font-semibold text-gray-500 text-right">Montant</th>
                       <th className="px-3 py-2 font-semibold text-gray-500">Retard</th>
+                      <th className="px-3 py-2 font-semibold text-gray-500">Relances</th>
                       <th className="px-3 py-2 font-semibold text-gray-500"></th>
                     </tr>
                   </thead>
@@ -455,6 +465,15 @@ export default function AdminPage() {
                           ) : (
                             <span className="text-gray-400 text-xs">À échéance</span>
                           )}
+                        </td>
+                        <td className="px-3 py-2">
+                          <Badge className={
+                            u.reminder_count >= 3 ? 'bg-red-100 text-red-700' :
+                            u.reminder_count > 0 ? 'bg-amber-100 text-amber-700' :
+                            'bg-gray-100 text-gray-500'
+                          }>
+                            {REMINDER_LABELS[u.reminder_count] ?? `${u.reminder_count}x`}
+                          </Badge>
                         </td>
                         <td className="px-3 py-2">
                           <button

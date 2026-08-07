@@ -16,6 +16,7 @@ import TeamPage from '@/pages/TeamPage'
 import PricingPage from '@/pages/PricingPage'
 import CommunicationsPage from '@/pages/CommunicationsPage'
 import SettingsPage from '@/pages/SettingsPage'
+import BillingPage from '@/pages/BillingPage'
 import BookingPage from '@/pages/BookingPage'
 import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
@@ -140,6 +141,7 @@ export default function App() {
           <Route path="/communications"  element={<CommunicationsPage />} />
           <Route path="/blacklist"       element={<BlacklistPage />} />
           <Route path="/settings"        element={<SettingsPage />} />
+          <Route path="/billing"         element={<BillingPage />} />
         </Route>
 
         {/* Fallback */}

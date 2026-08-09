@@ -98,14 +98,14 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {/* Dashboard */}
-        <NavLink to="/dashboard" className={({ isActive }) => LINK_CLASS(isActive)}>
+        <NavLink to="/dashboard" data-tour="nav-dashboard" className={({ isActive }) => LINK_CLASS(isActive)}>
           <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
           {t('nav.dashboard')}
         </NavLink>
 
         {/* Biens — single type: simple NavLink / multi: collapsible */}
         {!isMultiType ? (
-          <NavLink to="/villas" className={({ isActive }) => LINK_CLASS(isActive)}>
+          <NavLink to="/villas" data-tour="nav-villas" className={({ isActive }) => LINK_CLASS(isActive)}>
             <Home className="h-5 w-5 flex-shrink-0" />
             <span className="flex-1">Mes biens</span>
             {villas.length > 0 && (
@@ -117,6 +117,7 @@ export default function Sidebar() {
         ) : (
           <div>
             <button
+              data-tour="nav-villas"
               onClick={() => setBienOpen(o => !o)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
@@ -165,7 +166,7 @@ export default function Sidebar() {
 
         {/* Rest of nav */}
         {NAV_LINKS.map(({ to, icon: Icon, key }) => (
-          <NavLink key={to} to={to} className={({ isActive }) => LINK_CLASS(isActive)}>
+          <NavLink key={to} to={to} data-tour={`nav-${to.slice(1)}`} className={({ isActive }) => LINK_CLASS(isActive)}>
             <Icon className="h-5 w-5 flex-shrink-0" />
             <span className="flex-1">{t(key)}</span>
             {to === '/reservations' && pendingCount > 0 && (
@@ -189,6 +190,7 @@ export default function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            data-tour={to === '/settings' ? 'nav-settings' : undefined}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',

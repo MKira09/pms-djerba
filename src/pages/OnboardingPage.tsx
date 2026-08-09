@@ -13,6 +13,13 @@ import type { Villa } from '@/types'
 
 type Step = 'welcome' | 'villa' | 'done'
 
+// Permet à DashboardPage de savoir qu'un compte a explicitement choisi de
+// sauter le parcours d'accueil, pour ne pas le renvoyer en boucle vers
+// /onboarding tant qu'il n'a aucune villa.
+export function onboardingSkipKey(profileId: string) {
+  return `villahub_onboarding_skipped_${profileId}`
+}
+
 const EMPTY_VILLA: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
   name: '', description: '', address: '', city: 'Djerba',
   capacity: 4, bedrooms: 2, bathrooms: 1, base_price: 300,
@@ -40,6 +47,13 @@ function StepDots({ step }: { step: Step }) {
 
 function Shell({ step, children }: { step: Step; children: React.ReactNode }) {
   const navigate = useNavigate()
+  const { profile } = useAuthStore()
+
+  function skip() {
+    if (profile?.id) localStorage.setItem(onboardingSkipKey(profile.id), '1')
+    navigate('/dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
@@ -57,7 +71,7 @@ function Shell({ step, children }: { step: Step; children: React.ReactNode }) {
 
         {step !== 'done' && (
           <p className="text-center text-sm text-gray-400 mt-5">
-            <button onClick={() => navigate('/dashboard')} className="hover:text-gray-600 hover:underline">
+            <button onClick={skip} className="hover:text-gray-600 hover:underline">
               Plus tard, j'irai directement sur mon tableau de bord
             </button>
           </p>
@@ -239,8 +253,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <Button size="lg" className="w-full" onClick={() => navigate('/dashboard')}>
-            Aller sur mon tableau de bord <ArrowRight className="h-4 w-4 ml-1" />
+          <Button size="lg" className="w-full" onClick={() => navigate('/dashboard', { state: { startTour: true } })}>
+            Découvrir mon tableau de bord <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       )}

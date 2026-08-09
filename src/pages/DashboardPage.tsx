@@ -18,6 +18,7 @@ import { useReservationsStore } from '@/stores/reservations.store'
 import { SOURCE_COLORS, SOURCE_HEX } from '@/lib/utils'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useAuthStore } from '@/stores/auth.store'
+import { onboardingSkipKey } from '@/pages/OnboardingPage'
 import type { ReservationSource } from '@/types'
 
 function KpiCard({ label, value, sub, icon: Icon, trend }: {
@@ -49,7 +50,7 @@ function KpiCard({ label, value, sub, icon: Icon, trend }: {
 export default function DashboardPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { isDemoMode } = useAuthStore()
+  const { isDemoMode, profile } = useAuthStore()
   const { villas, loading: villasLoading, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
   const { fmt } = useCurrency()
@@ -57,12 +58,13 @@ export default function DashboardPage() {
   useEffect(() => { fetchVillas(); fetchRes() }, [])
 
   // Un compte tout neuf sans aucun bien n'a rien à faire sur un dashboard
-  // vide et décourageant — on le renvoie vers le parcours d'accueil guidé.
+  // vide et décourageant — on le renvoie vers le parcours d'accueil guidé,
+  // sauf s'il a explicitement choisi de le sauter (bouton "Plus tard").
   useEffect(() => {
-    if (!isDemoMode && !villasLoading && villas.length === 0) {
-      navigate('/onboarding', { replace: true })
-    }
-  }, [isDemoMode, villasLoading, villas.length, navigate])
+    if (isDemoMode || villasLoading || villas.length > 0) return
+    const skipped = profile?.id && localStorage.getItem(onboardingSkipKey(profile.id)) === '1'
+    if (!skipped) navigate('/onboarding', { replace: true })
+  }, [isDemoMode, villasLoading, villas.length, profile?.id, navigate])
 
   const stats = useMemo(() => {
     const now = new Date()

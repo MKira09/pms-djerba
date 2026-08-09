@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   TrendingUp, TrendingDown, Home, CalendarCheck,
   CalendarX, Clock, Moon, Coins, BarChart3, ArrowRight,
@@ -17,6 +17,7 @@ import { useVillasStore } from '@/stores/villas.store'
 import { useReservationsStore } from '@/stores/reservations.store'
 import { SOURCE_COLORS, SOURCE_HEX } from '@/lib/utils'
 import { useCurrency } from '@/hooks/useCurrency'
+import { useAuthStore } from '@/stores/auth.store'
 import type { ReservationSource } from '@/types'
 
 function KpiCard({ label, value, sub, icon: Icon, trend }: {
@@ -47,11 +48,21 @@ function KpiCard({ label, value, sub, icon: Icon, trend }: {
 
 export default function DashboardPage() {
   const { t } = useTranslation()
-  const { villas, fetch: fetchVillas } = useVillasStore()
+  const navigate = useNavigate()
+  const { isDemoMode } = useAuthStore()
+  const { villas, loading: villasLoading, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
   const { fmt } = useCurrency()
 
   useEffect(() => { fetchVillas(); fetchRes() }, [])
+
+  // Un compte tout neuf sans aucun bien n'a rien à faire sur un dashboard
+  // vide et décourageant — on le renvoie vers le parcours d'accueil guidé.
+  useEffect(() => {
+    if (!isDemoMode && !villasLoading && villas.length === 0) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [isDemoMode, villasLoading, villas.length, navigate])
 
   const stats = useMemo(() => {
     const now = new Date()

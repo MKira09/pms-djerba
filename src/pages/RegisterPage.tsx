@@ -67,7 +67,7 @@ export default function RegisterPage() {
       }
 
       toast.success('Compte créé ! Bienvenue 🎉', { duration: 4000 })
-      navigate('/dashboard')
+      navigate('/onboarding')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       toast.error('Erreur réseau : ' + (msg || 'connexion impossible'))

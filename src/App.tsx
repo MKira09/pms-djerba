@@ -17,6 +17,7 @@ import PricingPage from '@/pages/PricingPage'
 import CommunicationsPage from '@/pages/CommunicationsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import BillingPage from '@/pages/BillingPage'
+import OnboardingPage from '@/pages/OnboardingPage'
 import BookingPage from '@/pages/BookingPage'
 import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
@@ -129,6 +130,9 @@ export default function App() {
 
         {/* Admin only */}
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
+        {/* Onboarding — plein écran, sans le chrome habituel (sidebar/header) */}
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
         {/* Protected */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

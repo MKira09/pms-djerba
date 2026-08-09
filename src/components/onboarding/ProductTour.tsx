@@ -123,3 +123,9 @@ export function hasSeenTour(profileId: string | undefined): boolean {
   if (!profileId) return true
   return localStorage.getItem(tourStorageKey(profileId)) === '1'
 }
+
+// Permet de relancer la visite à la demande (ex: bouton "Revoir la visite"
+// dans le header), sans devoir recréer un compte pour la retester.
+export function resetTour(profileId: string | undefined) {
+  if (profileId) localStorage.removeItem(tourStorageKey(profileId))
+}

@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, Globe } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, Globe, HelpCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
+import { resetTour } from '@/components/onboarding/ProductTour'
 import type { Lang } from '@/types'
 
 const LANGS: { code: Lang; label: string }[] = [
@@ -11,12 +13,18 @@ const LANGS: { code: Lang; label: string }[] = [
 
 export default function Header() {
   const { i18n } = useTranslation()
-  const { tenant } = useAuthStore()
+  const navigate = useNavigate()
+  const { tenant, profile, isDemoMode } = useAuthStore()
 
   function switchLang(lang: Lang) {
     i18n.changeLanguage(lang)
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.lang = lang
+  }
+
+  function replayTour() {
+    resetTour(profile?.id)
+    navigate('/dashboard', { state: { startTour: true } })
   }
 
   return (
@@ -50,6 +58,17 @@ export default function Header() {
             </button>
           ))}
         </div>
+
+        {/* Revoir la visite guidée du menu */}
+        {!isDemoMode && (
+          <button
+            onClick={replayTour}
+            title="Revoir la visite guidée"
+            className="hidden md:flex p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </button>
+        )}
 
         {/* Notif bell */}
         <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">

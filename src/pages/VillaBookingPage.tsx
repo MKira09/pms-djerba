@@ -16,6 +16,10 @@ type VillaInfo = {
   id: string; name: string; description: string | null; city: string
   capacity: number; bedrooms: number; bathrooms: number
   base_price: number; photos: string[]; tenant_id: string
+  tenant_currency: string | null
+  tenant_brand_color_primary: string | null
+  tenant_brand_color_secondary: string | null
+  tenant_brand_font: string | null
 }
 type BlockedRange = { check_in: string; check_out: string }
 type Form = {
@@ -115,38 +119,30 @@ export default function VillaBookingPage() {
   useEffect(() => {
     if (!villaId) return
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(villaId)
-
+    // Public booking-page lookup: one villa (by id or its own slug), plus its
+    // tenant's currency/brand — all scoped server-side, no direct table read.
+    // See supabase/migrations/038_public_catalog_lockdown.sql
     const villaQuery = supabase
-      .from('villas')
-      .select('id,name,description,city,capacity,bedrooms,bathrooms,base_price,photos,tenant_id')
-      .eq(isUuid ? 'id' : 'slug', villaId)
-      .eq('status', 'active')
+      .rpc('get_public_villa', { p_id_or_slug: villaId })
       .maybeSingle()
 
-    villaQuery.then(async ({ data: v }) => {
+    villaQuery.then(async ({ data: vData }) => {
+      const v = vData as VillaInfo | null
       if (!v) {
         setNotFound(true)
         setLoading(false)
         return
       }
       setVilla(v)
-      // Always query reservations by the real UUID, regardless of how we looked up the villa
-      const [{ data: r }, { data: t }] = await Promise.all([
-        supabase
-          .from('reservations')
-          .select('check_in,check_out')
-          .eq('villa_id', v.id)
-          .eq('status', 'confirmed'),
-        supabase
-          .from('tenants')
-          .select('currency, brand_color_primary, brand_color_secondary, brand_font')
-          .eq('id', v.tenant_id)
-          .single(),
-      ])
+      const { data: r } = await supabase
+        .rpc('get_villa_availability', { p_villa_id: v.id })
       setBlocked(r ?? [])
-      if (t?.currency) setTenantCurrency(t.currency)
-      if (t) setTenantBrand({ primary: t.brand_color_primary, secondary: t.brand_color_secondary, font: t.brand_font })
+      if (v.tenant_currency) setTenantCurrency(v.tenant_currency)
+      setTenantBrand({
+        primary: v.tenant_brand_color_primary,
+        secondary: v.tenant_brand_color_secondary,
+        font: v.tenant_brand_font,
+      })
       setLoading(false)
     })
   }, [villaId])
@@ -198,6 +194,10 @@ export default function VillaBookingPage() {
     }
 
     setSubmitting(true)
+    // Client's display currency/rate now travels IN the RPC call itself —
+    // reservations has no public update policy anymore, so a follow-up
+    // anon .update() would silently fail. See migration 038.
+    const clientRate = isConverted && rate != null ? rate : null
     const { data: reservationId, error: rpcErr } = await supabase.rpc('create_booking_request', {
       p_villa_id:  villa.id,
       p_full_name: `${form.firstName.trim()} ${form.lastName.trim()}`,
@@ -207,6 +207,8 @@ export default function VillaBookingPage() {
       p_check_out: form.checkOut,
       p_guests:    form.guests,
       p_message:   form.message.trim() || '',
+      p_client_currency:      displayCurrency,
+      p_client_currency_rate: clientRate,
     })
     setSubmitting(false)
 
@@ -219,13 +221,6 @@ export default function VillaBookingPage() {
     } else {
       setSubmitted(true)
       if (reservationId) {
-        // Store client's currency preference for PDF/email generation
-        const clientRate = isConverted && rate != null ? rate : null
-        supabase.from('reservations').update({
-          client_currency: displayCurrency,
-          client_currency_rate: clientRate,
-        }).eq('id', reservationId).then()
-
         supabase.functions.invoke('notify-owner-booking', {
           body: { reservation_id: reservationId },
         }).catch((e) => console.warn('[booking] owner notification failed:', e))

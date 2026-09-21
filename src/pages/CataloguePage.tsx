@@ -24,10 +24,14 @@ type TenantPublic = {
   brand_font: string | null
 }
 
+// Only the fields the public catalogue is allowed to see (via get_public_villas) —
+// deliberately narrower than the full Villa type (no access_code, wifi_password, etc.)
+type PublicVilla = Pick<Villa, 'id' | 'name' | 'city' | 'capacity' | 'bedrooms' | 'base_price' | 'photos'>
+
 export default function CataloguePage() {
   const { tenantSlug } = useParams<{ tenantSlug: string }>()
   const [tenant, setTenant] = useState<TenantPublic | null>(null)
-  const [villas, setVillas] = useState<Villa[]>([])
+  const [villas, setVillas] = useState<PublicVilla[]>([])
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
   const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set())
@@ -41,11 +45,11 @@ export default function CataloguePage() {
   useEffect(() => {
     async function load() {
       setLoading(true)
+      // Public catalogue lookup: scoped server-side to exactly this slug's
+      // tenant — see supabase/migrations/038_public_catalog_lockdown.sql
       const { data: t } = await supabase
-        .from('tenants')
-        .select('id, name, logo_url, slogan, currency, slug, brand_color_primary, brand_color_secondary, brand_font')
-        .eq('slug', tenantSlug!)
-        .single()
+        .rpc('get_tenant_by_slug', { p_slug: tenantSlug! })
+        .maybeSingle()
       if (!t) {
         setNotFound(true)
         setLoading(false)
@@ -53,12 +57,8 @@ export default function CataloguePage() {
       }
       setTenant(t as TenantPublic)
       const { data: v } = await supabase
-        .from('villas')
-        .select('*')
-        .eq('tenant_id', t.id)
-        .eq('status', 'active')
-        .order('name')
-      setVillas(v ?? [])
+        .rpc('get_public_villas', { p_slug: tenantSlug! })
+      setVillas((v ?? []) as PublicVilla[])
       setLoading(false)
     }
     if (tenantSlug) load()
@@ -72,12 +72,11 @@ export default function CataloguePage() {
     if (checkIn >= checkOut) return
     setChecking(true)
     supabase
-      .from('reservations')
-      .select('villa_id')
-      .eq('tenant_id', tenant.id)
-      .in('status', ['confirmed', 'pending'])
-      .lt('check_in', checkOut)
-      .gt('check_out', checkIn)
+      .rpc('get_tenant_availability', {
+        p_slug: tenant.slug!,
+        p_check_in: checkIn,
+        p_check_out: checkOut,
+      })
       .then(({ data }) => {
         setUnavailableIds(new Set((data ?? []).map((r: { villa_id: string }) => r.villa_id)))
         setChecking(false)

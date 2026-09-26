@@ -1,20 +1,10 @@
 User-agent: *
-Allow: /
-Allow: /plans
+Allow: /$
+Allow: /blog
+Allow: /catalogue/
+Allow: /book/
+Allow: /booking
 
-Disallow: /dashboard
-Disallow: /villas
-Disallow: /calendar
-Disallow: /reservations
-Disallow: /team
-Disallow: /pricing
-Disallow: /communications
-Disallow: /blacklist
-Disallow: /settings
-Disallow: /subscription
-Disallow: /admin
-Disallow: /login
-Disallow: /register
-Disallow: /payment-success
+Disallow: /
 
 Sitemap: https://www.agencykira.com/sitemap.xml

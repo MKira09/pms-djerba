@@ -47,7 +47,7 @@ function BlockModal({
   onClose: () => void
 }) {
   const { add } = useBlockedPeriodsStore()
-  const { plural } = usePropertyTerm()
+  const { plural, allDeterminerPlural } = usePropertyTerm()
   const [form, setForm] = useState({
     villa_id: '' as string,
     start_date: defaultDate ?? '',
@@ -88,7 +88,7 @@ function BlockModal({
   }
 
   const villaOpts = [
-    { value: '', label: `Toutes les ${plural.toLowerCase()}` },
+    { value: '', label: `${allDeterminerPlural} les ${plural.toLowerCase()}` },
     ...villas.map(v => ({ value: v.id, label: v.name })),
   ]
   const reasonOpts = Object.entries(REASON_LABELS).map(([k, v]) => ({ value: k, label: v.label }))
@@ -154,7 +154,7 @@ function BlockDetailModal({
   onClose: () => void
   onDelete: () => void
 }) {
-  const { plural } = usePropertyTerm()
+  const { plural, allDeterminerPlural } = usePropertyTerm()
   if (!period) return null
   const info = REASON_LABELS[period.reason]
   const villa = villas.find(v => v.id === period.villa_id)
@@ -176,7 +176,7 @@ function BlockDetailModal({
           <span style={{ color: info.color }}>{info.icon}</span>
           <span className="font-medium">{info.label}</span>
         </div>
-        <p><span className="text-gray-500">Villa :</span> {villa?.name ?? `Toutes les ${plural.toLowerCase()}`}</p>
+        <p><span className="text-gray-500">Villa :</span> {villa?.name ?? `${allDeterminerPlural} les ${plural.toLowerCase()}`}</p>
         <p>
           <span className="text-gray-500">Période :</span>{' '}
           {format(parseISO(period.start_date), 'dd MMM yyyy', { locale: fr })}
@@ -194,7 +194,7 @@ function BlockDetailModal({
 /* ─── Main page ──────────────────────────────────────────────────────────── */
 export default function CalendarPage() {
   const { t } = useTranslation()
-  const { plural } = usePropertyTerm()
+  const { plural, allDeterminerPlural } = usePropertyTerm()
   const { villas, fetch: fetchVillas } = useVillasStore()
   const { reservations, fetch: fetchRes } = useReservationsStore()
   const { periods, fetch: fetchPeriods, remove } = useBlockedPeriodsStore()
@@ -246,7 +246,7 @@ export default function CalendarPage() {
   }
 
   const villaOptions = [
-    { value: 'all', label: `Toutes les ${plural.toLowerCase()}` },
+    { value: 'all', label: `${allDeterminerPlural} les ${plural.toLowerCase()}` },
     ...villas.map(v => ({ value: v.id, label: v.name })),
   ]
 

@@ -50,11 +50,13 @@ export function usePropertyTerm() {
   const definiteArticle = elided ? "l'" : (gender === 'f' ? 'la ' : 'le ')
   const possessive = gender === 'f' ? 'ma' : 'mon'
   const noneArticle = gender === 'f' ? 'Aucune' : 'Aucun'
+  const allDeterminerPlural = gender === 'f' ? 'Toutes' : 'Tous'
   const firstAdjective = gender === 'f' ? 'première' : 'premier'
   const pastParticipleSuffix = gender === 'f' ? 'e' : ''
 
   return {
     singular, plural, isMultiType, types, gender,
     indefiniteArticle, definiteArticle, possessive, noneArticle, firstAdjective, pastParticipleSuffix,
+    allDeterminerPlural,
   }
 }

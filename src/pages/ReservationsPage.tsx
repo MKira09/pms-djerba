@@ -40,7 +40,7 @@ const PAYMENT_BADGE: Record<PaymentStatus, { label: string; cls: string }> = {
 
 export default function ReservationsPage() {
   const { t } = useTranslation()
-  const { singular, plural } = usePropertyTerm()
+  const { singular, plural, allDeterminerPlural } = usePropertyTerm()
   const { reservations, archived, fetch, fetchArchived, remove, restore } = useReservationsStore()
   const { villas, fetch: fetchVillas } = useVillasStore()
   const { fmt } = useCurrency()
@@ -193,7 +193,7 @@ export default function ReservationsPage() {
     { value: 'all', label: 'Tous les statuts' },
     ...(['confirmed', 'pending', 'cancelled', 'checkout'] as ReservationStatus[]).map(s => ({ value: s, label: t(`reservations.${s}`) })),
   ]
-  const villaOpts = [{ value: 'all', label: `Toutes les ${plural.toLowerCase()}` }, ...villas.map(v => ({ value: v.id, label: v.name }))]
+  const villaOpts = [{ value: 'all', label: `${allDeterminerPlural} les ${plural.toLowerCase()}` }, ...villas.map(v => ({ value: v.id, label: v.name }))]
   const sourceOpts = [{ value: 'all', label: 'Toutes les sources' }, ...(['airbnb','booking','direct','whatsapp','vrbo','autre'] as ReservationSource[]).map(s => ({ value: s, label: s }))]
 
   return (

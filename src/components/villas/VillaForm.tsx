@@ -29,7 +29,7 @@ const EMPTY: Omit<Villa, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> = {
 
 export default function VillaForm({ open, villa, onClose }: Props) {
   const { t } = useTranslation()
-  const { singular, isMultiType, types } = usePropertyTerm()
+  const { singular, isMultiType, types, definiteArticle, indefiniteArticle } = usePropertyTerm()
   const { add, update } = useVillasStore()
   const { tenant } = useAuthStore()
   const [form, setForm] = useState(EMPTY)
@@ -142,7 +142,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title={villa ? `Modifier la ${singular.toLowerCase()}` : `Ajouter une ${singular.toLowerCase()}`}
+      title={villa ? `Modifier ${definiteArticle}${singular.toLowerCase()}` : `Ajouter ${indefiniteArticle} ${singular.toLowerCase()}`}
       size="lg"
       footer={
         <>
@@ -154,7 +154,7 @@ export default function VillaForm({ open, villa, onClose }: Props) {
       <form id="villa-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <Input
-            label={`Nom de la ${singular.toLowerCase()}`}
+            label={`Nom de ${definiteArticle}${singular.toLowerCase()}`}
             value={form.name}
             onChange={e => {
               const newName = e.target.value

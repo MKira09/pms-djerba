@@ -21,8 +21,8 @@ export default function VillasPage() {
   const { t } = useTranslation()
   const { villas, fetch, remove, loading } = useVillasStore()
   const { tenant } = useAuthStore()
-  const { singular, plural, isMultiType } = usePropertyTerm()
-  const searchLabel = isMultiType ? 'un bien' : `une ${singular.toLowerCase()}`
+  const { singular, plural, isMultiType, indefiniteArticle, definiteArticle, noneArticle, firstAdjective, pastParticipleSuffix } = usePropertyTerm()
+  const searchLabel = `${indefiniteArticle} ${singular.toLowerCase()}`
   const [searchParams] = useSearchParams()
   const typeFilter = searchParams.get('type')
   const [search, setSearch] = useState('')
@@ -57,7 +57,7 @@ export default function VillasPage() {
     if (!deleteId) return
     try {
       await remove(deleteId)
-      toast.success(`${singular} supprimée.`)
+      toast.success(`${singular} supprimé${pastParticipleSuffix}.`)
     } catch {
       toast.error('Erreur lors de la suppression.')
     } finally {
@@ -94,7 +94,7 @@ export default function VillasPage() {
           </p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-          Ajouter une {singular}
+          Ajouter {indefiniteArticle} {singular}
         </Button>
       </div>
 
@@ -144,7 +144,7 @@ export default function VillasPage() {
       ) : filtered.length === 0 ? (
         <Card className="text-center py-16 text-gray-400">
           <p className="text-lg font-medium mb-2">🏠</p>
-          <p>Aucune {singular.toLowerCase()} pour l'instant. Ajoutez votre première {singular.toLowerCase()} !</p>
+          <p>{noneArticle} {singular.toLowerCase()} pour l'instant. Ajoutez votre {firstAdjective} {singular.toLowerCase()} !</p>
         </Card>
       ) : (
         <div className="space-y-8">
@@ -183,7 +183,7 @@ export default function VillasPage() {
       <Modal
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title={`Supprimer la ${singular.toLowerCase()}`}
+        title={`Supprimer ${definiteArticle}${singular.toLowerCase()}`}
         size="sm"
         footer={
           <>

@@ -85,7 +85,7 @@ export default function OnboardingPage() {
   const navigate = useNavigate()
   const { profile, tenant, isDemoMode } = useAuthStore()
   const { villas, loading: villasLoading, fetch: fetchVillas, add } = useVillasStore()
-  const { singular, isMultiType, types } = usePropertyTerm()
+  const { singular, isMultiType, types, definiteArticle, possessive, firstAdjective } = usePropertyTerm()
   const [step, setStep] = useState<Step>('welcome')
 
   // Si ce compte a déjà au moins un bien (ex: retour manuel sur /onboarding
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
             Bienvenue{firstName ? `, ${firstName}` : ''} !
           </h2>
           <p className="text-gray-500 mb-8 leading-relaxed">
-            Configurons votre première {singular.toLowerCase()} en deux minutes — vous aurez ensuite
+            Configurons votre {firstAdjective} {singular.toLowerCase()} en deux minutes — vous aurez ensuite
             un catalogue prêt à partager à vos clients pour recevoir vos premières réservations.
           </p>
           <Button size="lg" className="w-full" onClick={() => setStep('villa')}>
@@ -164,14 +164,14 @@ export default function OnboardingPage() {
       {step === 'villa' && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
-            Votre première {singular.toLowerCase()}
+            Votre {firstAdjective} {singular.toLowerCase()}
           </h2>
           <p className="text-sm text-gray-500 mb-6">
             Juste l'essentiel pour commencer — vous pourrez compléter photos, équipements et détails plus tard depuis "Mes biens".
           </p>
           <form onSubmit={handleCreateVilla} className="space-y-4">
             <Input
-              label={`Nom de la ${singular.toLowerCase()}`}
+              label={`Nom de ${definiteArticle}${singular.toLowerCase()}`}
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               placeholder="Ex: Villa Jasmine"
@@ -209,7 +209,7 @@ export default function OnboardingPage() {
               />
             </div>
             <Button type="submit" size="lg" className="w-full" loading={saving}>
-              Créer ma {singular.toLowerCase()} <ArrowRight className="h-4 w-4 ml-1" />
+              Créer {possessive} {singular.toLowerCase()} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </form>
         </div>

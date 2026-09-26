@@ -1,0 +1,4 @@
+Contact: mailto:contact.agencykira@gmail.com
+Expires: 2027-09-26T00:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://www.agencykira.com/.well-known/security.txt

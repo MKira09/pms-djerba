@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
 import '@/i18n'
@@ -31,19 +31,30 @@ import { supabase } from '@/lib/supabase'
 const ADMIN_EMAIL = 'prokmbconsulting@gmail.com'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { profile } = useAuthStore()
+  const { profile, enterDemoMode } = useAuthStore()
+  const [searchParams] = useSearchParams()
   const [sessionChecked, setSessionChecked] = useState(false)
   const [hasSession, setHasSession] = useState(false)
 
+  // Lien de démo partageable (ex: /dashboard?demo=1) : bascule directement en
+  // mode démonstration, sans passer par la case connexion, tant qu'aucune
+  // vraie session n'est déjà chargée dans le store.
+  const wantsDemoLink = searchParams.get('demo') === '1'
+
   useEffect(() => {
+    if (wantsDemoLink && !profile) {
+      enterDemoMode()
+      return
+    }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setHasSession(!!session)
       setSessionChecked(true)
     })
   }, [])
 
-  // Profile already in store (persisted or just logged in) → pass through
+  // Profile already in store (persisted, démo, ou juste connecté) → pass through
   if (profile) return <>{children}</>
+  if (wantsDemoLink) return null
   // Waiting for session check → show nothing briefly
   if (!sessionChecked) return null
   // No session at all → redirect to login

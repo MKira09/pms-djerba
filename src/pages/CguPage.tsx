@@ -210,7 +210,10 @@ export default function CguPage() {
             </p>
 
             <p className="text-sm text-gray-400 mt-10">
-              Pour toute question sur ces conditions, contactez-nous à l'adresse indiquée sur votre espace client.
+              Pour toute question sur ces conditions, contactez-nous à{' '}
+              <a href="mailto:contact.agencykira@gmail.com" className="text-brand-700 font-medium hover:underline">
+                contact.agencykira@gmail.com
+              </a>.
             </p>
           </div>
         </article>

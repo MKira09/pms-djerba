@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const selectedPlan = searchParams.get('plan') ?? 'starter'
   const { setProfile, setTenant } = useAuthStore()
   const [form, setForm] = useState({ full_name: '', company_name: '', email: '', password: '', confirm: '' })
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [loading, setLoading] = useState(false)
 
   function set(key: string, val: string) { setForm(f => ({ ...f, [key]: val })) }
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (form.password !== form.confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
+    if (!acceptTerms) { toast.error('Merci d\'accepter les conditions générales pour créer votre compte.'); return }
     setLoading(true)
     try {
       // Étape 1 : créer le compte auth
@@ -101,7 +103,23 @@ export default function RegisterPage() {
             <Input label={t('auth.password')} type="password" value={form.password} onChange={e => set('password', e.target.value)} left={<Lock className="h-4 w-4" />} placeholder="Min. 8 caractères" required />
             <Input label={t('auth.confirm_password')} type="password" value={form.confirm} onChange={e => set('confirm', e.target.value)} left={<Lock className="h-4 w-4" />} placeholder="••••••••" required />
 
-            <Button type="submit" loading={loading} className="w-full" size="lg">
+            <label className="flex items-start gap-2.5 text-sm text-gray-600 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={e => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-700 focus:ring-brand-500"
+                required
+              />
+              <span>
+                J'ai lu et j'accepte les{' '}
+                <Link to="/cgu" target="_blank" rel="noopener noreferrer" className="text-brand-700 font-medium hover:underline">
+                  conditions générales d'utilisation et de vente
+                </Link>
+              </span>
+            </label>
+
+            <Button type="submit" loading={loading} className="w-full" size="lg" disabled={!acceptTerms}>
               Créer mon compte
             </Button>
           </form>

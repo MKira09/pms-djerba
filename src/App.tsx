@@ -23,6 +23,7 @@ import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
 import BlogListPage from '@/pages/BlogListPage'
 import BlogLouerSansCommissionPage from '@/pages/BlogLouerSansCommissionPage'
+import CguPage from '@/pages/CguPage'
 import HomePage from '@/pages/HomePage'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="/catalogue/:tenantSlug" element={<CataloguePage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/louer-sa-villa-sans-commission" element={<BlogLouerSansCommissionPage />} />
+        <Route path="/cgu" element={<CguPage />} />
 
         {/* Admin only */}
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />

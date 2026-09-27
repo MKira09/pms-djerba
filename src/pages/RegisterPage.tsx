@@ -119,15 +119,26 @@ export default function RegisterPage() {
         }
       }
 
-      // Notification (best-effort, ne doit jamais bloquer l'inscription)
+      // Notification (best-effort, ne doit jamais bloquer l'inscription).
+      // Appel manuel (même raison que pour la création de profil plus haut) :
+      // supabase.functions.invoke() envoie un en-tête d'autorisation qui se fait
+      // rejeter par la passerelle, même quand la vérification JWT est désactivée
+      // sur la fonction. On n'envoie ici que la clé publique du projet.
       if (!isResumedSignup) {
-        supabase.functions.invoke('notify-signup', {
-          body: {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        fetch(`${supabaseUrl}/functions/v1/notify-signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
             agency_name: form.company_name || 'Mon agence',
             owner_name: form.full_name,
             owner_email: form.email,
             plan: selectedPlan,
-          },
+          }),
         }).catch(() => {})
       }
 

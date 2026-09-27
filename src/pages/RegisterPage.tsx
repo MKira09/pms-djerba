@@ -126,12 +126,14 @@ export default function RegisterPage() {
       // sur la fonction. On n'envoie ici que la clé publique du projet.
       if (!isResumedSignup) {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        // Pas d'en-tête "apikey" ici : la fonction est déployée en --no-verify-jwt
+        // (aucune authentification requise), et l'ajouter déclenchait un blocage
+        // CORS côté navigateur (Access-Control-Allow-Headers ne l'autorisait pas),
+        // si bien que la requête POST réelle n'était jamais envoyée.
         fetch(`${supabaseUrl}/functions/v1/notify-signup`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             agency_name: form.company_name || 'Mon agence',

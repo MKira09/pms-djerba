@@ -92,17 +92,36 @@ export default function RegisterPage() {
           refresh_token: activeSession.refresh_token,
         })
       }
+      // Vérification serveur (pas seulement locale) que la session est bien active
+      await supabase.auth.getUser()
 
       // Étape 2 : créer le tenant + profil via la fonction SQL — seulement si ce n'est
       // pas déjà fait (reprise d'une inscription précédemment interrompue)
       const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle()
 
       if (!existingProfile) {
-        const { error: rpcError } = await supabase.rpc('create_tenant_and_profile', {
+        const callRpc = () => supabase.rpc('create_tenant_and_profile', {
           p_full_name: form.full_name,
           p_company_name: form.company_name || 'Mon agence',
           p_plan: selectedPlan,
         })
+
+        let { error: rpcError } = await callRpc()
+
+        // Filet de sécurité : si la session n'était vraiment pas encore propagée
+        // côté serveur au premier essai, on retente une fois après un court délai
+        // plutôt que de bloquer l'inscription avec une erreur technique.
+        if (rpcError && /null value in column "id"/i.test(rpcError.message || '')) {
+          await new Promise(resolve => setTimeout(resolve, 800))
+          if (activeSession) {
+            await supabase.auth.setSession({
+              access_token: activeSession.access_token,
+              refresh_token: activeSession.refresh_token,
+            })
+          }
+          ;({ error: rpcError } = await callRpc())
+        }
+
         if (rpcError) { showError(rpcError, 'Erreur profil'); return }
       }
 

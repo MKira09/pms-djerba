@@ -41,6 +41,7 @@ export default function RegisterPage() {
       })
 
       let userId: string | undefined = authData?.user?.id
+      let activeSession: typeof authData.session = authData?.session ?? null
       let isResumedSignup = false
 
       if (authError) {
@@ -62,6 +63,7 @@ export default function RegisterPage() {
           return
         }
         userId = signInData.user.id
+        activeSession = signInData.session
         isResumedSignup = true
       } else if (!authData.user) {
         toast.error('Erreur : utilisateur non créé', { duration: 8000 })
@@ -79,6 +81,17 @@ export default function RegisterPage() {
       }
 
       if (!userId) { toast.error('Erreur : utilisateur non identifié', { duration: 8000 }); return }
+
+      // Force la prise en compte immédiate de la session par le client avant
+      // d'enchaîner sur un appel authentifié : juste après signUp/signIn, le
+      // client peut ne pas avoir encore propagé le jeton en interne, ce qui
+      // ferait échouer auth.uid() côté base (cause du bug "id null" observé).
+      if (activeSession) {
+        await supabase.auth.setSession({
+          access_token: activeSession.access_token,
+          refresh_token: activeSession.refresh_token,
+        })
+      }
 
       // Étape 2 : créer le tenant + profil via la fonction SQL — seulement si ce n'est
       // pas déjà fait (reprise d'une inscription précédemment interrompue)

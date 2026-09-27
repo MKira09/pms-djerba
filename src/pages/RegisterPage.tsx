@@ -47,7 +47,7 @@ export default function RegisterPage() {
         // Cas fréquent : une inscription précédente a créé le compte auth mais s'est
         // arrêtée avant l'étape 2 (profil/agence). On tente de reprendre plutôt que
         // de bloquer définitivement cette adresse email.
-        const looksAlreadyRegistered = authError.status === 422 || /already registered/i.test(authError.message || '')
+        const looksAlreadyRegistered = /already registered|user already exists/i.test(authError.message || '')
         if (!looksAlreadyRegistered) { showError(authError, 'Erreur inscription'); return }
 
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

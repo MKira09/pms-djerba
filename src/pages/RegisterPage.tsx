@@ -81,48 +81,42 @@ export default function RegisterPage() {
       }
 
       if (!userId) { toast.error('Erreur : utilisateur non identifié', { duration: 8000 }); return }
+      if (!activeSession) { toast.error('Session invalide, merci de réessayer.', { duration: 8000 }); return }
 
-      // Force la prise en compte immédiate de la session par le client avant
-      // d'enchaîner sur un appel authentifié : juste après signUp/signIn, le
-      // client peut ne pas avoir encore propagé le jeton en interne, ce qui
-      // ferait échouer auth.uid() côté base (cause du bug "id null" observé).
-      if (activeSession) {
-        await supabase.auth.setSession({
-          access_token: activeSession.access_token,
-          refresh_token: activeSession.refresh_token,
-        })
-      }
-      // Vérification serveur (pas seulement locale) que la session est bien active
-      await supabase.auth.getUser()
+      // Garde la session locale synchronisée (utile pour le reste de l'app)
+      await supabase.auth.setSession({
+        access_token: activeSession.access_token,
+        refresh_token: activeSession.refresh_token,
+      })
 
       // Étape 2 : créer le tenant + profil via la fonction SQL — seulement si ce n'est
       // pas déjà fait (reprise d'une inscription précédemment interrompue)
       const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle()
 
       if (!existingProfile) {
-        const callRpc = () => supabase.rpc('create_tenant_and_profile', {
-          p_full_name: form.full_name,
-          p_company_name: form.company_name || 'Mon agence',
-          p_plan: selectedPlan,
+        // Appel manuel avec le jeton explicitement attaché : contourne un souci
+        // observé où l'appel via supabase.rpc() juste après signUp/signIn n'envoyait
+        // pas le jeton d'authentification, faisant échouer auth.uid() côté base.
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        const res = await fetch(`${supabaseUrl}/rest/v1/rpc/create_tenant_and_profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${activeSession.access_token}`,
+          },
+          body: JSON.stringify({
+            p_full_name: form.full_name,
+            p_company_name: form.company_name || 'Mon agence',
+            p_plan: selectedPlan,
+          }),
         })
-
-        let { error: rpcError } = await callRpc()
-
-        // Filet de sécurité : si la session n'était vraiment pas encore propagée
-        // côté serveur au premier essai, on retente une fois après un court délai
-        // plutôt que de bloquer l'inscription avec une erreur technique.
-        if (rpcError && /null value in column "id"/i.test(rpcError.message || '')) {
-          await new Promise(resolve => setTimeout(resolve, 800))
-          if (activeSession) {
-            await supabase.auth.setSession({
-              access_token: activeSession.access_token,
-              refresh_token: activeSession.refresh_token,
-            })
-          }
-          ;({ error: rpcError } = await callRpc())
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({} as any))
+          showError({ status: res.status, message: errBody.message || errBody.error_description || `Erreur HTTP ${res.status}` }, 'Erreur profil')
+          return
         }
-
-        if (rpcError) { showError(rpcError, 'Erreur profil'); return }
       }
 
       // Notification (best-effort, ne doit jamais bloquer l'inscription)

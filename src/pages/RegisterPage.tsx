@@ -39,29 +39,74 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
       })
-      if (authError) { showError(authError, 'Erreur inscription'); return }
-      if (!authData.user) { toast.error('Erreur : utilisateur non créé', { duration: 8000 }); return }
 
-      // Étape 2 : créer le tenant + profil via la fonction SQL
-      const { error: rpcError } = await supabase.rpc('create_tenant_and_profile', {
-        p_full_name: form.full_name,
-        p_company_name: form.company_name || 'Mon agence',
-        p_plan: selectedPlan,
-      })
-      if (rpcError) { showError(rpcError, 'Erreur profil'); return }
+      let userId: string | undefined = authData?.user?.id
+      let isResumedSignup = false
+
+      if (authError) {
+        // Cas fréquent : une inscription précédente a créé le compte auth mais s'est
+        // arrêtée avant l'étape 2 (profil/agence). On tente de reprendre plutôt que
+        // de bloquer définitivement cette adresse email.
+        const looksAlreadyRegistered = authError.status === 422 || /already registered/i.test(authError.message || '')
+        if (!looksAlreadyRegistered) { showError(authError, 'Erreur inscription'); return }
+
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password,
+        })
+        if (signInError || !signInData.user) {
+          toast.error(
+            "Un compte existe déjà avec cet email. Si c'est le vôtre, connectez-vous depuis la page de connexion. Sinon, contactez-nous à contact.agencykira@gmail.com.",
+            { duration: 9000 }
+          )
+          return
+        }
+        userId = signInData.user.id
+        isResumedSignup = true
+      } else if (!authData.user) {
+        toast.error('Erreur : utilisateur non créé', { duration: 8000 })
+        return
+      } else if (!authData.session) {
+        // Le compte est créé mais aucune session n'a été ouverte (confirmation par
+        // email requise côté Supabase). Impossible de créer le profil dans ce cas
+        // (nécessite une session active) : on informe clairement plutôt que de
+        // laisser échouer l'étape suivante avec une erreur technique.
+        toast.error(
+          "Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse avant de continuer.",
+          { duration: 9000 }
+        )
+        return
+      }
+
+      if (!userId) { toast.error('Erreur : utilisateur non identifié', { duration: 8000 }); return }
+
+      // Étape 2 : créer le tenant + profil via la fonction SQL — seulement si ce n'est
+      // pas déjà fait (reprise d'une inscription précédemment interrompue)
+      const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle()
+
+      if (!existingProfile) {
+        const { error: rpcError } = await supabase.rpc('create_tenant_and_profile', {
+          p_full_name: form.full_name,
+          p_company_name: form.company_name || 'Mon agence',
+          p_plan: selectedPlan,
+        })
+        if (rpcError) { showError(rpcError, 'Erreur profil'); return }
+      }
 
       // Notification (best-effort, ne doit jamais bloquer l'inscription)
-      supabase.functions.invoke('notify-signup', {
-        body: {
-          agency_name: form.company_name || 'Mon agence',
-          owner_name: form.full_name,
-          owner_email: form.email,
-          plan: selectedPlan,
-        },
-      }).catch(() => {})
+      if (!isResumedSignup) {
+        supabase.functions.invoke('notify-signup', {
+          body: {
+            agency_name: form.company_name || 'Mon agence',
+            owner_name: form.full_name,
+            owner_email: form.email,
+            plan: selectedPlan,
+          },
+        }).catch(() => {})
+      }
 
       // Charger le profil et le tenant dans le store
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single()
       if (profile) {
         setProfile(profile)
         const { data: tenant } = await supabase.from('tenants').select('*').eq('id', profile.tenant_id).single()

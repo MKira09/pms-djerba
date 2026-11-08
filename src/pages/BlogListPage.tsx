@@ -2,16 +2,15 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Home } from 'lucide-react'
 import { usePageMeta } from '@/hooks/usePageMeta'
 
-const ARTICLES = [
-  {
-    slug: 'louer-sa-villa-sans-commission',
-    title: "Louer votre villa sans intermédiaire : comment garder le contrôle (et jusqu'à 15-17% de plus dans votre poche)",
-    excerpt:
-      'Vous générez déjà des réservations par vous-même — WhatsApp, Instagram, clients fidèles. Alors pourquoi continuer à donner 15 à 17% de commission sur des réservations que vous auriez obtenues de toute façon ?',
-    date: '18 juillet 2026',
-    readTime: '5 min',
-  },
-]
+interface Article {
+  slug: string
+  title: string
+  excerpt: string
+  date: string
+  readTime: string
+}
+
+const ARTICLES: Article[] = []
 
 export default function BlogListPage() {
   usePageMeta({

@@ -22,7 +22,6 @@ import BookingPage from '@/pages/BookingPage'
 import VillaBookingPage from '@/pages/VillaBookingPage'
 import CataloguePage from '@/pages/CataloguePage'
 import BlogListPage from '@/pages/BlogListPage'
-import BlogLouerSansCommissionPage from '@/pages/BlogLouerSansCommissionPage'
 import CguPage from '@/pages/CguPage'
 import HomePage from '@/pages/HomePage'
 import { useAuthStore } from '@/stores/auth.store'
@@ -138,7 +137,7 @@ export default function App() {
         <Route path="/book/:villaId" element={<VillaBookingPage />} />
         <Route path="/catalogue/:tenantSlug" element={<CataloguePage />} />
         <Route path="/blog" element={<BlogListPage />} />
-        <Route path="/blog/louer-sa-villa-sans-commission" element={<BlogLouerSansCommissionPage />} />
+        <Route path="/blog/louer-sa-villa-sans-commission" element={<Navigate to="/blog" replace />} />
         <Route path="/cgu" element={<CguPage />} />
 
         {/* Admin only */}
@@ -149,16 +148,16 @@ export default function App() {
 
         {/* Protected */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/dashboard"       element={<DashboardPage />} />
-          <Route path="/villas"          element={<VillasPage />} />
-          <Route path="/calendar"        element={<CalendarPage />} />
-          <Route path="/reservations"    element={<ReservationsPage />} />
-          <Route path="/team"            element={<TeamPage />} />
-          <Route path="/pricing"         element={<PricingPage />} />
-          <Route path="/communications"  element={<CommunicationsPage />} />
-          <Route path="/blacklist"       element={<BlacklistPage />} />
-          <Route path="/settings"        element={<SettingsPage />} />
-          <Route path="/billing"         element={<BillingPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/villas" element={<VillasPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/reservations" element={<ReservationsPage />} />
+          <Route path="/team" element={<TeamPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/communications" element={<CommunicationsPage />} />
+          <Route path="/blacklist" element={<BlacklistPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/billing" element={<BillingPage />} />
         </Route>
 
         {/* Fallback */}

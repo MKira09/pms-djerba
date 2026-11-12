@@ -24,6 +24,7 @@ import CataloguePage from '@/pages/CataloguePage'
 import BlogListPage from '@/pages/BlogListPage'
 import CguPage from '@/pages/CguPage'
 import HomePage from '@/pages/HomePage'
+import BotpressChat from '@/components/BotpressChat'
 import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
 
@@ -122,6 +123,7 @@ export default function App() {
           style: { fontSize: '0.875rem', maxWidth: '360px' },
         }}
       />
+      <BotpressChat />
       <Routes>
         {/* Landing */}
         <Route path="/" element={

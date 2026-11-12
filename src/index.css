@@ -187,3 +187,18 @@
 .prose-article em {
   font-style: italic;
 }
+
+/* Botpress Webchat — masqué sur le dashboard de gestion et les espaces privés */
+body.hide-botpress-chat #bp-webchat-container,
+body.hide-botpress-chat #bp-webchat,
+body.hide-botpress-chat [id^="bp-"],
+body.hide-botpress-chat [class*="bpw-"],
+body.hide-botpress-chat [class*="bpWebchat"],
+body.hide-botpress-chat iframe[src*="botpress"],
+body.hide-botpress-chat iframe[src*="bpcontent"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
